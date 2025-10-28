@@ -1,0 +1,57 @@
+/**
+ * app ドメイン: /switch-org
+ *
+ * 責務:
+ * - ユーザーが所属する組織の一覧を表示
+ * - 組織を切り替える（Server Actionを呼び出す）
+ * - Server Actionの戻り値に従って遷移する
+ *
+ * 重要な設計方針:
+ * - Server Actionはredirect()しない
+ * - このClient ComponentがnextUrlに基づいて遷移する
+ */
+
+import { getCurrentOrg } from '@repo/config';
+import SwitchOrgForm from './switch-org-form';
+
+export default async function SwitchOrgPage() {
+  const org = await getCurrentOrg();
+
+  // TODO: 実際にはSupabase profilesテーブルからユーザーが所属する組織一覧を取得
+  const userOrganizations = [
+    { id: 'org_dummy_12345', name: 'サンプル組織A' },
+    { id: 'org_dummy_67890', name: 'サンプル組織B' },
+    { id: 'org_dummy_abcde', name: 'サンプル組織C' },
+  ];
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <h1>組織切替</h1>
+
+      <section style={{ marginTop: '2rem' }}>
+        <h2>現在の組織</h2>
+        <p>
+          <strong>{org.orgName}</strong> ({org.orgId})
+        </p>
+      </section>
+
+      <section style={{ marginTop: '2rem' }}>
+        <h2>切り替え先の組織を選択</h2>
+        <SwitchOrgForm
+          organizations={userOrganizations}
+          currentOrgId={org.orgId}
+        />
+      </section>
+
+      <section style={{ marginTop: '2rem', padding: '1rem', background: '#422006', border: '1px solid #92400e', borderRadius: '4px' }}>
+        <h3 style={{ margin: 0, color: '#fbbf24' }}>注意</h3>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#fde68a' }}>
+          組織を切り替えると、現在のコンテキストが変更されます。
+        </p>
+        <p style={{ fontSize: '0.875rem', color: '#fde68a' }}>
+          この操作はactivity_logsに記録されます（将来実装）。
+        </p>
+      </section>
+    </div>
+  );
+}
