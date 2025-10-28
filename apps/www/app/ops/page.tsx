@@ -1,0 +1,56 @@
+/**
+ * ops ドメイン: /
+ *
+ * 責務:
+ * - 事業者側（SaaS提供者）の内部コンソール領域
+ * - ops ロールのみアクセス可能
+ *
+ * 実装方針:
+ * - 今回の雛形では機能自体は実装しない
+ * - "internal only / ops only" と明記したダミーページのみ
+ *
+ * 将来的な用途例:
+ * - 全組織の一覧・統計
+ * - サポートチケット管理
+ * - システム設定
+ */
+
+import { getCurrentRole } from '@repo/config';
+
+export default async function OpsHomePage() {
+  const { role } = await getCurrentRole();
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <h1>Ops コンソール</h1>
+
+      <section style={{ marginTop: '2rem', padding: '2rem', border: '2px solid #6366f1', borderRadius: '4px', background: '#f5f3ff', textAlign: 'center' }}>
+        <h2 style={{ color: '#6366f1' }}>Internal Only / Ops Only</h2>
+        <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+          このドメインは事業者側（SaaS提供者）の内部コンソール領域です。
+        </p>
+        <p style={{ fontSize: '0.875rem', color: '#666' }}>
+          現在のロール: <strong>{role}</strong>
+        </p>
+      </section>
+
+      <section style={{ marginTop: '2rem' }}>
+        <h2>将来的な機能例</h2>
+        <ul style={{ lineHeight: '1.8' }}>
+          <li>全組織の一覧・統計</li>
+          <li>サポートチケット管理</li>
+          <li>システム設定・メンテナンス</li>
+          <li>課金・請求の管理</li>
+        </ul>
+      </section>
+
+      <section style={{ marginTop: '2rem', padding: '1rem', background: '#fef3c7', borderRadius: '4px' }}>
+        <h3 style={{ margin: 0 }}>注意</h3>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+          今回の雛形では、機能自体は実装していません。
+          このダミーページのみで、実際の機能は将来実装する想定です。
+        </p>
+      </section>
+    </div>
+  );
+}

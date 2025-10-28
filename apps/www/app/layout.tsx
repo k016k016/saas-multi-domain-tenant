@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'SaaS Multi-Tenant Starter - Welcome',
+  title: 'SaaS Multi-Tenant Starter',
   description: 'マルチテナント/マルチドメインSaaSスターター',
 };
 

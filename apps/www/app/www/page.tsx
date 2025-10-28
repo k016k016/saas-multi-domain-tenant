@@ -38,7 +38,7 @@ export default function HomePage() {
         </p>
         <div style={{ marginTop: '1rem' }}>
           <a
-            href={process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}
+            href={process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3000'}
             style={{
               display: 'inline-block',
               padding: '0.5rem 1rem',
