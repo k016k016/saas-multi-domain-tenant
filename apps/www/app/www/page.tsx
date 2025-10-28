@@ -53,7 +53,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ marginTop: '2rem', fontSize: '0.875rem', color: '#666' }}>
+      <section style={{ marginTop: '2rem', fontSize: '0.875rem', color: '#9ca3af' }}>
         <p>
           注: このプロジェクトは責務分離とセキュリティを重視しています。
           各ドメインは明確に分離されており、統合は禁止されています。

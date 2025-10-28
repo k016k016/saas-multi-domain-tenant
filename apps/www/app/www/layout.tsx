@@ -14,13 +14,13 @@ export default function WwwLayout({
     <>
       <nav style={{
         padding: '1rem',
-        background: '#f3f4f6',
-        borderBottom: '1px solid #d1d5db',
+        background: '#2d2d2d',
+        borderBottom: '1px solid #404040',
         display: 'flex',
         alignItems: 'center',
         gap: '2rem'
       }}>
-        <strong style={{ color: '#374151' }}>WWW (公開サイト)</strong>
+        <strong style={{ color: '#9ca3af' }}>WWW (公開サイト)</strong>
       </nav>
       {children}
     </>

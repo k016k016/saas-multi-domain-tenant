@@ -63,16 +63,16 @@ export default async function OverviewPage() {
         </dl>
       </section>
 
-      <section style={{ marginTop: '2rem', padding: '1rem', background: '#fef3c7', borderRadius: '4px' }}>
-        <h3 style={{ margin: 0 }}>admin ドメインについて</h3>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+      <section style={{ marginTop: '2rem', padding: '1rem', background: '#422006', border: '1px solid #92400e', borderRadius: '4px' }}>
+        <h3 style={{ margin: 0, color: '#fbbf24' }}>admin ドメインについて</h3>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#fde68a' }}>
           このドメインは組織管理・請求・リスク領域を扱います。
         </p>
-        <ul style={{ fontSize: '0.875rem' }}>
+        <ul style={{ fontSize: '0.875rem', color: '#fde68a' }}>
           <li><strong>admin権限:</strong> ユーザー管理（CRUD、ロール変更: member/admin）</li>
           <li><strong>owner権限:</strong> 上記に加えて、支払い情報変更・組織凍結/廃止・owner譲渡</li>
         </ul>
-        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#fde68a' }}>
           これらの操作は activity_logs に必ず記録されます。
         </p>
       </section>

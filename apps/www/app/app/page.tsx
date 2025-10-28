@@ -59,17 +59,17 @@ export default async function DashboardPage() {
         </ul>
       </section>
 
-      <section style={{ marginTop: '2rem', padding: '1rem', background: '#fef3c7', borderRadius: '4px' }}>
-        <h3 style={{ margin: 0 }}>注意</h3>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+      <section style={{ marginTop: '2rem', padding: '1rem', background: '#422006', border: '1px solid #92400e', borderRadius: '4px' }}>
+        <h3 style={{ margin: 0, color: '#fbbf24' }}>注意</h3>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#fde68a' }}>
           このドメイン(app)では以下の操作は<strong>禁止</strong>されています:
         </p>
-        <ul style={{ fontSize: '0.875rem' }}>
+        <ul style={{ fontSize: '0.875rem', color: '#fde68a' }}>
           <li>支払い情報の変更</li>
           <li>組織の凍結 / 廃止</li>
           <li>owner権限の譲渡</li>
         </ul>
-        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#fde68a' }}>
           これらはadminドメインの /org-settings (owner専用) でのみ許可されます。
         </p>
       </section>
