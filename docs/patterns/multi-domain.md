@@ -103,9 +103,10 @@ window.location.href = redirectUrl
 
 **判定ロジック**:
 - OPS権限 → OPSドメイン
-- 管理者権限（owner/admin） → ADMINドメイン
-- 一般メンバー → APPドメイン
+- それ以外（owner/admin/member） → APPドメイン
 - 組織未所属 → WWWのオンボーディング
+
+**注意**: 認証後もWWWドメインにはアクセス可能（公開サイトのため制限なし）
 
 ---
 
