@@ -190,15 +190,156 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提とする。
 
 ---
 
-## 8. middleware.ts
+## 8. アプリ構成（4つの独立Next.jsアプリ）
 
-- middleware.ts は org_idベースのアクセス制御とドメインごとのガードに依存する。
-- Claudeは「テストを楽にするためmiddlewareを緩めます」「1ドメインに集約しましょう」といった提案をしてはならない。
-- middlewareの挙動（org_idで判定する前提）を勝手に簡略化・削除・別方式に置き換えるのは禁止。
+このプロジェクトは**4つの完全に独立したNext.jsアプリケーション**で構成される。
+
+### 構成
+- `apps/www` - 独立したNext.jsアプリ（外向けLP・ログイン導線）
+- `apps/app` - 独立したNext.jsアプリ（日常業務UI）
+- `apps/admin` - 独立したNext.jsアプリ（組織管理・高リスク操作）
+- `apps/ops` - 独立したNext.jsアプリ（事業者側内部コンソール）
+
+### 配置規則
+- **ネスト構造禁止**: `apps/www/app/admin/...` のように1つのアプリ直下に他ドメインをぶら下げる構成は全面禁止
+- **正しい配置**: `apps/admin/app/members/...` のように、adminの機能はadminアプリ内に配置する
+- 各アプリは独立したpackage.json、next.config.js、tsconfig.jsonを持つ
+
+### ローカル開発時の起動方法
+
+各アプリを独立したポートで起動する：
+
+```bash
+# ターミナル1
+cd apps/www && npm run dev    # ポート 3000
+
+# ターミナル2
+cd apps/app && npm run dev    # ポート 3001
+
+# ターミナル3
+cd apps/admin && npm run dev  # ポート 3002
+
+# ターミナル4
+cd apps/ops && npm run dev    # ポート 3003
+```
+
+または、モノレポのルートから：
+
+```bash
+pnpm --filter www dev &
+pnpm --filter app dev &
+pnpm --filter admin dev &
+pnpm --filter ops dev &
+```
+
+#### アクセスURL
+
+- http://www.local.test:3000
+- http://app.local.test:3001
+- http://admin.local.test:3002
+- http://ops.local.test:3003
+
+#### /etc/hosts 設定
+
+以下を `/etc/hosts` に追加：
+
+```
+127.0.0.1 www.local.test
+127.0.0.1 app.local.test
+127.0.0.1 admin.local.test
+127.0.0.1 ops.local.test
+```
+
+#### Cookie共有の前提
+
+- `Domain=.local.test` のCookieは、`app.local.test:3001` や `admin.local.test:3002` のようにポートが違っていても共有される。ポート番号はCookieのスコープ判定条件ではない。
+
+- つまり、ローカルでもサブドメイン間SSO的な動作は基本的に再現できる想定。
+
+- ただし本番相当の挙動を完全に再現するには別の問題がある：
+  - 本番ではクロスサブドメインでCookieを送るために `SameSite=None; Secure` を付ける必要がある。
+  - `Secure` が付いたCookieはHTTPSでしか送れないので、ローカルHTTP環境だと本番と同じ条件では動かない場合がある。
+
+- そのため、将来的に本番同等のSSOテストをする場合は以下のような対応が必要になる可能性はある：
+  1. ローカルでHTTPS終端するリバースプロキシ（Caddy/nginx等）を立てる
+  2. 4アプリをそれぞれサブドメインで公開し、TLS付きで動かす
+  3. またはE2E専用の検証環境（Vercel Previewなど）でまとめて検証する
+
+- **重要**: 「ポートが違うからCookie共有できない」は誤りなので、それを理由に1アプリ統合やwwwゲートウェイ化を正当化しないこと。
+
+### 本番デプロイ
+- 本番環境では4アプリを**独立してデプロイ**する
+- Vercelでは同一リポジトリから4つのプロジェクトを作成し、Root Directoryを分ける想定
+  - www.example.com → Vercel Project (Root: `apps/www`)
+  - app.example.com → Vercel Project (Root: `apps/app`)
+  - admin.example.com → Vercel Project (Root: `apps/admin`)
+  - ops.example.com → Vercel Project (Root: `apps/ops`)
+- **4アプリ分割の理由**: 監査・権限境界・障害分離のため。コスト理由で統合しない
+- **禁止**: コスト理由での統合提案
+- **禁止**: 1つのNext.jsアプリでhostヘッダやmiddlewareで分岐する案（セキュリティ・監査・ロールバック分離・権限境界を崩すため）
+
+禁止事項:
+- 「全部1つのNext.jsプロジェクトにまとめてhostヘッダで振り分けましょう」という提案
+- アプリ間でルーティング知識を共有する設計（例: wwwがadminのルーティングを知っている）
 
 ---
 
-## 9. 認証 / サインアップ / 課金
+## 9. middleware.ts（各アプリ専用）
+
+各アプリは**自分専用のmiddleware.ts**を持つ。他ドメインの責務を肩代わりしない。
+
+### 各アプリのmiddleware責務
+
+- **apps/www/middleware.ts**
+  - wwwドメイン専用の制御のみ
+  - 外向けLPなので基本的に緩い（ログイン不要）
+  - **admin/app/opsのルーティング・認可を肩代わりしない**（wwwが他のアプリにrewriteするゲートウェイ方式は禁止）
+
+- **apps/app/middleware.ts**
+  - appドメイン専用
+  - member / admin / owner 全員OK
+  - org_id必須（将来的に）
+  - ログイン状態とorg_idがあることを確認
+
+- **apps/admin/middleware.ts**
+  - adminドメイン専用
+  - admin または owner 以外は **403 を返す**
+  - memberがadminにアクセスしようとした場合は強制拒否
+  - これは仕様であり、テストであっても緩めない
+
+- **apps/ops/middleware.ts**
+  - opsドメイン専用
+  - opsロール以外は **403 を返す**
+  - 本格機能は未実装だが、アクセス制御は必ず実装する
+  - **注意**: opsは「RLSをバイパスする神ビュー」ではない。現段階はダミーページのみで、横断閲覧機能は実装しない
+
+### 禁止事項
+- **旧構成の復活**: 「apps/www/middleware.tsがサブドメインを見て全ドメインをrewriteする」という設計は破棄済み。復活させるな。
+- 「テストを楽にするためmiddlewareを緩めます」「1ドメインに集約しましょう」といった提案
+- middlewareの挙動（org_idで判定する前提）を勝手に簡略化・削除・別方式に置き換えること
+- 他アプリのアクセス制御を肩代わりする設計
+
+---
+
+## 10. Cookie共有とアクセス制御
+
+### Cookie共有
+- 将来的にサブドメイン間でログイン状態を共有する方針
+- 設定例: `Domain=.example.com`（ローカル開発: `Domain=.local.test`）
+- これにより `*.example.com` 間でSSO的な動作が可能
+
+### アクセス制御の分離
+- **Cookie共有 ≠ どこでも入れる**
+- Cookieを共有しても、アクセス可否は**各アプリのmiddlewareで個別に判定**して403を返す
+- 例: memberがadmin.example.comにアクセス → Cookieは共有されているが、adminのmiddlewareが403で拒否
+- これにより、セキュリティとSSOを両立する
+
+禁止事項:
+- 「SSOのために全部1アプリにまとめましょう」という提案（Cookie共有とアプリ統合は別物）
+
+---
+
+## 11. 認証 / サインアップ / 課金
 
 - 認証、サインアップ、課金処理はまだ実装しない。
 - `getCurrentOrg()` / `getCurrentRole()` はダミー（ハードコード）でよい。
@@ -211,7 +352,7 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提とする。
 
 ---
 
-## 10. ブランチ運用 / デプロイ先
+## 12. ブランチ運用 / デプロイ先
 
 - ブランチ戦略:
   - `develop` ブランチは日常開発用。VercelのPreview環境に対応。
