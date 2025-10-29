@@ -15,8 +15,9 @@ AIアシスタントは以下を絶対に守ること。
 - `CLAUDE_RUNTIME_FULL.md`
 - `CONTRIBUTING_AI.md`
 - `README.md`
-- `docs/` 配下すべて  
+- `docs/` 配下すべて
   - 例: `docs/domains.md`, `docs/spec/tenancy.md` など
+- `infra/supabase/SETUP.md` はAIが勝手に変更しない
 
 禁止内容:
 - 文言の書き換えや言い回しの最適化
