@@ -16,24 +16,32 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提に、SaaSの�
 
 
 ## ドメイン構成
-4つのドメインを分ける。この分離は崩さないでください。
+4つのドメインを**独立したNext.jsアプリケーション**として分離する。この分離は崩さないでください。
+
+### アプリ構成
+- `apps/www` - 独立したNext.jsアプリ
+- `apps/app` - 独立したNext.jsアプリ
+- `apps/admin` - 独立したNext.jsアプリ
+- `apps/ops` - 独立したNext.jsアプリ
+
+各アプリは独立したpackage.json、next.config.js、tsconfig.jsonを持ち、**本番では別々にデプロイ**されます。
 
 ### www
 - LP / プロダクト説明 / サインアップ・ログイン導線（将来的）
 - 認証済みの業務データや内部情報は表示しない
 - ダッシュボードを置かない
-- 想定: `www.example.com`
+- 本番: `www.example.com`（Vercelプロジェクト: Root=`apps/www`）
 
 ### app
 - 日常業務UI。`member` / `admin` / `owner` 全員が使う
 - 自分の業務データ、進捗、プロフィール、通知、所属組織の切り替えなど
 - アクティブなorg_idのコンテキストで動く
 - 組織を壊す操作（支払い変更・凍結・owner譲渡など）は置かない
-- 想定: `app.example.com`
+- 本番: `app.example.com`（Vercelプロジェクト: Root=`apps/app`）
 
 ### admin
 - 組織運用・契約・高リスク系操作のUI
-- `admin` / `owner` が入れる。`member` は403
+- `admin` / `owner` が入れる。`member` は403（middlewareで強制拒否）
 - adminができること:
   - 同一組織内ユーザーのCRUD（招待 / 更新 / 無効化）
   - member/adminロール切り替え
@@ -43,20 +51,44 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提に、SaaSの�
   - admin権限の付け替え
   - owner権限の譲渡（新オーナーを指名し、自分は降格）
 - 上記のowner専用操作はすべて `activity_logs` に記録する前提
-- 想定: `admin.example.com`
+- 本番: `admin.example.com`（Vercelプロジェクト: Root=`apps/admin`）
 
 ### ops
 - SaaS提供側（ベンダー側）の内部コンソール
 - 将来的には複数組織を横断したサポート/監査を行う場所
 - 現時点の雛形では "internal only / ops only" のダミーページのみ用意する
 - 現段階ではRLSをバイパスするような横断閲覧機能は実装しない
-- 想定: `ops.example.com`
+- 本番: `ops.example.com`（Vercelプロジェクト: Root=`apps/ops`）
+
+### デプロイ方針
+本番環境では、4アプリを**独立してデプロイ**します。
+
+- Vercelでは同一リポジトリから4つのプロジェクトを作成し、Root Directoryを分ける
+- 分割理由: セキュリティ・監査・ロールバック分離・権限境界の明確化（コスト理由で崩さない）
+- **禁止**: 「全部1つのNext.jsプロジェクトにまとめてhostヘッダで振り分ける」設計
+
+### Middlewareの責務
+各アプリは**自分専用のmiddleware.ts**を持ち、他ドメインの責務を肩代わりしません。
+
+- `apps/www/middleware.ts`: www専用（外向けLPなので緩い制御）
+- `apps/app/middleware.ts`: app専用（member/admin/owner全員OK、org_id必須）
+- `apps/admin/middleware.ts`: admin専用（admin/owner以外403。memberをadmin画面に入れないのは仕様、テストでも緩めない）
+- `apps/ops/middleware.ts`: ops専用（ops以外403）
+
+**重要**: wwwがadminにrewriteする集約型middlewareは採用しません。各アプリは独立して動作します。
+
+### Cookie共有とアクセス制御
+将来的に、`*.example.com` / `*.local.test` のようなサブドメイン間で `Domain=.example.com` クッキーを共有してSSO的な動作を可能にする方針があります。
+
+ただし、Cookieを共有しても、アクセス可否は**各ドメインのmiddlewareで個別に判定**して403を返すため、セキュリティを保ちます。例: memberがadmin.example.comにアクセス → Cookieは共有されているが、adminのmiddlewareが403で拒否。
 
 ### 重要な禁止事項
 - 「全部appにまとめたほうがシンプル」は却下
+- 「全部1つのNext.jsでhostヘッダ振り分け」は却下
 - memberにadmin画面を見せる、は却下
 - owner専用操作（支払い変更・凍結・owner譲渡など）をapp側に置くのは却下
 - admin権限とowner権限をごちゃ混ぜにする提案も却下
+- apps/www/app/admin/... のようなネスト構造は禁止
 
 
 ## ロールモデル（権限階層）
@@ -244,6 +276,7 @@ v0のゴールは「骨格と契約（責務分離・権限境界・RLS前提・
 - これは「memberにも見えて便利な管理画面」を作るサンプルではない
 - これは「RLSを一旦切って楽に動かしましょう」というやり方ではない
 - これは「Server Actionから直接redirectしてラクにしましょう」というサンプルでもない
+- これは**単一アプリに全ドメインを統合してmiddlewareで出し分ける系のサンプルではない**
 
 このスターターの価値は、**分離・権限境界・マルチテナント・監査**が最初から揃っていること。  
 そこを崩す提案は拒否する。

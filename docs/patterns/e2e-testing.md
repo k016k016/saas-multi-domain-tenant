@@ -1,191 +1,88 @@
-E2Eテスト パターン
+E2Eテストの目的は「動くかどうか」ではなく「境界が破られていないか」を確認すること。
+特に、ドメインごとの分離（www/app/admin/ops）とロールごとの分離（member/admin/owner/ops）、org_idによるテナント分離、RLS前提、Server Actionの返却フロー、activity_logsの記録義務は壊さない。
 
-PlaywrightでのE2Eテストは「本番と同じ前提での挙動確認」を目的とする。
-動けばいい・一時的に通ればいい・ロールを一時的に書き換えればいい、という発想は禁止。
+## 1. ローカルドメイン
 
-このファイルと ../test-data/README.md のルールは両方守ること。
+`/etc/hosts` に以下を登録すること:
 
-⸻
+```text
+127.0.0.1 www.local.test
+127.0.0.1 app.local.test
+127.0.0.1 admin.local.test
+127.0.0.1 ops.local.test
+```
 
-ドメイン / URL ルール
-	•	localhost は使わない。禁止。
-	•	必ずサブドメイン（.local.test等）でアクセスすること。
-	•	URLは .env.local の値を参照し、ハードコードしないこと。
-
-例（.env.localから取得）:
-	•	process.env.NEXT_PUBLIC_APP_URL
-	•	process.env.NEXT_PUBLIC_ADMIN_URL
-	•	process.env.NEXT_PUBLIC_OPS_URL
-
-理由:
-	•	本番と同じマルチドメイン挙動（Cookie共有、権限分岐、middlewareのリダイレクト）をテストするため。
-	•	localhost で通るテストは信用しない。
-	•	.env.local の値を参照することで、プロジェクトごとのドメイン設定に対応。
-
-テストコード内に http://localhost:3000 を書く提案はすべて却下する。
-
-⸻
-
-ログイン戦略
-
-原則
-	•	既にseed済みのテストユーザを使ってログインする。
-	•	組織・ロール（owner / admin / member）はseed時点のものをそのまま使う。
-	•	例: test_user_admin@example.com など
-	•	テスト中にロールを付け替えて通そうとしない。
-	•	**ops権限はorgロールとは別枠**。admin/owner/memberと混ぜない。
-
-目的:
-	•	「admin権限があるユーザで管理画面に入れるか」
-	•	「member権限しかないユーザは拒否されるか」
-これを確認するためのE2Eなので、ロール昇格で無理やり通すのは無意味。
-
-ログイン方法について
-	•	毎回UIからログイン画面を踏む必要はない。
-	•	E2Eでは、ADR-003で定義されたE2E専用のログインバイパスを使って「特定のseedユーザとしてログイン済みの状態」をセットしてからテスト開始してよい。
-	•	これはテストの安定性と速度のために許可される公式手段。
-	•	このバイパスはE2E専用。本番やステージング本番相当では無効であることが前提。
-	•	middlewareを緩める/RLSを外す/if (TEST) { return admin } みたいな独自の抜け道を勝手に作る提案はすべて禁止。
-	•	使っていいのは公式に定義されたE2Eログインバイパスだけ。
-
-サインアップフローだけは例外
-	•	「ユーザ登録フローそのもの（サインアップ画面→初回セットアップ）」をテストする場合だけ、テスト内で新規ユーザを作ってよい。
-	•	その場合のメールは毎回ユニークにすること。
-
-形式:
-	•	e2e+<yyyyMMddHHmmss>@example.com
-	•	例: e2e+20251025T130455@example.com
+* `localhost` は使わない。
+* 4つとも127.0.0.1で構わない。
+* ブラウザやPlaywrightは `www.local.test`, `app.local.test` ... という別オリジンとして扱う。
 
 禁止:
-	•	同じメールを再利用する
-	•	既存ユーザをDELETEして「再登録のために空ける」
-	•	ownerを消して組織を壊す
 
-これらはCI全体を赤くする元凶なので絶対にやらない。
+* `http://localhost:3000` に全部まとめてテストする。
+* `localhost:3000/admin` みたいなURLでadminを触る。
 
-⸻
+これは本番構成と乖離し、ドメイン境界テストが無効になるのでNG。
 
-セレクタの書き方
+## 2. ローカルポート
 
-必須
-	•	Playwrightではアクセシビリティベースで要素を取得すること。
-	•	getByRole()
-	•	getByLabel()
-	•	getByText()（静的文言が安定している場合のみ）
+各アプリは別ポートで `next dev` を起動してよい:
 
-例:
+* `apps/www`   → `www.local.test:3000`
+* `apps/app`   → `app.local.test:3001`
+* `apps/admin` → `admin.local.test:3002`
+* `apps/ops`   → `ops.local.test:3003`
 
-await expect(
-  page.getByRole('heading', { name: '運用ダッシュボード' })
-).toBeVisible();
+1ポートに統合するためのリバースプロキシやgatewayを今は作らない。
+`www` をゲートウェイに昇格させないことが重要。
 
-await page.getByRole('button', { name: '保存' }).click();
+## 3. クッキー / SSO想定
 
-禁止
-	•	.className での直接指定
-	•	div > span:nth-child(2) のような構造依存セレクタ
-	•	ランダムっぽいクラス名（TailwindやCSS-in-JS由来）に依存した指定
+* セッションCookieは将来的に `Domain=.local.test`（本番は`.example.com`）で発行し、サブドメイン間(app/adminなど)で共有する想定。
+* ただしアクセス可否は各アプリのmiddlewareが決める。
 
-理由:
-	•	見た目の調整やリファクタで壊れやすい。
-	•	role / アクセシビリティ名は実際のUI意図を表しており安定する。
+  * `admin.local.test` は `admin` / `owner` 以外403。
+  * `member` が`admin` 画面を見れたらテスト失敗。
 
-⸻
+この「403が正しい相手には403が返るか」をE2Eで確認する。
 
-ページ遷移と待機（Firefox / WebKit 対応）
+## 4. middlewareの検証
 
-Chromiumだけで動いて満足するな。FirefoxとWebKitで落ちやすいのは「表示前にassertしてる」パターン。
+* 各アプリは自分専用の `middleware.ts` を持ち、他ドメインの認可やrewriteを肩代わりしない。
+* E2Eでは以下を最低限確認する:
 
-ページ遷移後はこれを入れること：
+  * `app.local.test`: `member`/`admin`/`owner` でアクセスできる。
+  * `admin.local.test`: `admin`/`owner` はOK、`member` は403。
+  * `ops.local.test`: `ops` 以外を拒否する（将来前提でもコメント込みでチェック）。
+  * `www.local.test`: 公開系。ここには内部管理UIを混ぜない。
 
-await page.waitForLoadState('domcontentloaded');
+禁止:
 
-これは特に以下のケースで必須：
-	•	ログイン直後のダッシュボード読み込み
-	•	ドメインを跨ぐ遷移（app→adminなど）
-	•	重い初期ロードがある画面
+* `www` のmiddlewareが他ドメインへのrewriteを行う構成。
+  それを前提にしたテストは書かない。
 
-waitForLoadState('networkidle') のような過度な待機は基本不要。domcontentloaded が標準。
+## 5. org切り替えの検証
 
-⸻
+* `/switch-org` のような画面で所属org一覧が出ること。
+* 任意のorgを選択するとServer Actionが `{ success: true, nextUrl: "/dashboard" }` のようなレスポンスを返すこと。
+* クライアント側で `router.push(nextUrl)` すること。
+* Server Action内で `redirect()` を呼んでいないこと。
+* 所属していないorg_idを指定すると `{ success: false, error: "...", nextUrl: "/unauthorized" }` が返り、`/unauthorized` 側に遷移すること。
 
-ダイアログ（confirm / alert 等）の扱い
+## 6. activity_logs の検証
 
-ダイアログを伴う操作（削除ボタンなど）をテストするときは、クリック前 にハンドラを登録しておくこと。
+* adminドメインで行う高リスク操作（ユーザー招待、ロール変更、請求更新、組織凍結/廃止、owner権限の譲渡、admin権限の再割当など）は `activity_logs` に残す前提になっているかをテストで担保する。
+* 「今回はデモだからログなしでOK」というパスを作らない。PRレビュー時に落とす。
 
-やるべき書き方（OK）:
+## 7. URL / 環境変数
 
-page.once('dialog', async dialog => {
-  await dialog.accept();
-});
+* テストコードでドメインやポートを直書きしない。
+  `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_ADMIN_URL`, ... のような環境変数を参照させる。
+* これは将来 `apps/app` を `apps/portal` にリネームしてもテストが壊れないようにするためでもある。
 
-await page.getByRole('button', { name: '削除' }).click();
+---
 
-やってはいけない書き方（NG）:
+## 最終原則
 
-await page.getByRole('button', { name: '削除' }).click();
-// ❌ その後で page.on('dialog', ...) を設定する
-
-理由:
-	•	ブラウザによってはクリック直後に即ダイアログが出るため、
-後からハンドラをつけると間に合わない。
-
-⸻
-
-describe / test の命名ルール
-
-テスト名は以下3段構成を徹底すること：
-
-<ドメイン> - <機能> › <シナリオ> › <期待される結果>
-
-例:
-
-組織切り替え - AUTH_FLOW_SPECIFICATION準拠 › 権限がない組織への切り替え › エラー表示
-OPSドメイン - 運用ダッシュボード › ダッシュボード表示 › 正しく表示される
-
-理由:
-	•	レポートを見ただけで、どの責務のどの振る舞いが壊れたのかを特定できるようにする。
-	•	「なんか失敗した」ではなく「どこが壊れたか」を明文化する。
-
-⸻
-
-最小サンプル
-
-import { test, expect } from '@playwright/test';
-
-test('OPSドメイン - 運用ダッシュボード › ダッシュボード表示 › 正しく表示される', async ({ page }) => {
-  // ops向けユーザでログインする処理（seedユーザを使うこと）
-  // loginAsOps(page) などのヘルパーを使う想定
-
-  await page.goto(process.env.NEXT_PUBLIC_OPS_URL + '/dashboard');
-  await page.waitForLoadState('domcontentloaded');
-
-  await expect(
-    page.getByRole('heading', { name: '運用ダッシュボード' })
-  ).toBeVisible();
-
-  await expect(
-    page.getByRole('button', { name: '更新' })
-  ).toBeEnabled();
-});
-
-このサンプルが守っていること：
-	•	.env.local の値を参照してドメインにアクセスしている
-	•	waitForLoadState('domcontentloaded') を入れている
-	•	getByRole を使っている
-	•	権限は事前にseedされたユーザを想定しており、テスト中に昇格させていない
-
-⸻
-
-Claudeへの禁止事項まとめ
-
-ClaudeがE2Eテストを書くとき・直すときにやってはいけないこと：
-	•	http://localhost:3000 を使う提案
-	•	seedユーザのロールや所属組織をテスト中に書き換える提案
-	•	ownerロールを削除して「オーナー不在の組織」を作ろうとする提案
-	•	既存ユーザ/組織をDELETEしてテストを”初期化”しようとする提案
-	•	CSSクラスやnth-childセレクタに依存した操作
-	•	Firefox/WebKitでの待機なしに expect(...).toBeVisible() を即座に叩く提案
-	•	confirmダイアログのハンドラをクリック後に登録する提案
-
-これらを提案してきた場合、その提案は却下すること。
+* E2Eテストは「機能が動くか」だけでなく「境界が壊れていないか」を見るもの。
+* 単一アプリ統合案・RLS OFF・owner不在org・Server Actionでのredirect・wwwをゲートウェイにする、といったショートカットは全部NGとして扱う。
+* これらは仕様違反であり、"一時的に許容" することはしない。

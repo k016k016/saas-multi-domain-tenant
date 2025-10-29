@@ -21,12 +21,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body>
-        <nav style={{ padding: '1rem', background: '#fee2e2', borderBottom: '1px solid #dc2626' }}>
-          <strong style={{ color: '#dc2626' }}>Admin Domain (admin/owner専用)</strong> |
-          <a href="/overview" style={{ marginLeft: '1rem' }}>概要</a> |
-          <a href="/members" style={{ marginLeft: '1rem' }}>ユーザー管理</a> |
-          <a href="/org-settings" style={{ marginLeft: '1rem' }}>組織設定 (owner専用)</a>
+      <body style={{
+        margin: 0,
+        padding: 0,
+        background: '#1a1a1a',
+        color: '#e5e5e5',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        minHeight: '100vh'
+      }}>
+        <nav style={{
+          padding: '1rem',
+          background: '#78350f',
+          borderBottom: '2px solid #f59e0b',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2rem'
+        }}>
+          <strong style={{ color: '#fbbf24' }}>Admin Domain (組織管理)</strong>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <a href="/" style={{ color: '#fcd34d', textDecoration: 'none' }}>組織概要</a>
+            <a href="/members" style={{ color: '#fcd34d', textDecoration: 'none' }}>メンバー管理</a>
+            <a href="/org-settings" style={{ color: '#fcd34d', textDecoration: 'none' }}>組織設定</a>
+          </div>
         </nav>
         {children}
       </body>

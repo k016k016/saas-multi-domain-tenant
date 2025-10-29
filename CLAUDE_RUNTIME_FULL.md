@@ -211,16 +211,16 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提とする。
 
 ```bash
 # ターミナル1
-cd apps/www && npm run dev    # ポート 3000
+cd apps/www && npm run dev    # ポート 3001
 
 # ターミナル2
-cd apps/app && npm run dev    # ポート 3001
+cd apps/app && npm run dev    # ポート 3002
 
 # ターミナル3
-cd apps/admin && npm run dev  # ポート 3002
+cd apps/admin && npm run dev  # ポート 3003
 
 # ターミナル4
-cd apps/ops && npm run dev    # ポート 3003
+cd apps/ops && npm run dev    # ポート 3004
 ```
 
 または、モノレポのルートから：
@@ -234,10 +234,10 @@ pnpm --filter ops dev &
 
 #### アクセスURL
 
-- http://www.local.test:3000
-- http://app.local.test:3001
-- http://admin.local.test:3002
-- http://ops.local.test:3003
+- http://www.local.test:3001
+- http://app.local.test:3002
+- http://admin.local.test:3003
+- http://ops.local.test:3004
 
 #### /etc/hosts 設定
 
@@ -252,7 +252,7 @@ pnpm --filter ops dev &
 
 #### Cookie共有の前提
 
-- `Domain=.local.test` のCookieは、`app.local.test:3001` や `admin.local.test:3002` のようにポートが違っていても共有される。ポート番号はCookieのスコープ判定条件ではない。
+- `Domain=.local.test` のCookieは、`app.local.test:3002` や `admin.local.test:3003` のようにポートが違っていても共有される。ポート番号はCookieのスコープ判定条件ではない。
 
 - つまり、ローカルでもサブドメイン間SSO的な動作は基本的に再現できる想定。
 

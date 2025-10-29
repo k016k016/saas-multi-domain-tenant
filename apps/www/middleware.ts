@@ -1,141 +1,44 @@
+/**
+ * このmiddlewareは www ドメイン専用（LP/公開用）。
+ *
+ * - 機密データや組織内部データを返さない。
+ * - 認証済みユーザーの管理画面(admin)をここで代理提供しない。
+ * - wwwドメインは基本的に誰でもアクセス可能（ログイン不要の公開サイト）。
+ *
+ * 禁止:
+ * - wwwをゲートウェイ化して、host名やパスで admin/app/ops にrewriteする。
+ *   各ドメインは別アプリとして独立デプロイされる前提。
+ * - 他ドメイン（app/admin/ops）のルーティングや認可を肩代わりする。
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentRole, hasRole, type Role } from '@repo/config';
-
-type DomainType = 'www' | 'app' | 'admin' | 'ops';
-
-/**
- * Server Action/RSCリクエストかどうかを判定
- * これらのリクエストは無条件で素通しさせる必要がある
- */
-function isServerActionOrRSC(request: NextRequest): boolean {
-  const headers = request.headers;
-
-  // Next.js Server Actionsのヘッダー
-  if (headers.get('next-action')) {
-    return true;
-  }
-
-  // RSC (React Server Components) リクエスト
-  if (headers.get('rsc')) {
-    return true;
-  }
-
-  // Prefetchリクエスト
-  if (headers.get('next-router-prefetch')) {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * ホスト名からドメインタイプを判定
- */
-function getDomainType(host: string | null): DomainType {
-  if (!host) {
-    return 'www'; // デフォルト
-  }
-
-  // サブドメインを抽出
-  if (host.startsWith('app.')) {
-    return 'app';
-  }
-  if (host.startsWith('admin.')) {
-    return 'admin';
-  }
-  if (host.startsWith('ops.')) {
-    return 'ops';
-  }
-
-  // www または ルートドメイン
-  return 'www';
-}
-
-/**
- * OPSドメインのIP制限チェック（将来実装）
- */
-function isAllowedIP(ip: string | undefined): boolean {
-  // TODO: 本番環境では実際のIP制限を実装
-  // 現時点では全て許可
-  return true;
-}
 
 export async function middleware(request: NextRequest) {
-  // 1. Server Action/RSCリクエストは無条件で素通し
-  // IMPORTANT: これを最優先で処理すること
-  if (isServerActionOrRSC(request)) {
-    return NextResponse.next();
-  }
+  // 1. wwwドメインは基本的に全員アクセス可能
+  //    LP・ログイン導線・公開情報のみを提供
+  //    特別なアクセス制御は不要
 
-  // 2. 静的ファイル（画像、フォントなど）は素通し
+  // 2. 将来的にはログイン済みユーザーを適切なドメインにリダイレクトする処理を追加
+  // TODO: 認証状態とロールに応じてリダイレクト
+  // if (isAuthenticated()) {
+  //   const { role } = await getCurrentRole();
+  //   if (role === 'ops') {
+  //     return NextResponse.redirect(new URL('http://ops.example.com', request.url));
+  //   }
+  //   // 他のロールはappドメインへ
+  //   return NextResponse.redirect(new URL('http://app.example.com', request.url));
+  // }
+
+  // 3. wwwドメインのリクエストをwwwディレクトリにリライト
   const pathname = request.nextUrl.pathname;
-  if (
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/static/') ||
-    pathname.includes('.') // 拡張子を持つファイル
-  ) {
+
+  // 既にwwwディレクトリ配下にいる場合はリライトしない
+  if (pathname.startsWith('/www')) {
     return NextResponse.next();
   }
 
-  // 3. ホスト名からドメインタイプを判定
-  const host = request.headers.get('host');
-  const domainType = getDomainType(host);
-
-  // 4. 現在のユーザーロールを取得
-  // TODO: 将来的にはSupabaseセッションから取得
-  // 現時点ではダミー実装（packages/config/src/auth.ts）
-  const { role } = await getCurrentRole();
-
-  // 5. ロールベースのアクセス制御
-  // 重要な設計方針:
-  // - この制御はorg_idベースのマルチテナントアーキテクチャを前提とする
-  // - この前提を崩す提案（例: グローバルadmin、組織横断アクセス）は禁止
-  // - ロール階層は member ⊂ admin ⊂ owner (opsは別枠) で固定
-
-  if (domainType === 'admin') {
-    // adminドメイン: admin または owner のみアクセス可能
-    // memberは組織管理・請求・リスク領域にアクセスできない
-    if (!hasRole(role, 'admin')) {
-      console.log(`[Middleware] Access denied: role=${role} tried to access admin domain`);
-      return new Response(
-        `403 Forbidden\n\nYou do not have permission to access the admin domain.\nRequired role: admin or owner\nYour role: ${role}`,
-        { status: 403, headers: { 'Content-Type': 'text/plain' } }
-      );
-    }
-  }
-
-  if (domainType === 'ops') {
-    // opsドメイン: ops ロールのみアクセス可能
-    // 事業者側の内部コンソール領域
-    if (role !== 'ops') {
-      console.log(`[Middleware] Access denied: role=${role} tried to access ops domain`);
-      return new Response(
-        `403 Forbidden\n\nYou do not have permission to access the ops domain.\nRequired role: ops\nYour role: ${role}`,
-        { status: 403, headers: { 'Content-Type': 'text/plain' } }
-      );
-    }
-
-    // OPSドメインのIP制限（追加のセキュリティレイヤー）
-    const ip = request.ip;
-    if (!isAllowedIP(ip)) {
-      return new Response('Forbidden: IP not allowed', { status: 403 });
-    }
-  }
-
-  // appドメインとwwwドメインはすべてのロールがアクセス可能
-  // - app: member/admin/owner が日常業務で使用
-  // - www: 認証前の公開サイト
-
-  // 6. 適切なドメイン別ディレクトリにリライト
-  // 既にドメイン別ディレクトリ配下にいる場合はリライトしない
-  if (pathname.startsWith(`/${domainType}`)) {
-    return NextResponse.next();
-  }
-
-  // ドメイン別ディレクトリへのリライト
-  const rewriteUrl = new URL(`/${domainType}${pathname}`, request.url);
-
-  console.log(`[Middleware] Rewriting: ${pathname} -> /${domainType}${pathname} (host: ${host}, role: ${role})`);
+  // wwwディレクトリへのリライト
+  const rewriteUrl = new URL(`/www${pathname}`, request.url);
 
   return NextResponse.rewrite(rewriteUrl);
 }

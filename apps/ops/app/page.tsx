@@ -24,12 +24,12 @@ export default async function OpsHomePage() {
     <div style={{ padding: '2rem' }}>
       <h1>Ops コンソール</h1>
 
-      <section style={{ marginTop: '2rem', padding: '2rem', border: '2px solid #6366f1', borderRadius: '4px', background: '#f5f3ff', textAlign: 'center' }}>
-        <h2 style={{ color: '#6366f1' }}>Internal Only / Ops Only</h2>
-        <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+      <section style={{ marginTop: '2rem', padding: '2rem', border: '2px solid #6366f1', borderRadius: '4px', background: '#1e1b4b', textAlign: 'center' }}>
+        <h2 style={{ color: '#a5b4fc' }}>Internal Only / Ops Only</h2>
+        <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#c7d2fe' }}>
           このドメインは事業者側（SaaS提供者）の内部コンソール領域です。
         </p>
-        <p style={{ fontSize: '0.875rem', color: '#666' }}>
+        <p style={{ fontSize: '0.875rem', color: '#c7d2fe' }}>
           現在のロール: <strong>{role}</strong>
         </p>
       </section>
@@ -44,9 +44,9 @@ export default async function OpsHomePage() {
         </ul>
       </section>
 
-      <section style={{ marginTop: '2rem', padding: '1rem', background: '#fef3c7', borderRadius: '4px' }}>
-        <h3 style={{ margin: 0 }}>注意</h3>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+      <section style={{ marginTop: '2rem', padding: '1rem', background: '#422006', border: '1px solid #92400e', borderRadius: '4px' }}>
+        <h3 style={{ margin: 0, color: '#fbbf24' }}>注意</h3>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#fde68a' }}>
           今回の雛形では、機能自体は実装していません。
           このダミーページのみで、実際の機能は将来実装する想定です。
         </p>
