@@ -1,14 +1,19 @@
 /**
- * 認証・組織コンテキスト取得のダミー実装
+ * 認証・組織コンテキスト取得
  *
- * 将来的にはSupabaseセッションからorg_id/roleを解決する予定。
+ * Supabaseセッションとorg_id CookieからユーザーのロールとアクティブなorgIdを取得。
  * middlewareがorg_idを前提に動作し、アクティブな組織コンテキストを管理する。
  *
  * 重要な設計方針:
  * - Server Actionでは `{ success, nextUrl }` を返し、`redirect()`は使用しない。
  * - 画面遷移はクライアント側で `router.push(nextUrl)` 等を使って行う。
  * - org_idベースのアクセス制御とRLSは必須であり、バイパスは許可しない。
+ * - デフォルトでmemberにしない、未所属orgへのアクセスは許可しない。
+ * - Server Component / Server Action のみで使用（Client Componentでは使用禁止）
  */
+
+import { createServerClient } from '@repo/db';
+import { getOrgIdCookie } from './cookies';
 
 export type Role = 'member' | 'admin' | 'owner' | 'ops';
 
@@ -24,63 +29,108 @@ export interface RoleContext {
 /**
  * 現在アクティブな組織コンテキストを取得
  *
- * 【現在の実装】
- * ハードコードされたダミー値を返す。
+ * CookieからアクティブなorgIdを取得し、organizationsテーブルから組織情報を取得。
  *
- * 【将来の実装】
- * - Supabaseセッション + Cookieからアクティブなorg_idを取得
- * - middlewareでorg_idの妥当性検証済みであることを前提とする
- * - ユーザーが所属していないorg_idの場合は401/403を返す
+ * 【重要な制約】
+ * - Cookie に org_id が無い場合は null を返す（デフォルト組織は設定しない）
+ * - 組織が見つからない場合は null を返す
+ * - redirect() は使用しない（呼び出し側で nextUrl を使って遷移する）
+ * - Server Component / Server Action のみで使用
+ *
+ * @returns OrgContext | null
  */
-export async function getCurrentOrg(): Promise<OrgContext> {
-  // TODO: 実際にはSupabaseセッション + Cookieから取得
-  return {
-    orgId: 'org_dummy_12345',
-    orgName: 'サンプル組織A',
-  };
+export async function getCurrentOrg(): Promise<OrgContext | null> {
+  try {
+    // 1. Cookie から org_id を取得
+    const orgId = await getOrgIdCookie();
+    if (!orgId) {
+      // 組織が選択されていない → null を返す（呼び出し側で /switch-org へ誘導）
+      return null;
+    }
+
+    // 2. Supabase で組織情報を取得
+    const supabase = createServerClient();
+    const { data: org, error } = await supabase
+      .from('organizations')
+      .select('id, name')
+      .eq('id', orgId)
+      .single();
+
+    if (error || !org) {
+      console.error('[getCurrentOrg] Organization not found:', { orgId, error });
+      // 組織が見つからない → Cookie が無効 → null を返す
+      return null;
+    }
+
+    return {
+      orgId: org.id,
+      orgName: org.name,
+    };
+  } catch (error) {
+    console.error('[getCurrentOrg] Unexpected error:', error);
+    return null;
+  }
 }
 
 /**
  * 現在のユーザーのロールを取得
  *
- * 【現在の実装】
- * ハードコードされたダミー値を返す。
+ * Supabase Sessionから user_id を取得し、Cookieから org_id を取得して、
+ * profiles テーブルから該当ユーザーのロールを取得。
  *
- * 【将来の実装】
- * 1. Supabase Sessionから user_id を取得:
- *    ```typescript
- *    import { createServerClient } from '@repo/db';
- *    const supabase = createServerClient();
- *    const { data: { session } } = await supabase.auth.getSession();
- *    const userId = session?.user?.id;
- *    ```
+ * 【重要な制約】
+ * - Session が無い場合は null を返す（デフォルトでmemberにしない）
+ * - Cookie に org_id が無い場合は null を返す
+ * - ユーザーが指定orgに所属していない場合は null を返す（未所属orgへのアクセス禁止）
+ * - redirect() は使用しない（呼び出し側で nextUrl を使って遷移する）
+ * - Server Component / Server Action のみで使用
  *
- * 2. Cookieから org_id を取得:
- *    ```typescript
- *    import { getOrgIdCookie } from './cookies';
- *    const orgId = await getOrgIdCookie();
- *    ```
+ * ロール階層: member ⊂ admin ⊂ owner (opsは別枠)
+ * この階層は固定であり、変更・追加・統合は禁止。
  *
- * 3. profiles テーブルから role を SELECT:
- *    ```typescript
- *    const { data } = await supabase
- *      .from('profiles')
- *      .select('role')
- *      .eq('user_id', userId)
- *      .eq('org_id', orgId)
- *      .single();
- *    return { role: data.role };
- *    ```
- *
- * - ロール階層: member ⊂ admin ⊂ owner (opsは別枠)
- * - この階層は固定であり、変更・追加・統合は禁止
+ * @returns RoleContext | null
  */
-export async function getCurrentRole(): Promise<RoleContext> {
-  // TODO: 実際にはSupabase profilesテーブルから取得
-  // 開発時はここを 'member' / 'admin' / 'owner' / 'ops' に切り替えてテスト可能
-  return {
-    role: 'admin',
-  };
+export async function getCurrentRole(): Promise<RoleContext | null> {
+  try {
+    // 1. Supabase Session から user_id を取得
+    const supabase = createServerClient();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.user?.id) {
+      // セッションが無い → 未認証 → null を返す
+      return null;
+    }
+
+    const userId = session.user.id;
+
+    // 2. Cookie から org_id を取得
+    const orgId = await getOrgIdCookie();
+    if (!orgId) {
+      // 組織が選択されていない → null を返す
+      return null;
+    }
+
+    // 3. profiles テーブルから role を SELECT
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('org_id', orgId)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('[getCurrentRole] Profile not found:', { userId, orgId, error: profileError });
+      // ユーザーがこの組織に所属していない → null を返す（未所属orgへのアクセス禁止）
+      return null;
+    }
+
+    return {
+      role: profile.role as Role,
+    };
+  } catch (error) {
+    console.error('[getCurrentRole] Unexpected error:', error);
+    return null;
+  }
 }
 
 /**
