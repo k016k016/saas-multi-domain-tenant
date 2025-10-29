@@ -101,33 +101,192 @@ CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created
 -- Row Level Security (RLS) Policies
 -- ============================================================
 --
--- TODO: RLS policies
+-- org_id ベースのマルチテナント隔離を実現する RLS ポリシー。
+-- 別組織のレコードはDBレベルで完全に弾かれる。
 --
--- 将来的には以下のポリシーを実装する:
---
--- 1. organizations テーブル
---    - ユーザーが profiles 経由で所属している org のみ読み取り可能
---    - 更新は admin 以上の権限が必要
---
--- 2. profiles テーブル
---    - 自分が所属している org のプロフィールのみ読み取り可能
---    - 更新・削除は admin 以上の権限が必要
---    - owner の削除は禁止
---
--- 3. activity_logs テーブル
---    - 自分が所属している org のログのみ読み取り可能
---    - 挿入はアプリケーション経由のみ（サービスロールキー）
---    - 更新・削除は禁止（監査ログの改ざん防止）
---
--- 重要: RLS を無効化・バイパスする実装は許可しない。
--- 　　　org_id 単位のアクセス制御は必須。
+-- 重要な原則:
+-- - RLS を無効化・バイパスする実装は許可しない
+-- - org_id 単位のアクセス制御は必須
+-- - 開発中も RLS を OFF にすることは禁止
+-- - ops ロールは特殊ロールとして全組織のデータにアクセス可能
 --
 -- ============================================================
 
--- RLS を有効化（将来のポリシー実装に備える）
+-- RLS を有効化
 ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+
+-- ------------------------------------------------------------
+-- 1. organizations テーブルの RLS ポリシー
+-- ------------------------------------------------------------
+
+-- 【SELECT】ユーザーが profiles 経由で所属している org のみ読み取り可能
+-- ops ロールは全組織にアクセス可能
+CREATE POLICY "organizations_select_policy"
+ON organizations
+FOR SELECT
+USING (
+  -- ops ロールの場合は全組織にアクセス可能
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.role = 'ops'
+  )
+  OR
+  -- 通常ユーザーは自分が所属する組織のみ
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.org_id = organizations.id
+  )
+);
+
+-- 【UPDATE】admin 以上のロールのみ更新可能
+CREATE POLICY "organizations_update_policy"
+ON organizations
+FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.org_id = organizations.id
+    AND profiles.role IN ('admin', 'owner', 'ops')
+  )
+);
+
+-- 【INSERT】ops ロールのみ新規組織を作成可能
+CREATE POLICY "organizations_insert_policy"
+ON organizations
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.role = 'ops'
+  )
+);
+
+-- 【DELETE】ops ロールのみ組織を削除可能
+CREATE POLICY "organizations_delete_policy"
+ON organizations
+FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.role = 'ops'
+  )
+);
+
+-- ------------------------------------------------------------
+-- 2. profiles テーブルの RLS ポリシー
+-- ------------------------------------------------------------
+
+-- 【SELECT】自分が所属している org のプロフィールのみ読み取り可能
+-- ops ロールは全プロフィールにアクセス可能
+CREATE POLICY "profiles_select_policy"
+ON profiles
+FOR SELECT
+USING (
+  -- ops ロールの場合は全プロフィールにアクセス可能
+  EXISTS (
+    SELECT 1 FROM profiles AS p
+    WHERE p.user_id = auth.uid()
+    AND p.role = 'ops'
+  )
+  OR
+  -- 通常ユーザーは自分が所属する組織のプロフィールのみ
+  EXISTS (
+    SELECT 1 FROM profiles AS p
+    WHERE p.user_id = auth.uid()
+    AND p.org_id = profiles.org_id
+  )
+);
+
+-- 【INSERT】admin 以上のロールのみ新規プロフィールを作成可能
+CREATE POLICY "profiles_insert_policy"
+ON profiles
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM profiles AS p
+    WHERE p.user_id = auth.uid()
+    AND p.org_id = profiles.org_id
+    AND p.role IN ('admin', 'owner', 'ops')
+  )
+);
+
+-- 【UPDATE】admin 以上のロールのみ更新可能
+CREATE POLICY "profiles_update_policy"
+ON profiles
+FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles AS p
+    WHERE p.user_id = auth.uid()
+    AND p.org_id = profiles.org_id
+    AND p.role IN ('admin', 'owner', 'ops')
+  )
+);
+
+-- 【DELETE】admin 以上のロールのみ削除可能
+-- 注意: owner の削除はアプリケーションレベルで禁止（この RLS では制御しない）
+CREATE POLICY "profiles_delete_policy"
+ON profiles
+FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles AS p
+    WHERE p.user_id = auth.uid()
+    AND p.org_id = profiles.org_id
+    AND p.role IN ('admin', 'owner', 'ops')
+  )
+);
+
+-- ------------------------------------------------------------
+-- 3. activity_logs テーブルの RLS ポリシー
+-- ------------------------------------------------------------
+
+-- 【SELECT】自分が所属している org のログのみ読み取り可能
+-- ops ロールは全ログにアクセス可能
+CREATE POLICY "activity_logs_select_policy"
+ON activity_logs
+FOR SELECT
+USING (
+  -- ops ロールの場合は全ログにアクセス可能
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.role = 'ops'
+  )
+  OR
+  -- 通常ユーザーは自分が所属する組織のログのみ
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.org_id = activity_logs.org_id
+  )
+);
+
+-- 【INSERT】すべての認証済みユーザーがログを挿入可能
+-- （自分が所属する組織のログのみ）
+CREATE POLICY "activity_logs_insert_policy"
+ON activity_logs
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.user_id = auth.uid()
+    AND profiles.org_id = activity_logs.org_id
+  )
+);
+
+-- 【UPDATE】禁止（監査ログの改ざん防止）
+-- ポリシーを作成しないことで UPDATE を禁止
+
+-- 【DELETE】禁止（監査ログの改ざん防止）
+-- ポリシーを作成しないことで DELETE を禁止
 
 -- ============================================================
 -- 初期データ（開発用）
