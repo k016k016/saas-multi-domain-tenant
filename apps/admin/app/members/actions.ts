@@ -63,19 +63,90 @@ export async function inviteUser(
 
   // 4. ユーザー招待処理
   // TODO: 実際にはSupabase Authの招待機能を使用
-  // - supabase.auth.admin.inviteUserByEmail(email, { data: { org_id, role } })
-  // - 招待メールが自動送信される
-  // - ユーザーがリンクをクリックしてサインアップ完了
+  //
+  // 【実装パス】
+  // import { createServerClient } from '@repo/db';
+  // const supabase = createServerClient();
+  //
+  // // 4-1. 現在のユーザーIDを取得
+  // const { data: { session } } = await supabase.auth.getSession();
+  // const currentUserId = session?.user?.id;
+  // if (!currentUserId) {
+  //   return { success: false, error: '認証セッションが見つかりません' };
+  // }
+  //
+  // // 4-2. 同じメールアドレスのユーザーが既に存在するか確認
+  // const { data: existingUser } = await supabase
+  //   .from('profiles')
+  //   .select('id, email')
+  //   .eq('org_id', org.orgId)
+  //   .eq('email', email)
+  //   .single();
+  //
+  // if (existingUser) {
+  //   return { success: false, error: 'このメールアドレスは既に登録されています' };
+  // }
+  //
+  // // 4-3. Supabase Auth経由で招待メールを送信
+  // // ※ Service Role Key使用時のみ利用可能
+  // const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+  //   email,
+  //   {
+  //     data: {
+  //       org_id: org.orgId,
+  //       role: role,
+  //       invited_by: currentUserId,
+  //     },
+  //     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+  //   }
+  // );
+  //
+  // if (inviteError) {
+  //   console.error('[inviteUser] Invite error:', inviteError);
+  //   return { success: false, error: '招待メールの送信に失敗しました' };
+  // }
+  //
+  // // 4-4. profilesテーブルに仮ユーザーレコードを作成
+  // const { error: profileError } = await supabase
+  //   .from('profiles')
+  //   .insert({
+  //     user_id: inviteData.user.id, // 招待されたユーザーのID
+  //     org_id: org.orgId,
+  //     email: email,
+  //     role: role,
+  //     status: 'pending', // 招待メール未承認状態
+  //     invited_at: new Date().toISOString(),
+  //     invited_by: currentUserId,
+  //   });
+  //
+  // if (profileError) {
+  //   console.error('[inviteUser] Profile creation error:', profileError);
+  //   return { success: false, error: 'ユーザーレコードの作成に失敗しました' };
+  // }
   console.log(`[inviteUser] Inviting ${email} as ${role} to org ${org.orgId}`);
-
-  // TODO: profilesテーブルに仮ユーザーを作成
-  // INSERT INTO profiles (org_id, email, role, status, invited_at, invited_by)
-  // VALUES (org_id, email, role, 'pending', NOW(), current_user_id)
 
   // 5. 監査ログ記録
   // TODO: activity_logsテーブルに記録
-  // INSERT INTO activity_logs (user_id, org_id, action, details)
-  // VALUES (current_user_id, org_id, 'user_invited', { email, role })
+  //
+  // 【実装パス】
+  // const { error: logError } = await supabase
+  //   .from('activity_logs')
+  //   .insert({
+  //     user_id: currentUserId,
+  //     org_id: org.orgId,
+  //     action: 'user_invited',
+  //     details: {
+  //       invited_email: email,
+  //       invited_role: role,
+  //       invited_user_id: inviteData.user.id,
+  //       timestamp: new Date().toISOString(),
+  //     },
+  //   });
+  //
+  // if (logError) {
+  //   console.error('[inviteUser] Activity log error:', logError);
+  //   // ログ失敗は致命的エラーではないが、ワーニングを出す
+  // }
 
   // 6. 成功を返す
   return {
@@ -124,25 +195,80 @@ export async function changeUserRole(
 
   // 4. 対象ユーザーのロールを確認
   // TODO: 実際にはSupabase profilesテーブルから取得
-  // const targetUser = await getUser(targetUserId, org.orgId);
+  //
+  // 【実装パス】
+  // import { createServerClient } from '@repo/db';
+  // const supabase = createServerClient();
+  //
+  // // 4-1. 現在のユーザーIDを取得
+  // const { data: { session } } = await supabase.auth.getSession();
+  // const currentUserId = session?.user?.id;
+  // if (!currentUserId) {
+  //   return { success: false, error: '認証セッションが見つかりません' };
+  // }
+  //
+  // // 4-2. 対象ユーザーの情報を取得
+  // const { data: targetUser, error: fetchError } = await supabase
+  //   .from('profiles')
+  //   .select('user_id, email, role')
+  //   .eq('user_id', targetUserId)
+  //   .eq('org_id', org.orgId)
+  //   .single();
+  //
+  // if (fetchError || !targetUser) {
+  //   console.error('[changeUserRole] User fetch error:', fetchError);
+  //   return { success: false, error: '対象ユーザーが見つかりません' };
+  // }
+  //
+  // const oldRole = targetUser.role;
 
   // ownerのロール変更は禁止
   // if (targetUser.role === 'owner') {
   //   return {
   //     success: false,
-  //     error: 'ownerのロールは変更できません',
+  //     error: 'ownerのロールは変更できません。owner権限を譲渡する場合は専用の譲渡機能を使用してください。',
   //   };
   // }
 
   // 5. ロール変更処理
   // TODO: 実際にはSupabase profilesテーブルを更新
-  // UPDATE profiles SET role = newRole WHERE user_id = targetUserId AND org_id = org.orgId
+  //
+  // 【実装パス】
+  // const { error: updateError } = await supabase
+  //   .from('profiles')
+  //   .update({ role: newRole, updated_at: new Date().toISOString() })
+  //   .eq('user_id', targetUserId)
+  //   .eq('org_id', org.orgId);
+  //
+  // if (updateError) {
+  //   console.error('[changeUserRole] Role update error:', updateError);
+  //   return { success: false, error: 'ロールの変更に失敗しました' };
+  // }
   console.log(`[changeUserRole] Changing user ${targetUserId} role to ${newRole} in org ${org.orgId}`);
 
   // 6. 監査ログ記録
   // TODO: activity_logsテーブルに記録
-  // INSERT INTO activity_logs (user_id, org_id, action, details)
-  // VALUES (current_user_id, org_id, 'role_changed', { target_user_id, old_role, new_role })
+  //
+  // 【実装パス】
+  // const { error: logError } = await supabase
+  //   .from('activity_logs')
+  //   .insert({
+  //     user_id: currentUserId,
+  //     org_id: org.orgId,
+  //     action: 'role_changed',
+  //     details: {
+  //       target_user_id: targetUserId,
+  //       target_email: targetUser.email,
+  //       old_role: oldRole,
+  //       new_role: newRole,
+  //       timestamp: new Date().toISOString(),
+  //     },
+  //   });
+  //
+  // if (logError) {
+  //   console.error('[changeUserRole] Activity log error:', logError);
+  //   // ログ失敗は致命的エラーではないが、ワーニングを出す
+  // }
 
   // 7. 成功を返す
   return {
@@ -182,7 +308,30 @@ export async function removeUser(
 
   // 4. 対象ユーザーのロールを確認
   // TODO: 実際にはSupabase profilesテーブルから取得
-  // const targetUser = await getUser(targetUserId, org.orgId);
+  //
+  // 【実装パス】
+  // import { createServerClient } from '@repo/db';
+  // const supabase = createServerClient();
+  //
+  // // 4-1. 現在のユーザーIDを取得
+  // const { data: { session } } = await supabase.auth.getSession();
+  // const currentUserId = session?.user?.id;
+  // if (!currentUserId) {
+  //   return { success: false, error: '認証セッションが見つかりません' };
+  // }
+  //
+  // // 4-2. 対象ユーザーの情報を取得
+  // const { data: targetUser, error: fetchError } = await supabase
+  //   .from('profiles')
+  //   .select('user_id, email, role')
+  //   .eq('user_id', targetUserId)
+  //   .eq('org_id', org.orgId)
+  //   .single();
+  //
+  // if (fetchError || !targetUser) {
+  //   console.error('[removeUser] User fetch error:', fetchError);
+  //   return { success: false, error: '対象ユーザーが見つかりません' };
+  // }
 
   // ownerの削除は禁止
   // if (targetUser.role === 'owner') {
@@ -194,14 +343,54 @@ export async function removeUser(
 
   // 5. ユーザー削除/無効化処理
   // TODO: 実際にはSupabase profilesテーブルを更新
-  // - 論理削除の場合: UPDATE profiles SET status = 'inactive' WHERE user_id = targetUserId AND org_id = org.orgId
-  // - 物理削除の場合: DELETE FROM profiles WHERE user_id = targetUserId AND org_id = org.orgId
+  //
+  // 【実装パス】
+  // 論理削除を推奨（監査証跡を保持）:
+  // const { error: deleteError } = await supabase
+  //   .from('profiles')
+  //   .update({
+  //     status: 'inactive',
+  //     deleted_at: new Date().toISOString(),
+  //     deleted_by: currentUserId,
+  //   })
+  //   .eq('user_id', targetUserId)
+  //   .eq('org_id', org.orgId);
+  //
+  // 物理削除の場合（監査要件に注意）:
+  // const { error: deleteError } = await supabase
+  //   .from('profiles')
+  //   .delete()
+  //   .eq('user_id', targetUserId)
+  //   .eq('org_id', org.orgId);
+  //
+  // if (deleteError) {
+  //   console.error('[removeUser] Delete error:', deleteError);
+  //   return { success: false, error: 'ユーザーの削除に失敗しました' };
+  // }
   console.log(`[removeUser] Removing user ${targetUserId} from org ${org.orgId}`);
 
   // 6. 監査ログ記録
   // TODO: activity_logsテーブルに記録
-  // INSERT INTO activity_logs (user_id, org_id, action, details)
-  // VALUES (current_user_id, org_id, 'user_removed', { target_user_id })
+  //
+  // 【実装パス】
+  // const { error: logError } = await supabase
+  //   .from('activity_logs')
+  //   .insert({
+  //     user_id: currentUserId,
+  //     org_id: org.orgId,
+  //     action: 'user_removed',
+  //     details: {
+  //       target_user_id: targetUserId,
+  //       target_email: targetUser.email,
+  //       target_role: targetUser.role,
+  //       timestamp: new Date().toISOString(),
+  //     },
+  //   });
+  //
+  // if (logError) {
+  //   console.error('[removeUser] Activity log error:', logError);
+  //   // ログ失敗は致命的エラーではないが、ワーニングを出す
+  // }
 
   // 7. 成功を返す
   return {
