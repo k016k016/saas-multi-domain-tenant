@@ -47,13 +47,37 @@ export async function getCurrentOrg(): Promise<OrgContext> {
  * ハードコードされたダミー値を返す。
  *
  * 【将来の実装】
- * - Supabaseのprofilesテーブルから、現在のユーザーとorg_idの組み合わせでroleを取得
+ * 1. Supabase Sessionから user_id を取得:
+ *    ```typescript
+ *    import { createServerClient } from '@repo/db';
+ *    const supabase = createServerClient();
+ *    const { data: { session } } = await supabase.auth.getSession();
+ *    const userId = session?.user?.id;
+ *    ```
+ *
+ * 2. Cookieから org_id を取得:
+ *    ```typescript
+ *    import { getOrgIdCookie } from './cookies';
+ *    const orgId = await getOrgIdCookie();
+ *    ```
+ *
+ * 3. profiles テーブルから role を SELECT:
+ *    ```typescript
+ *    const { data } = await supabase
+ *      .from('profiles')
+ *      .select('role')
+ *      .eq('user_id', userId)
+ *      .eq('org_id', orgId)
+ *      .single();
+ *    return { role: data.role };
+ *    ```
+ *
  * - ロール階層: member ⊂ admin ⊂ owner (opsは別枠)
  * - この階層は固定であり、変更・追加・統合は禁止
  */
 export async function getCurrentRole(): Promise<RoleContext> {
   // TODO: 実際にはSupabase profilesテーブルから取得
-  // 開発時はここを 'member' / 'admin' / 'owner' に切り替えてテスト可能
+  // 開発時はここを 'member' / 'admin' / 'owner' / 'ops' に切り替えてテスト可能
   return {
     role: 'admin',
   };

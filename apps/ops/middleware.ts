@@ -35,11 +35,22 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // 3. TODO: 将来的にはIP制限を追加
-  // const clientIp = request.headers.get('x-forwarded-for') || request.ip;
-  // if (!isAllowedIp(clientIp)) {
-  //   return new Response('403 Forbidden - IP not allowed', { status: 403 });
-  // }
+  // 3. TODO: 将来的にはIP制限とログイン確認を追加
+  //
+  // IP制限:
+  //   const clientIp = request.headers.get('x-forwarded-for') || request.ip;
+  //   const allowedIps = process.env.OPS_ALLOWED_IPS?.split(',') || [];
+  //   if (!allowedIps.includes(clientIp)) {
+  //     return new Response('403 Forbidden - IP not allowed', { status: 403 });
+  //   }
+  //
+  // Supabase Sessionの確認:
+  //   import { createServerClient } from '@repo/db';
+  //   const supabase = createServerClient();
+  //   const { data: { session } } = await supabase.auth.getSession();
+  //   if (!session) {
+  //     return NextResponse.redirect(new URL('/login', request.url));
+  //   }
 
   // 4. 権限OK: 次の処理へ
   return NextResponse.next();

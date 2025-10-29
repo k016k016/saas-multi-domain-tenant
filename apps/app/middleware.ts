@@ -36,12 +36,21 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. TODO: 将来的にはログイン状態とorg_idの確認を追加
-  // if (!isAuthenticated()) {
-  //   return NextResponse.redirect(new URL('/login', request.url));
-  // }
-  // if (!hasOrgId()) {
-  //   return NextResponse.redirect(new URL('/switch-org', request.url));
-  // }
+  //
+  // Supabase Sessionの確認:
+  //   import { createServerClient } from '@repo/db';
+  //   const supabase = createServerClient();
+  //   const { data: { session } } = await supabase.auth.getSession();
+  //   if (!session) {
+  //     return NextResponse.redirect(new URL('/login', request.url));
+  //   }
+  //
+  // org_id Cookieの確認:
+  //   import { getOrgIdCookie } from '@repo/config';
+  //   const orgId = await getOrgIdCookie();
+  //   if (!orgId) {
+  //     return NextResponse.redirect(new URL('/switch-org', request.url));
+  //   }
 
   // 4. 権限OK: 次の処理へ
   return NextResponse.next();
