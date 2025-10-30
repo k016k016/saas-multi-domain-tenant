@@ -32,13 +32,12 @@ export default function HomePage() {
       <section style={{ marginTop: '2rem' }}>
         <h2>ログイン</h2>
         <p>
-          {/* TODO: 実際のログインフローは未実装 */}
-          ログイン機能は現在未実装です。
-          開発環境では各ドメインに直接アクセスできます。
+          メールアドレスでログインできます。
+          Magic Link（ワンタイムログインリンク）を送信します。
         </p>
         <div style={{ marginTop: '1rem' }}>
           <a
-            href={process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002'}
+            href="/www/login"
             style={{
               display: 'inline-block',
               padding: '0.5rem 1rem',
@@ -48,7 +47,7 @@ export default function HomePage() {
               textDecoration: 'none',
             }}
           >
-            アプリへ移動（ダミー）
+            ログイン
           </a>
         </div>
       </section>

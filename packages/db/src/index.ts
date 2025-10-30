@@ -2,46 +2,58 @@
  * Supabaseクライアント
  *
  * Server / Client の2種類のSupabaseクライアントを提供する。
- * - Server側: Service Role Key使用、RLSをバイパス可能（慎重に使用）
+ * - Server側: Cookie ベースの認証セッション管理（@supabase/ssr）
  * - Client側: Anon Key使用、RLSで保護される
  *
  * 重要: RLSを無効化・バイパスする実装は許可しない。
- *       Service Role Keyは信頼できるサーバー側コードでのみ使用すること。
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
+import { createBrowserClient as createSupabseBrowserClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 // 環境変数の取得
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 /**
- * サーバー側で使用するSupabaseクライアント
+ * サーバー側で使用するSupabaseクライアント（Cookie ベース）
  *
- * Service Role Keyを使用するため、RLSをバイパス可能。
- * 信頼できるサーバー側のコード（Server Actions, API Routes, middleware等）でのみ使用。
+ * Next.js の cookies() を使用して、サーバー側でセッション管理を行う。
+ * Server Actions, Route Handlers, Server Components で使用。
  *
  * 使用例:
  * ```typescript
  * import { createServerClient } from '@repo/db';
  *
  * const supabase = createServerClient();
- * const { data, error } = await supabase.from('profiles').select('*');
+ * const { data: { user } } = await supabase.auth.getUser();
  * ```
  */
 export function createServerClient() {
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
+  if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
-      'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in environment variables. ' +
+      'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. ' +
       'See infra/supabase/SETUP.md for setup instructions.'
     );
   }
 
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
+  const cookieStore = cookies();
+
+  return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Server Component 内での set は無視（middleware で処理）
+        }
+      },
     },
   });
 }
@@ -58,31 +70,19 @@ export function createServerClient() {
  * import { createBrowserClient } from '@repo/db';
  *
  * const supabase = createBrowserClient();
- * const { data, error } = await supabase.from('profiles').select('*');
+ * const { data: { user } } = await supabase.auth.getUser();
  * ```
  */
 export function createBrowserClient() {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
-      'SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables. ' +
+      'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. ' +
       'See infra/supabase/SETUP.md for setup instructions.'
     );
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-    },
-  });
+  return createSupabseBrowserClient(supabaseUrl, supabaseAnonKey);
 }
-
-/**
- * レガシー互換用のデフォルトエクスポート（非推奨）
- *
- * @deprecated createServerClient() または createBrowserClient() を使用してください。
- */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // 将来的にはここでDatabase型定義をエクスポート
 // export type Database = ...
