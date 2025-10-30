@@ -4,18 +4,33 @@
 2. SQLエディタで `infra/supabase/migrations/20251030121106_initial_schema.sql` の内容を適用する
    - organizations / profiles / activity_logs が作成されること
    - 13個のRLSポリシーが設定されること
-3. プロジェクト設定から以下を取得し、ルートの `.env.local` に設定する:
+3. **[開発環境のみ]** SQLエディタで `infra/supabase/seed.sql` の内容を適用してサンプルデータを投入する
+   - サンプル組織2件が作成されること
+   - **注意**: このステップは本番環境では実行しないこと
+4. プロジェクト設定から以下を取得し、ルートの `.env.local` に設定する:
    - SUPABASE_URL=
    - SUPABASE_ANON_KEY=
    - SUPABASE_SERVICE_ROLE_KEY=
-4. ローカル開発時は次のドメイン/ポートで各アプリを起動する:
+5. ローカル開発時は次のドメイン/ポートで各アプリを起動する:
    - www.local.test:3001
    - app.local.test:3002
    - admin.local.test:3003
    - ops.local.test:3004
-5. Cookie は `Domain=.local.test` 前提で発行する予定。
+6. Cookie は `Domain=.local.test` 前提で発行する予定。
    - ポートが違っても `.local.test` のCookieは共有される。
    - SameSite=None; Secure は本番用の挙動（ローカルHTTPではSecure Cookieは送られない点に注意）。
+
+## 開発用データのリセット
+
+開発中にデータをリセットしたい場合は、`seed.sql`を再実行してください：
+
+```bash
+# Supabase Studio の SQL Editor で seed.sql を実行
+```
+
+`seed.sql`は以下の操作を行います：
+1. 既存データの削除（activity_logs → profiles → organizations の順）
+2. サンプル組織2件の登録
 
 ## マイグレーション管理
 

@@ -1,122 +1,78 @@
-# マルチテナント / org_id / RLS / 監査ポリシー
+# 機能名: テナンシー / マルチテナント仕様 (Tenancy)
 
-このSaaSは「1つのDBを複数組織(org)で共有する」マルチテナント設計である。  
-データアクセスは常に `org_id` でスコープされ、RLS (Row Level Security) を前提とする。  
-この前提は開発中・テスト中でも外さない。
+## 概要
+本システムはマルチテナントSaaSであり、すべてのデータアクセスは `organization_id` を境界とする。この仕様は、テナント分離の基本原則、RLS（Row Level Security）、組織とロールの関係、ドメイン責務、監査ログの要件を定義する。
 
-## org とユーザー
+## 対象ドメイン
+全ドメイン（`www`, `app`, `admin`, `ops`）に適用される基本仕様
 
-- 1ユーザーは複数のorgに所属できる。
-  - 例: A社のadmin兼B社のmember。
-- 現在アクティブなorgは、セッション（クッキー経由）で保持される `current_org_id` として決まる。
-- アプリ（appドメインなど）は常に「現在のorg_idコンテキストでデータを見る・書く」。
+## 前提・前提条件
+- DBはPostgres/Supabaseを想定
+- Supabase Authが認証のソースオブトゥルース
+- すべてのテーブルは `organization_id` でテナント境界を持っている
+- 現在のアクティブな組織IDはセッションとCookieで保持される
+- 参考: [CLAUDE_RUNTIME_MIN.md](../../CLAUDE_RUNTIME_MIN.md)
 
-### ownerの扱い
-- 各orgには必ず `owner` が1人存在する。
-- `owner` は削除不可。
-- `owner` の交代は「owner権限の譲渡」という明示的な手続きで行う。
-  - 現オーナーが後任を指名し、自分は降格する。
-- `owner` がいないorg状態をテストで再現しようとするのは禁止（仕様外状態とみなす）。
+## 正常フロー
 
-### role
-- ロールは固定:
-  - `member`: 現場の通常ユーザー
-  - `admin`: 組織の運用管理者
-  - `owner`: 組織の代表（各orgに常に1名）
-  - `ops`: SaaS提供者側サポート/監査
-- これ以外のロールを勝手に足さない。
-- `admin` ↔ `member` の付け替えは `admin` / `owner` が行える。
-- `owner` 付与/剥奪は通常のロール変更ではなく、`owner` 譲渡フローのみで行う。
+### 基本前提
+- **1ユーザーは複数の組織(org)に所属できる**
+- **ユーザーはUI上で「現在アクティブな組織(org_id)」を切り替えることができる**
+  - 詳細は [組織切り替え仕様](./organization-switching.md) を参照
+- **現在のorg_idはサーバー側セッションとCookieで保持**
+  - middlewareはこのorg_idを前提にルーティング・アクセス制御を行う
+  - middlewareの挙動を勝手に簡略化・変更しない
 
----
+### RLS（Row Level Security）
+- **すべての行は `organization_id` でスコープされる**
+- **RLSは全てのSELECT/INSERT/UPDATE/DELETEで `organization_id` チェックを行う**
+- **RLSを無効化・バイパスしない（テストでも同様）**
+- **実装位置**: `infra/supabase/migrations/` の初期スキーマおよび後続マイグレーションにて実装済み
+  （詳細は `infra/supabase/RLS.md` を参照）
 
-## RLS (Row Level Security)
+### 組織とロール
+**階層構造**: `member ⊂ admin ⊂ owner`。`ops` は事業者側で別枠。
+- **member**: appで日々の業務。組織/他ユーザー設定は触らない。アクセス: `app.*`
+- **admin**: memberを包含。`admin.*` で同一組織内ユーザーCRUD。owner操作は不可
+- **owner**: adminを包含。支払い変更/凍結・廃止/owner譲渡等が可能。アクセス: `admin.*` と `app.*`。各orgに必ず1人
+- **ops**: 事業者側運用（今はダミー）
 
-- DBはPostgres/Supabaseを想定し、RLSは必須。
-- すべての行は `org_id` を持つ前提で設計する。
-- 「RLSをOFFにして全部見えるようにしてデバッグしましょう」「ops画面からは全orgを直接生で見れるようにしましょう」という提案は仕様違反。
-- あくまで「ユーザーの今のorg_idに対してだけ行を返す」が正しい。
+### ドメイン責務（混ぜない）
+- **`www`**: LP/説明/ログイン導線
+- **`app`**: 日常業務UI（orgコンテキストに依存）
+- **`admin`**: 組織管理・契約・支払い・凍結・権限管理（memberは403）
+- **`ops`**: 事業者側社内用（今はダミー）
+詳細: [マルチドメインパターン](../patterns/multi-domain.md)
 
-`infra/supabase/schema.sql` の方針:
-- `organizations`
-  - `id uuid primary key`
-  - `name text`
-  - `plan text`
-  - `is_active boolean`
-  - `created_at timestamptz`
-- `profiles`
-  - `id uuid primary key`
-  - `org_id uuid`
-  - `role text`  (`member` | `admin` | `owner` | `ops`)
-  - `metadata jsonb`
-  - `updated_at timestamptz`
-- `activity_logs`
-  - `id bigserial primary key`
-  - `org_id uuid`
-  - `user_id uuid`
-  - `action text`
-  - `payload jsonb`
-  - `created_at timestamptz default now()`
+### 監査 (activity_logs)
+必ず記録する操作：
+- 組織切替
+- adminによるユーザー管理（作成/ロール変更/無効化/削除）
+- ownerによる組織レベル操作（支払い変更 / 凍結・廃止 / owner譲渡 / admin権限の付け替え）
+※ 監査ログ仕様は削らない・弱めない
 
-`-- TODO: RLS policies` というコメントで止めておき、RLSポリシーは後続で定義する。ただし「RLSはあとでやります、今日は無効化でいいでしょ」は禁止。  
-RLS抜きの動作確認を正当化するのは、このプロジェクトの思想自体を壊すので不可。
+## 権限制御の原則
+1. **すべてのDBクエリで `organization_id` を明示指定**
+2. **RLSとアプリ側チェックの二重化（RLSは最終防御線）**
+3. **フロントだけで判定を完結させない（Server Actionで再チェック）**
 
----
+## Server Actionの注意
+- 戻り値は `{ success, nextUrl }` で返す
+- `redirect()` は禁止（クライアント側で `router.push()` / `location.assign()`）
 
-## 組織の切り替え (organization switching)
+## 禁止事項
+- RLSの無効化/バイパス
+- 「全件取得してクライアントでフィルタ」
+- `owner` 不在の組織の作成/テスト
+- owner専用操作をappドメインに置く
+- adminにowner相当操作を混ぜる
+- middlewareの簡略化/統合
+- 監査ログの省略/弱体化
 
-- ユーザーは、自分が所属している複数orgの中から、現在アクティブなorgを切り替えられる。
-- 切り替え後のorg_idはサーバ側セッション/クッキーに保持され、app側はそのorgコンテキストで動作する。
-- フロー:
-  1. `/switch-org` のような画面に所属org一覧を表示する。
-  2. ユーザーが選んだorgをServer Actionに渡す。
-  3. Server Actionは
-     - ユーザーがそのorgに所属しているかを検証する（所属していないorg_idは拒否）
-     - セッション上の `current_org_id` を更新する
-     - `{ success: true, nextUrl: "/dashboard" }` のような戻り値を返す
-  4. クライアント側が nextUrl へ遷移する。
-- ポイント:
-  - Server Action内で `redirect()` しない。`{ success, nextUrl }` だけ返す。
-  - アクセス権がないorgを指定した場合は `{ success: false, error: "...", nextUrl: "/unauthorized" }` のように返す。
-  - middlewareは「いまのorg_idは有効か？」を前提に動作するので、勝手にmiddlewareをゆるめて「とりあえず通しときました」はダメ。
-
----
-
-## activity_logs と監査
-
-- 重要操作はすべて `activity_logs` に残す。
-- 対象とする操作の例:
-  - ユーザー招待
-  - ロール変更 (`member` ↔ `admin`)
-  - 請求情報の変更
-  - 組織の凍結/廃止（= is_active の状態遷移）
-  - owner権限の譲渡
-  - admin権限の再割り当て
-- これらは基本的に `admin` ドメイン（= admin/ownerだけが触れるUI）から実行されるべきで、`app` ドメイン側には置かない。
-- 「ログは後でまとめて」「今は動けばいい」は仕様違反。監査が前提文化。
-
----
-
-## middleware とアクセス制御
-
-- 各ドメイン(app / admin / ops / www)はそれぞれ独立したNext.jsアプリであり、それぞれが独自の `middleware.ts` を持つ。
-- middlewareの責務:
-  - そのアプリが許すロール以外を403にする
-  - セッションから `current_org_id` を引き、なければ弾く（app/adminなど）
-- 禁止事項:
-  - `www` 側でサブドメインやパスを見て `admin` 側にrewriteするなど、1つのアプリをゲートウェイ化すること。
-  - appの中にadminの画面をコピーして「便利だからまとめました」とすること。
-
-これらは「権限ごとにartifactを分離する」目的であり、コストや実装の手間を理由に統合しない。
-
----
-
-## 要約
-
-- すべてのデータはorg_idでスコープされる。org_idはユーザーごとに切り替わる。
-- ownerは各orgに必ず1人。削除不可。譲渡のみ。
-- RLSは前提であり、RLSを外して全件を見る運用は許容しない。
-- 高リスク操作（請求・凍結・owner交代など）はadminドメインに集約し、activity_logsに必ず記録される。
-- 各ドメイン(app/admin/ops/www)は別アプリとしてデプロイされ、middlewareも別に持つ。他ドメインを肩代わりしない。
-
-このルールを崩す提案（単一アプリ化、RLS無効化、権限統合、ログ省略など）はすべてNG。
+## 関連参照
+- [CLAUDE_RUNTIME_MIN.md](../../CLAUDE_RUNTIME_MIN.md)
+- [権限モデル仕様書](./roles-and-access.md)
+- [組織切り替え仕様](./organization-switching.md)
+- [マルチドメインパターン](../patterns/multi-domain.md)
+- [Server Actionsパターン](../patterns/server-actions.md)
+- [infra/supabase/RLS.md](../../infra/supabase/RLS.md)
