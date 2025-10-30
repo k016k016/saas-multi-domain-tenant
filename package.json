@@ -8,11 +8,15 @@
     "lint": "turbo run lint",
     "clean": "turbo run clean",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "seed:create-users": "tsx infra/supabase/seeds/create-auth-users.ts",
+    "seed:run": "./infra/supabase/seeds/run-seeds.sh",
+    "seed:all": "pnpm seed:create-users && pnpm seed:run"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "pg": "^8.16.3",
+    "tsx": "^4.20.6",
     "turbo": "^2.0.0",
     "typescript": "^5.7.0"
   },
