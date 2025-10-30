@@ -16,18 +16,36 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createServerClient } from '@repo/db';
 import { getCurrentRole, hasRole } from '@repo/config';
+import { getOrgIdCookie } from '@repo/config';
 
 export async function middleware(request: NextRequest) {
-  // 1. 現在のユーザーロールを取得
-  // NOTE: getCurrentRole()は現在ダミー実装。将来的にはSupabase Sessionを読む
-  const { role } = await getCurrentRole();
+  const pathname = request.nextUrl.pathname;
+  const wwwUrl = process.env.NEXT_PUBLIC_WWW_URL || 'http://www.local.test:3001';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
 
-  // 2. adminドメインに入れるのは admin と owner のみ
-  if (!hasRole(role, 'admin')) {
-    // 403 Forbidden を返す
+  // 1. Supabase Sessionの確認（認証必須）
+  try {
+    const supabase = createServerClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session?.user) {
+      // 未認証 → www のログインページへリダイレクト
+      return NextResponse.redirect(`${wwwUrl}/www/login`);
+    }
+  } catch (error) {
+    console.error('[admin middleware] Session check failed:', error);
+    return NextResponse.redirect(`${wwwUrl}/www/login`);
+  }
+
+  // 2. ロールチェック（admin / owner のみ許可）
+  const roleContext = await getCurrentRole();
+
+  if (!roleContext) {
+    // ロールが取得できない（org未選択 or 未所属）
     return new Response(
-      `403 Forbidden\n\nYou do not have permission to access the admin domain.\nRequired role: admin or owner\nYour role: ${role}`,
+      '403 Forbidden\n\nYou are not a member of any organization.\nPlease contact your administrator.',
       {
         status: 403,
         headers: { 'Content-Type': 'text/plain' },
@@ -35,7 +53,28 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // 3. 権限OK: 次の処理へ
+  const { role } = roleContext;
+
+  // admin ドメインに入れるのは admin と owner のみ
+  if (!hasRole(role, 'admin')) {
+    // member ロールは app ドメインへリダイレクト
+    return NextResponse.redirect(appUrl);
+  }
+
+  // 3. org_id Cookieの確認
+  const orgId = await getOrgIdCookie();
+  if (!orgId) {
+    // TODO: org切り替えページへリダイレクト（次のステップで実装）
+    return new Response(
+      '403 Forbidden\n\nNo organization selected.\nPlease select an organization.',
+      {
+        status: 403,
+        headers: { 'Content-Type': 'text/plain' },
+      }
+    );
+  }
+
+  // 4. 権限OK: 次の処理へ
   return NextResponse.next();
 }
 

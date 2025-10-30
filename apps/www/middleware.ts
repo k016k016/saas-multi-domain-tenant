@@ -12,26 +12,33 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@repo/db';
 
 export async function middleware(request: NextRequest) {
-  // 1. wwwドメインは基本的に全員アクセス可能
-  //    LP・ログイン導線・公開情報のみを提供
-  //    特別なアクセス制御は不要
-
-  // 2. 将来的にはログイン済みユーザーを適切なドメインにリダイレクトする処理を追加
-  // TODO: 認証状態とロールに応じてリダイレクト
-  // if (isAuthenticated()) {
-  //   const { role } = await getCurrentRole();
-  //   if (role === 'ops') {
-  //     return NextResponse.redirect(new URL('http://ops.example.com', request.url));
-  //   }
-  //   // 他のロールはappドメインへ
-  //   return NextResponse.redirect(new URL('http://app.example.com', request.url));
-  // }
-
-  // 3. wwwドメインのリクエストをwwwディレクトリにリライト
   const pathname = request.nextUrl.pathname;
 
+  // 1. /auth/callback は認証フロー用なので除外
+  if (pathname.startsWith('/auth/')) {
+    return NextResponse.next();
+  }
+
+  // 2. 認証済みユーザーは app ドメインへリダイレクト
+  //    www は未認証ユーザー用（LP・ログイン導線）
+  try {
+    const supabase = createServerClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      // 認証済み → app ドメインへリダイレクト
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
+      return NextResponse.redirect(appUrl);
+    }
+  } catch (error) {
+    console.error('[www middleware] Session check failed:', error);
+    // エラー時は通常のフローを継続
+  }
+
+  // 3. wwwドメインのリクエストをwwwディレクトリにリライト
   // 既にwwwディレクトリ配下にいる場合はリライトしない
   if (pathname.startsWith('/www')) {
     return NextResponse.next();
