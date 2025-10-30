@@ -1,9 +1,9 @@
 # Supabase SETUP
 
 1. Supabaseで新しいプロジェクトを作成する（プロジェクト名は自由で良い）
-2. SQLエディタで `infra/supabase/schema.sql` の内容を適用する
+2. SQLエディタで `infra/supabase/migrations/20251030121106_initial_schema.sql` の内容を適用する
    - organizations / profiles / activity_logs が作成されること
-   - コメントは削除しない（RLS前提・owner一人制・activity_logs必須など）
+   - 13個のRLSポリシーが設定されること
 3. プロジェクト設定から以下を取得し、ルートの `.env.local` に設定する:
    - SUPABASE_URL=
    - SUPABASE_ANON_KEY=
@@ -32,8 +32,9 @@ supabase link --project-ref qtjcoffmwmqgfdqimlis
 
 ### マイグレーションファイルの場所
 
-- `infra/supabase/supabase/migrations/` にマイグレーションファイルが格納されています
+- `infra/supabase/migrations/` にマイグレーションファイルが格納されています
 - 現在の初期マイグレーション: `20251030121106_initial_schema.sql`
+- このマイグレーションファイルがデータベーススキーマの唯一の信頼できるソース（Single Source of Truth）です
 
 ### 新しいマイグレーションの作成
 
@@ -49,7 +50,7 @@ supabase migration new <migration_name>
 supabase migration new add_user_preferences_table
 ```
 
-これにより `supabase/migrations/YYYYMMDDHHMMSS_<migration_name>.sql` が作成されます。
+これにより `migrations/YYYYMMDDHHMMSS_<migration_name>.sql` が作成されます。
 
 ### マイグレーションの適用
 
@@ -72,6 +73,6 @@ Docker がない環境では、Supabase StudioのSQLエディタで以下の手�
 
 1. **マイグレーションは順序を守る**: ファイル名のタイムスタンプ順に実行する
 2. **直接編集しない**: 既存のマイグレーションファイルは編集せず、新しいファイルを作成する
-3. **スキーマと同期**: `schema.sql` は参照用として保持し、実際の変更は `migrations/` で管理する
+3. **Single Source of Truth**: `migrations/` のマイグレーションファイルのみがスキーマの真実
 4. **テスト**: マイグレーションを本番に適用する前に、開発環境でテストする
 5. **Gitで管理**: マイグレーションファイルは必ずGitにコミットする
