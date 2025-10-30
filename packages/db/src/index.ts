@@ -12,10 +12,6 @@ import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { createBrowserClient as createSupabseBrowserClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-// 環境変数の取得
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
 /**
  * サーバー側で使用するSupabaseクライアント（Cookie ベース）
  *
@@ -37,6 +33,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
  * - middleware(Edge) からの呼び出しは禁止
  */
 export async function createServerClient() {
+  // 環境変数を関数内で読み込む（モジュールトップレベルではなく）
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
       'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. ' +
@@ -80,6 +80,10 @@ export async function createServerClient() {
  * ```
  */
 export function createBrowserClient() {
+  // 環境変数を関数内で読み込む（モジュールトップレベルではなく）
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
       'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. ' +

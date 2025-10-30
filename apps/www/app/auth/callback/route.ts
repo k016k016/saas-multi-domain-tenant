@@ -38,13 +38,12 @@ export async function GET(request: NextRequest) {
     // ユーザーが所属する組織を取得
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('org_id, role, status')
+      .select('org_id, role')
       .eq('user_id', userId)
-      .eq('status', 'active')
       .order('created_at', { ascending: true });
 
     if (profileError) {
-      console.error('[auth/callback] Profile fetch failed:', profileError);
+      console.error('[auth/callback] Profile fetch failed:', JSON.stringify(profileError, null, 2));
     }
 
     // 最初の組織を active_org_id として設定

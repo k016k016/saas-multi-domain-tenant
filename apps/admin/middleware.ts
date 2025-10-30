@@ -21,9 +21,9 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(url.href)}`)
   }
 
-  // memberはadminを使えない（粗いゲート）
+  // memberはadminを使えない（403を返す）
   if (role === 'member') {
-    return NextResponse.redirect(`${DOMAINS.app}/dashboard`)
+    return new NextResponse('Forbidden', { status: 403 })
   }
 
   // admin/ownerは通す（本検証はサーバで再度行う）
