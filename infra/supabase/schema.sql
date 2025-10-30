@@ -295,6 +295,6 @@ WITH CHECK (
 
 -- サンプル組織
 INSERT INTO organizations (id, name, plan, is_active) VALUES
-  ('org_dummy_12345', 'サンプル組織A', 'business', true),
-  ('org_dummy_67890', 'サンプル組織B', 'free', true)
+  ('00000000-0000-0000-0000-000000000001', 'サンプル組織A', 'business', true),
+  ('00000000-0000-0000-0000-000000000002', 'サンプル組織B', 'free', true)
 ON CONFLICT DO NOTHING;
