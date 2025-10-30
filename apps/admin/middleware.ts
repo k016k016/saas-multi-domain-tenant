@@ -64,14 +64,8 @@ export async function middleware(request: NextRequest) {
   // 3. org_id Cookieの確認
   const orgId = await getOrgIdCookie();
   if (!orgId) {
-    // TODO: org切り替えページへリダイレクト（次のステップで実装）
-    return new Response(
-      '403 Forbidden\n\nNo organization selected.\nPlease select an organization.',
-      {
-        status: 403,
-        headers: { 'Content-Type': 'text/plain' },
-      }
-    );
+    // → app の /switch-org へリダイレクト（admin には switch-org ページが無い）
+    return NextResponse.redirect(`${appUrl}/switch-org`);
   }
 
   // 4. 権限OK: 次の処理へ

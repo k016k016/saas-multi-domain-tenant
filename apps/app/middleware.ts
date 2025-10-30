@@ -38,19 +38,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(`${wwwUrl}/www/login`);
   }
 
-  // 2. ロールチェック（member / admin / owner のみ許可）
+  // 2. /switch-org は org_id 無しでもアクセス可能
+  if (pathname.startsWith('/switch-org')) {
+    return NextResponse.next();
+  }
+
+  // 3. ロールチェック（member / admin / owner のみ許可）
   const roleContext = await getCurrentRole();
 
   if (!roleContext) {
     // ロールが取得できない（org未選択 or 未所属）
-    // TODO: org切り替えページへリダイレクト（次のステップで実装）
-    return new Response(
-      '403 Forbidden\n\nYou are not a member of any organization.\nPlease contact your administrator.',
-      {
-        status: 403,
-        headers: { 'Content-Type': 'text/plain' },
-      }
-    );
+    // → /switch-org へリダイレクト
+    return NextResponse.redirect(new URL('/switch-org', request.url));
   }
 
   const { role } = roleContext;
@@ -61,20 +60,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(opsUrl);
   }
 
-  // 3. org_id Cookieの確認
+  // 4. org_id Cookieの確認
   const orgId = await getOrgIdCookie();
   if (!orgId) {
-    // TODO: org切り替えページへリダイレクト（次のステップで実装）
-    return new Response(
-      '403 Forbidden\n\nNo organization selected.\nPlease select an organization.',
-      {
-        status: 403,
-        headers: { 'Content-Type': 'text/plain' },
-      }
-    );
+    // → /switch-org へリダイレクト
+    return NextResponse.redirect(new URL('/switch-org', request.url));
   }
 
-  // 4. 権限OK: 次の処理へ
+  // 5. 権限OK: 次の処理へ
   return NextResponse.next();
 }
 

@@ -10,7 +10,8 @@
  * - 組織切替の操作はactivity_logsに記録する（将来実装）
  */
 
-import { getCurrentOrg } from '@repo/config';
+import { createServerClient } from '@repo/db';
+import { setOrgIdCookie } from '@repo/config';
 import type { ActionResult } from '@repo/config';
 
 interface SwitchOrgData {
@@ -34,43 +35,56 @@ export async function switchOrganization(
     };
   }
 
-  // 2. 現在のユーザーとorg_idを取得
-  // TODO: 実際にはSupabaseセッションから現在のユーザーIDを取得
-  const currentOrg = await getCurrentOrg();
+  try {
+    // 2. 現在のユーザーを取得
+    const supabase = createServerClient();
+    const { data: { session } } = await supabase.auth.getSession();
 
-  // 3. 所属チェック
-  // TODO: 実際にはSupabase profilesテーブルでユーザーがtargetOrgIdに所属しているか確認
-  // 現時点ではダミー実装
-  const userOrganizations = [
-    'org_dummy_12345',
-    'org_dummy_67890',
-    'org_dummy_abcde',
-  ];
+    if (!session?.user) {
+      return {
+        success: false,
+        error: '認証が必要です',
+      };
+    }
 
-  if (!userOrganizations.includes(targetOrgId)) {
+    const userId = session.user.id;
+
+    // 3. ユーザーが指定組織に所属しているか確認
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('org_id, role')
+      .eq('user_id', userId)
+      .eq('org_id', targetOrgId)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('[switchOrganization] User not member of org:', { userId, targetOrgId, error: profileError });
+      return {
+        success: false,
+        error: 'この組織にはアクセス権がありません',
+      };
+    }
+
+    // 4. org_id Cookie を設定
+    await setOrgIdCookie(targetOrgId);
+
+    // 5. 監査ログ記録
+    // TODO: activity_logsテーブルに記録
+    // INSERT INTO activity_logs (user_id, org_id, action, details)
+    // VALUES (userId, targetOrgId, 'org_switched', { ... })
+
+    // 6. 成功を返す
+    // 重要: redirect()は使用しない。nextUrlを返してクライアント側で遷移させる
+    return {
+      success: true,
+      data: { targetOrgId },
+      nextUrl: '/', // APPドメインのダッシュボードに戻る
+    };
+  } catch (err) {
+    console.error('[switchOrganization] Unexpected error:', err);
     return {
       success: false,
-      error: 'この組織にはアクセス権がありません',
+      error: '予期しないエラーが発生しました',
     };
   }
-
-  // 4. セッション/Cookie更新
-  // TODO: 実際にはSupabaseセッションとCookieを更新
-  // - cookies().set('active_org_id', targetOrgId, { ... })
-  // - middlewareがこのCookieを読んで動作する
-  // 現時点ではダミー実装（何もしない）
-  console.log(`[switchOrganization] Switching to org: ${targetOrgId}`);
-
-  // 5. 監査ログ記録
-  // TODO: activity_logsテーブルに記録
-  // INSERT INTO activity_logs (user_id, org_id, action, details)
-  // VALUES (current_user_id, targetOrgId, 'org_switched', { from: currentOrg.orgId, to: targetOrgId })
-
-  // 6. 成功を返す
-  // 重要: redirect()は使用しない。nextUrlを返してクライアント側で遷移させる
-  return {
-    success: true,
-    data: { targetOrgId },
-    nextUrl: '/', // APPドメインのダッシュボードに戻る
-  };
 }

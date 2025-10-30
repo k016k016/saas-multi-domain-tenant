@@ -11,35 +11,74 @@
  * - このClient ComponentがnextUrlに基づいて遷移する
  */
 
+import { createServerClient } from '@repo/db';
 import { getCurrentOrg } from '@repo/config';
 import SwitchOrgForm from './switch-org-form';
 
 export default async function SwitchOrgPage() {
-  const org = await getCurrentOrg();
+  const supabase = createServerClient();
 
-  // TODO: 実際にはSupabase profilesテーブルからユーザーが所属する組織一覧を取得
-  const userOrganizations = [
-    { id: 'org_dummy_12345', name: 'サンプル組織A' },
-    { id: 'org_dummy_67890', name: 'サンプル組織B' },
-    { id: 'org_dummy_abcde', name: 'サンプル組織C' },
-  ];
+  // 1. 現在のユーザーを取得
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>認証が必要です</p>
+      </div>
+    );
+  }
+
+  const userId = session.user.id;
+
+  // 2. ユーザーが所属する組織一覧を取得
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('org_id, role, organizations(id, name)')
+    .eq('user_id', userId);
+
+  if (error || !profiles || profiles.length === 0) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+        <h1 style={{ marginBottom: '1rem' }}>組織が見つかりません</h1>
+        <p>
+          現在、どの組織にも所属していません。<br />
+          組織の管理者に招待してもらってください。
+        </p>
+      </div>
+    );
+  }
+
+  // 3. 組織データを整形
+  const userOrganizations = profiles
+    .filter(p => p.organizations)
+    .map(p => ({
+      id: p.organizations!.id,
+      name: p.organizations!.name,
+      role: p.role,
+    }));
+
+  // 4. 現在の組織を取得
+  const org = await getCurrentOrg();
 
   return (
     <div style={{ padding: '2rem' }}>
       <h1>組織切替</h1>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>現在の組織</h2>
-        <p>
-          <strong>{org.orgName}</strong> ({org.orgId})
-        </p>
-      </section>
+      {org && (
+        <section style={{ marginTop: '2rem' }}>
+          <h2>現在の組織</h2>
+          <p>
+            <strong>{org.orgName}</strong> ({org.orgId})
+          </p>
+        </section>
+      )}
 
       <section style={{ marginTop: '2rem' }}>
         <h2>切り替え先の組織を選択</h2>
         <SwitchOrgForm
           organizations={userOrganizations}
-          currentOrgId={org.orgId}
+          currentOrgId={org?.orgId}
         />
       </section>
 
