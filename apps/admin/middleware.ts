@@ -57,8 +57,14 @@ export async function middleware(request: NextRequest) {
 
   // admin ドメインに入れるのは admin と owner のみ
   if (!hasRole(role, 'admin')) {
-    // member ロールは app ドメインへリダイレクト
-    return NextResponse.redirect(appUrl);
+    // member ロールは 403 を返す（壁は壁として落ちる）
+    return new Response(
+      '403 Forbidden\n\nYou do not have permission to access the admin domain.\nRole required: admin or owner.',
+      {
+        status: 403,
+        headers: { 'Content-Type': 'text/plain' },
+      }
+    );
   }
 
   // 3. org_id Cookieの確認
