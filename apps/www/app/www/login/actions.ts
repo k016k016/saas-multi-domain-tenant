@@ -6,13 +6,24 @@
  * 責務:
  * - Supabase OTP (Magic Link) の送信
  * - Supabase Email/Password ログイン
+ *
+ * 重要な設計方針:
+ * - redirect()は使用しない。必ず{ success, nextUrl }を返す
+ * - クライアント側でrouter.push(nextUrl)を使って遷移する
  */
 
 import { createServerClient } from '@repo/db';
+import type { ActionResult } from '@repo/config';
 
-export async function sendOTP(email: string): Promise<{ error?: string }> {
+/**
+ * OTP (Magic Link) を送信する
+ *
+ * @param email - 送信先メールアドレス
+ * @returns ActionResult
+ */
+export async function sendOTP(email: string): Promise<ActionResult> {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -24,22 +35,37 @@ export async function sendOTP(email: string): Promise<{ error?: string }> {
 
     if (error) {
       console.error('OTP送信エラー:', error);
-      return { error: 'ログインリンクの送信に失敗しました' };
+      return {
+        success: false,
+        error: 'ログインリンクの送信に失敗しました',
+      };
     }
 
-    return {};
+    return {
+      success: true,
+    };
   } catch (err) {
     console.error('予期しないエラー:', err);
-    return { error: '予期しないエラーが発生しました' };
+    return {
+      success: false,
+      error: '予期しないエラーが発生しました',
+    };
   }
 }
 
+/**
+ * Email/Password でログインする
+ *
+ * @param email - メールアドレス
+ * @param password - パスワード
+ * @returns ActionResult - 成功時は nextUrl に app ドメインを返す
+ */
 export async function signInWithPassword(
   email: string,
   password: string
-): Promise<{ error?: string }> {
+): Promise<ActionResult> {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -48,12 +74,22 @@ export async function signInWithPassword(
 
     if (error) {
       console.error('Password ログインエラー:', error);
-      return { error: 'メールアドレスまたはパスワードが正しくありません' };
+      return {
+        success: false,
+        error: 'メールアドレスまたはパスワードが正しくありません',
+      };
     }
 
-    return {};
+    // ログイン成功後は app ドメインに遷移
+    return {
+      success: true,
+      nextUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002',
+    };
   } catch (err) {
     console.error('予期しないエラー:', err);
-    return { error: '予期しないエラーが発生しました' };
+    return {
+      success: false,
+      error: '予期しないエラーが発生しました',
+    };
   }
 }

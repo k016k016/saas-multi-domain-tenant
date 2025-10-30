@@ -18,7 +18,7 @@
 import { getCurrentRole } from '@repo/config';
 
 export default async function OpsHomePage() {
-  const { role } = await getCurrentRole();
+  const roleContext = await getCurrentRole();
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -30,7 +30,7 @@ export default async function OpsHomePage() {
           このドメインは事業者側（SaaS提供者）の内部コンソール領域です。
         </p>
         <p style={{ fontSize: '0.875rem', color: '#c7d2fe' }}>
-          現在のロール: <strong>{role}</strong>
+          現在のロール: <strong>{roleContext?.role ?? 'unknown'}</strong>
         </p>
       </section>
 

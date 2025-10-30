@@ -10,7 +10,7 @@
  * - 組織切替の操作はactivity_logsに記録する（将来実装）
  */
 
-import { createServerClient } from '@repo/db';
+import { createServerClient, logActivity } from '@repo/db';
 import { setOrgIdCookie } from '@repo/config';
 import type { ActionResult } from '@repo/config';
 
@@ -37,7 +37,7 @@ export async function switchOrganization(
 
   try {
     // 2. 現在のユーザーを取得
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session?.user) {
@@ -69,9 +69,21 @@ export async function switchOrganization(
     await setOrgIdCookie(targetOrgId);
 
     // 5. 監査ログ記録
-    // TODO: activity_logsテーブルに記録
-    // INSERT INTO activity_logs (user_id, org_id, action, details)
-    // VALUES (userId, targetOrgId, 'org_switched', { ... })
+    const logResult = await logActivity(supabase, {
+      orgId: targetOrgId,
+      userId,
+      action: 'org_switched',
+      payload: {
+        to_org_id: targetOrgId,
+        role: profile.role,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    if (logResult.error) {
+      console.warn('[switchOrganization] Activity log failed:', logResult.error);
+      // 監査ログ失敗は致命的エラーではないが、ワーニングを出す
+    }
 
     // 6. 成功を返す
     // 重要: redirect()は使用しない。nextUrlを返してクライアント側で遷移させる

@@ -20,7 +20,7 @@ interface Organization {
 
 interface SwitchOrgFormProps {
   organizations: Organization[];
-  currentOrgId: string;
+  currentOrgId?: string;
 }
 
 export default function SwitchOrgForm({
@@ -28,7 +28,7 @@ export default function SwitchOrgForm({
   currentOrgId,
 }: SwitchOrgFormProps) {
   const router = useRouter();
-  const [selectedOrgId, setSelectedOrgId] = useState<string>(currentOrgId);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>(currentOrgId || '');
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 

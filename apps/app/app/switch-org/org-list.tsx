@@ -11,7 +11,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { selectOrg } from './actions';
+import { switchOrganization } from './actions';
 
 interface Org {
   id: string;
@@ -31,9 +31,9 @@ export function OrgList({ orgs }: OrgListProps) {
     setLoading(orgId);
 
     try {
-      const result = await selectOrg(orgId);
+      const result = await switchOrganization(orgId);
 
-      if (result.error) {
+      if (!result.success) {
         alert(`エラー: ${result.error}`);
       } else {
         // 成功 → app ホームへリダイレクト

@@ -14,12 +14,13 @@ import { getCurrentOrg, getCurrentRole } from '@repo/config';
 
 export default async function OverviewPage() {
   const org = await getCurrentOrg();
-  const { role } = await getCurrentRole();
+  const roleContext = await getCurrentRole();
+  const role = roleContext?.role;
 
   // TODO: 実際にはSupabaseから組織情報を取得
   const orgDetails = {
-    id: org.orgId,
-    name: org.orgName,
+    id: org?.orgId ?? 'unknown',
+    name: org?.orgName ?? 'unknown',
     plan: 'Business',
     isActive: true,
     createdAt: '2024-01-01',
@@ -32,7 +33,7 @@ export default async function OverviewPage() {
 
       <section style={{ marginTop: '2rem' }}>
         <h2>現在のコンテキスト</h2>
-        <p>あなたのロール: <strong>{role}</strong></p>
+        <p>あなたのロール: <strong>{role ?? 'unknown'}</strong></p>
       </section>
 
       <section style={{ marginTop: '2rem' }}>

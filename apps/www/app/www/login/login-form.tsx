@@ -31,18 +31,24 @@ export function LoginForm() {
         // Password ログイン
         const result = await signInWithPassword(email, password);
 
-        if (result.error) {
+        if (!result.success) {
           setMessage({ type: 'error', text: result.error });
         } else {
-          // ログイン成功 → app ドメインへリダイレクト
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
-          router.push(appUrl);
+          // ログイン成功 → Server Action が返した nextUrl へ遷移
+          if (result.nextUrl) {
+            // nextUrl が相対パスの場合は router.push、フルURLの場合は location.assign
+            if (result.nextUrl.startsWith('/')) {
+              router.push(result.nextUrl);
+            } else {
+              window.location.assign(result.nextUrl);
+            }
+          }
         }
       } else {
         // OTP ログイン
         const result = await sendOTP(email);
 
-        if (result.error) {
+        if (!result.success) {
           setMessage({ type: 'error', text: result.error });
         } else {
           setMessage({

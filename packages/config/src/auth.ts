@@ -49,7 +49,7 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
     }
 
     // 2. Supabase で組織情報を取得
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { data: org, error } = await supabase
       .from('organizations')
       .select('id, name')
@@ -93,7 +93,7 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
 export async function getCurrentRole(): Promise<RoleContext | null> {
   try {
     // 1. Supabase Session から user_id を取得
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError || !session?.user?.id) {

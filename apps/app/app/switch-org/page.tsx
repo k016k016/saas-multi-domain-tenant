@@ -16,7 +16,7 @@ import { getCurrentOrg } from '@repo/config';
 import SwitchOrgForm from './switch-org-form';
 
 export default async function SwitchOrgPage() {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   // 1. 現在のユーザーを取得
   const { data: { session } } = await supabase.auth.getSession();
@@ -51,10 +51,10 @@ export default async function SwitchOrgPage() {
 
   // 3. 組織データを整形
   const userOrganizations = profiles
-    .filter(p => p.organizations)
+    .filter((p): p is typeof p & { organizations: { id: string; name: string } } => !!p.organizations)
     .map(p => ({
-      id: p.organizations!.id,
-      name: p.organizations!.name,
+      id: p.organizations.id,
+      name: p.organizations.name,
       role: p.role,
     }));
 

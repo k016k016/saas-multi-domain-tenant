@@ -24,7 +24,8 @@ import { getCurrentOrg, getCurrentRole } from '@repo/config';
 
 export default async function OrgSettingsPage() {
   const org = await getCurrentOrg();
-  const { role } = await getCurrentRole();
+  const roleContext = await getCurrentRole();
+  const role = roleContext?.role;
 
   // owner専用ページであることを明示
   // TODO: 実際にはmiddlewareでロールチェック済み
@@ -47,7 +48,7 @@ export default async function OrgSettingsPage() {
         <>
           <section style={{ marginTop: '2rem' }}>
             <h2>現在のコンテキスト</h2>
-            <p>組織: <strong>{org.orgName}</strong></p>
+            <p>組織: <strong>{org?.orgName ?? 'unknown'}</strong></p>
             <p>あなたのロール: <strong>{role}</strong></p>
           </section>
 

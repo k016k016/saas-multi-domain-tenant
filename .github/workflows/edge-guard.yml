@@ -1,0 +1,18 @@
+name: edge-guard
+on: [pull_request]
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: forbid @repo/db import in middleware
+        run: |
+          set -e
+          hits=$(grep -R "import .*@repo/db" apps/**/middleware.ts || true)
+          if [ -n "$hits" ]; then
+            echo "::error::Do not import @repo/db in middleware (Edge runtime)"; echo "$hits"; exit 1
+          fi
+          bad=$(grep -R "from 'next/headers'" apps/**/middleware.ts || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Do not use next/headers::cookies() in middleware"; echo "$bad"; exit 1
+          fi

@@ -99,3 +99,18 @@ AIアシスタントは以下のように回答すること:
 
 AIアシスタントは以上を前提に作業すること。  
 これに反する提案・出力は無効とする。
+ 
+## Edge Middleware ルール（必読）
+- middleware は Edge Runtime 固定。**@repo/db の import 禁止**。
+- DB 接続・Supabase クライアント生成・`next/headers::cookies()` 使用は禁止。
+- 認可の本検証は **サーバ側 (nodejs runtime)** で実施すること。
+- Server Action は **redirect() 禁止**。**{ success, nextUrl }** を返す。
+
+## ドキュメント編集ポリシー
+- `docs/**` と `CLAUDE_RUNTIME*.md` は**無断変更禁止**。変更時は PR に理由と対象箇所を明記。
+
+## Cookies / Runtime ルール
+- Server側（Route/Action/RSC）は **`await cookies()` 必須**。同期扱い禁止。
+- middleware では `next/headers` 禁止。`NextRequest/NextResponse.cookies` を使う。
+- middleware で **@repo/db import 禁止**（ESLint/CIで強制）。
+- Server Action は **redirect() 禁止**。`{ success, nextUrl }` を返す。

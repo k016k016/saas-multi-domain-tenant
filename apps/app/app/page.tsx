@@ -21,7 +21,8 @@ import { getCurrentOrg, getCurrentRole } from '@repo/config';
 
 export default async function DashboardPage() {
   const org = await getCurrentOrg();
-  const { role } = await getCurrentRole();
+  const roleContext = await getCurrentRole();
+  const role = roleContext?.role;
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -31,9 +32,9 @@ export default async function DashboardPage() {
         <h2>現在のコンテキスト</h2>
         <dl style={{ lineHeight: '1.8' }}>
           <dt><strong>組織ID:</strong></dt>
-          <dd>{org.orgId}</dd>
+          <dd>{org?.orgId ?? 'unknown'}</dd>
           <dt><strong>組織名:</strong></dt>
-          <dd>{org.orgName}</dd>
+          <dd>{org?.orgName ?? 'unknown'}</dd>
           <dt><strong>あなたのロール:</strong></dt>
           <dd>
             <span style={{
@@ -43,7 +44,7 @@ export default async function DashboardPage() {
               borderRadius: '4px',
               fontSize: '0.875rem',
             }}>
-              {role}
+              {role ?? 'unknown'}
             </span>
           </dd>
         </dl>

@@ -18,7 +18,8 @@ import MemberList from './member-list';
 
 export default async function MembersPage() {
   const org = await getCurrentOrg();
-  const { role: currentUserRole } = await getCurrentRole();
+  const roleContext = await getCurrentRole();
+  const currentUserRole = roleContext?.role;
 
   // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得
   // SELECT user_id, email, role, status, created_at, invited_by
@@ -61,7 +62,7 @@ export default async function MembersPage() {
       <header style={{ marginBottom: '2rem' }}>
         <h1>メンバー管理</h1>
         <p style={{ color: '#a1a1aa', marginTop: '0.5rem' }}>
-          組織: <strong>{org.orgName}</strong> ({org.orgId})
+          組織: <strong>{org?.orgName ?? 'unknown'}</strong> ({org?.orgId ?? 'unknown'})
         </p>
         <p style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>
           現在のメンバー数: {members.filter((m) => m.status === 'active').length}人
@@ -87,7 +88,7 @@ export default async function MembersPage() {
       {/* メンバー一覧セクション */}
       <section>
         <h2 style={{ marginBottom: '1rem' }}>メンバー一覧</h2>
-        <MemberList members={members} currentUserRole={currentUserRole} />
+        {currentUserRole && <MemberList members={members} currentUserRole={currentUserRole} />}
       </section>
 
       {/* 注意書き */}

@@ -30,7 +30,13 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
  * const { data: { user } } = await supabase.auth.getUser();
  * ```
  */
-export function createServerClient() {
+/**
+ * createServerClient(): Next.js 16準拠
+ * - 呼び出し側は必ず `await createServerClient()` すること
+ * - 内部で `await cookies()` を使用（非同期）
+ * - middleware(Edge) からの呼び出しは禁止
+ */
+export async function createServerClient() {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
       'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set. ' +
@@ -38,7 +44,7 @@ export function createServerClient() {
     );
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -86,3 +92,6 @@ export function createBrowserClient() {
 
 // 将来的にはここでDatabase型定義をエクスポート
 // export type Database = ...
+
+// 監査ログヘルパーをエクスポート
+export { logActivity, type AuditAction, type AuditLogPayload } from './audit';

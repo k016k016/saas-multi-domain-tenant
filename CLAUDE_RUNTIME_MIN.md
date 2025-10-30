@@ -62,3 +62,10 @@
 このMINに従わないコード生成・修正提案は無効。  
 あなた（Claude）は「簡略化」「統合」「権限バイパス」を勝手に行ってはならない。  
 詳細仕様・背景は CLAUDE_RUNTIME_FULL.md を参照し、矛盾させないこと。
+
+---
+
+補足（Edge/Node分離の最重要ルール）:
+- middleware は Edge Runtime 固定。`@repo/db` や `next/headers::cookies()` を使わない。
+- 認可やDBアクセスの本検証は Node ランタイム（Route/Server Action/Page）で行う。
+- Server Action で `redirect()` は使わず、`{ success, nextUrl }` を返す。
