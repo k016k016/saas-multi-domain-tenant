@@ -19,12 +19,6 @@ export default defineConfig({
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  webServer: {
-    command: 'pnpm dev:all',
-    url: WWW_URL,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
   projects: [
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },
     { name: 'app', use: { baseURL: APP_URL, ...devices['Desktop Chrome'] } },

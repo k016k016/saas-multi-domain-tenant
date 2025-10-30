@@ -4,7 +4,7 @@
 -- 目的: FK・制約・RLS を修正
 -- 実行: Supabase SQL Editor または psql で実行（Service Role推奨）
 
--- FK: profiles.id → auth.users(id)
+-- FK: profiles.user_id → auth.users(id)
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -13,7 +13,7 @@ BEGIN
   ) THEN
     ALTER TABLE public.profiles
       ADD CONSTRAINT profiles_user_fk
-      FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+      FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
   END IF;
 END$$;
 

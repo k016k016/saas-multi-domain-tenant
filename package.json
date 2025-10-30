@@ -15,7 +15,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "pg": "^8.16.3",
+    "cross-fetch": "^4.1.0",
+    "dotenv": "^17.2.3",
     "tsx": "^4.20.6",
     "turbo": "^2.0.0",
     "typescript": "^5.7.0"
@@ -23,9 +24,5 @@
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22.0.0"
-  },
-  "dependencies": {
-    "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.50.0"
   }
 }
