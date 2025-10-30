@@ -78,7 +78,7 @@ export default async function DashboardPage() {
         <section style={{ marginTop: '2rem' }}>
           <h3>管理者向けリンク</h3>
           <a
-            href={`${process.env.NEXT_PUBLIC_ADMIN_URL || 'http://admin.local.test:3000'}`}
+            href={`${process.env.NEXT_PUBLIC_ADMIN_URL || 'http://admin.local.test:3003'}`}
             style={{
               display: 'inline-block',
               padding: '0.5rem 1rem',
