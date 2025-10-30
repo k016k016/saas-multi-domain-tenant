@@ -11,7 +11,7 @@ if (!url || !serviceRole) {
 
 const admin = createClient(url, serviceRole, { auth: { persistSession: false } })
 
-const PASSWORD = 'Test1234!aB!2025' // 強め（ポリシー対策）
+const PASSWORD = process.env.E2E_TEST_PASSWORD || 'Test1234!aB!2025' // 強め（ポリシー対策）
 const REDIRECT = 'http://www.local.test:3001/auth/callback'
 const USERS = [
   { email: 'member1@example.com' },
