@@ -1,0 +1,224 @@
+
+> admin@0.1.0 dev /Volumes/ai00/AI-DEIVEN/saas-multi-domain-tenant/apps/admin
+> next dev -p 3003
+
+   ▲ Next.js 16.0.1 (Turbopack)
+   - Local:        http://localhost:3003
+   - Network:      http://192.168.0.5:3003
+   - Environments: .env.local
+
+ ✓ Starting...
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+ ✓ Ready in 322ms
+ ✓ Compiled in 2ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 1090ms (compile: 619ms, proxy.ts: 1928µs, render: 469ms)
+ GET /members 200 in 1192ms (compile: 612ms, proxy.ts: 1091µs, render: 579ms)
+ ⚠ Cross origin request detected from admin.local.test to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET /members 200 in 1210ms (compile: 566ms, proxy.ts: 1540µs, render: 642ms)
+ GET /members 200 in 1240ms (compile: 627ms, proxy.ts: 1474µs, render: 611ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 601ms (compile: 1105µs, proxy.ts: 1202µs, render: 599ms)
+ GET /members 200 in 630ms (compile: 4ms, proxy.ts: 3ms, render: 623ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 221ms (compile: 1283µs, proxy.ts: 1300µs, render: 219ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 272ms (compile: 1008µs, proxy.ts: 1029µs, render: 270ms)
+ ✓ Compiled in 1ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ ⨯ Error: Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.
+  {}
+    at ignore-listed frames {
+  digest: '1799117080'
+}
+ ⨯ Error: Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.
+  {}
+    at ignore-listed frames {
+  digest: '1799117080'
+}
+ GET /members 500 in 511ms (compile: 1407µs, proxy.ts: 1303µs, render: 509ms)
+ GET /members 200 in 500ms (compile: 1117µs, proxy.ts: 923µs, render: 498ms)
+ GET /members 500 in 686ms (compile: 56ms, proxy.ts: 2ms, render: 628ms)
+ GET /members 200 in 684ms (compile: 26ms, proxy.ts: 1713µs, render: 657ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ ⨯ Error: Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.
+  {}
+    at ignore-listed frames {
+  digest: '1799117080'
+}
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 500 in 366ms (compile: 1768µs, proxy.ts: 1651µs, render: 363ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 292ms (compile: 4ms, proxy.ts: 2ms, render: 286ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ ⨯ Error: Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.
+  {}
+    at ignore-listed frames {
+  digest: '1799117080'
+}
+ GET /members 500 in 282ms (compile: 1469µs, proxy.ts: 1096µs, render: 280ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 285ms (compile: 1177µs, proxy.ts: 1218µs, render: 283ms)
+ ✓ Compiled in 15ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:28:17)
+  26 |   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
+  27 |     // Next.js 16 の unauthorized() を使用して 401/403 相当のエラーを返す
+> 28 |     unauthorized();
+     |                 ^
+  29 |   }
+  30 |
+  31 |   // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得 {
+  digest: '40529495'
+}
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:30:5)
+  28 |   // ORDER BY created_at DESC
+  29 |   const members = [
+> 30 |     {
+     |     ^
+  31 |       userId: 'user_owner_123',
+  32 |       email: 'owner@example.com',
+  33 |       role: 'owner' as const, {
+  environmentName: 'Server',
+  digest: '40529495@E411'
+}
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:28:17)
+  26 |   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
+  27 |     // Next.js 16 の unauthorized() を使用して 401/403 相当のエラーを返す
+> 28 |     unauthorized();
+     |                 ^
+  29 |   }
+  30 |
+  31 |   // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得 {
+  digest: '40529495'
+}
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:30:5)
+  28 |   // ORDER BY created_at DESC
+  29 |   const members = [
+> 30 |     {
+     |     ^
+  31 |       userId: 'user_owner_123',
+  32 |       email: 'owner@example.com',
+  33 |       role: 'owner' as const, {
+  environmentName: 'Server',
+  digest: '40529495@E411'
+}
+ GET /members 200 in 602ms (compile: 78ms, proxy.ts: 4ms, render: 521ms)
+ GET /members 200 in 548ms (compile: 22ms, proxy.ts: 17ms, render: 509ms)
+ GET /members 500 in 629ms (compile: 18ms, proxy.ts: 74ms, render: 537ms)
+ GET /members 500 in 670ms (compile: 58ms, proxy.ts: 1932µs, render: 610ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:28:17)
+  26 |   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
+  27 |     // Next.js 16 の unauthorized() を使用して 401/403 相当のエラーを返す
+> 28 |     unauthorized();
+     |                 ^
+  29 |   }
+  30 |
+  31 |   // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得 {
+  digest: '40529495'
+}
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:30:5)
+  28 |   // ORDER BY created_at DESC
+  29 |   const members = [
+> 30 |     {
+     |     ^
+  31 |       userId: 'user_owner_123',
+  32 |       email: 'owner@example.com',
+  33 |       role: 'owner' as const, {
+  environmentName: 'Server',
+  digest: '40529495@E411'
+}
+ GET /members 200 in 281ms (compile: 2ms, proxy.ts: 3ms, render: 276ms)
+ GET /members 500 in 298ms (compile: 19ms, proxy.ts: 2ms, render: 277ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:28:17)
+  26 |   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
+  27 |     // Next.js 16 の unauthorized() を使用して 401/403 相当のエラーを返す
+> 28 |     unauthorized();
+     |                 ^
+  29 |   }
+  30 |
+  31 |   // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得 {
+  digest: '40529495'
+}
+ ⨯ Error: `unauthorized()` is experimental and only allowed to be used when `experimental.authInterrupts` is enabled.
+    at MembersPage (app/members/page.tsx:30:5)
+  28 |   // ORDER BY created_at DESC
+  29 |   const members = [
+> 30 |     {
+     |     ^
+  31 |       userId: 'user_owner_123',
+  32 |       email: 'owner@example.com',
+  33 |       role: 'owner' as const, {
+  environmentName: 'Server',
+  digest: '40529495@E411'
+}
+ GET /members 500 in 344ms (compile: 1032µs, proxy.ts: 905µs, render: 342ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 235ms (compile: 1188µs, proxy.ts: 1108µs, render: 233ms)
+ ✓ Compiled in 4ms
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 404 in 371ms (compile: 13ms, proxy.ts: 1268µs, render: 356ms)
+ GET /members 404 in 377ms (compile: 1325µs, proxy.ts: 1285µs, render: 375ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 200 in 532ms (compile: 25ms, proxy.ts: 1125µs, render: 506ms)
+ GET /members 200 in 223ms (compile: 1722µs, proxy.ts: 1243µs, render: 220ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 404 in 273ms (compile: 1581µs, proxy.ts: 2ms, render: 269ms)
+ GET /members 200 in 272ms (compile: 8ms, proxy.ts: 1827µs, render: 263ms)
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() events could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server.
+ GET /members 404 in 193ms (compile: 1102µs, proxy.ts: 1472µs, render: 190ms)

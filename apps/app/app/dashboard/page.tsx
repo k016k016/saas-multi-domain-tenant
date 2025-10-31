@@ -24,6 +24,13 @@ export default async function DashboardPage() {
   const roleContext = await getCurrentRole();
   const role = roleContext?.role;
 
+  console.log('[DashboardPage] Context:', {
+    org,
+    roleContext,
+    role,
+    cookieDomain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN,
+  });
+
   return (
     <div style={{ padding: '2rem' }}>
       <h1>ダッシュボード</h1>
@@ -44,7 +51,7 @@ export default async function DashboardPage() {
               borderRadius: '4px',
               fontSize: '0.875rem',
             }}>
-              {role ?? 'unknown'}
+              role: {role ?? 'unknown'}
             </span>
           </dd>
         </dl>

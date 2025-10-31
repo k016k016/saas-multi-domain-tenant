@@ -8,11 +8,12 @@
  * - メンバーの削除/無効化
  *
  * 権限:
- * - adminとownerのみアクセス可能（middlewareで制御済み）
+ * - adminとownerのみアクセス可能（ページレベルでチェック）
  * - ownerのロール変更・削除は禁止（Server Actionで制御）
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
+import { notFound } from 'next/navigation';
 import InviteUserForm from './invite-user-form';
 import MemberList from './member-list';
 
@@ -20,6 +21,13 @@ export default async function MembersPage() {
   const org = await getCurrentOrg();
   const roleContext = await getCurrentRole();
   const currentUserRole = roleContext?.role;
+
+  // ADMIN domain: admin/owner のみアクセス可能
+  // Next.jsではServer ComponentからHTTPステータスコードを直接返せないため
+  // notFound()で404を返す（実運用では専用のエラーページを作成推奨）
+  if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
+    notFound();
+  }
 
   // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得
   // SELECT user_id, email, role, status, created_at, invited_by
@@ -60,7 +68,7 @@ export default async function MembersPage() {
   return (
     <div style={{ padding: '2rem' }}>
       <header style={{ marginBottom: '2rem' }}>
-        <h1>メンバー管理</h1>
+        <h1>Members / メンバー管理</h1>
         <p style={{ color: '#a1a1aa', marginTop: '0.5rem' }}>
           組織: <strong>{org?.orgName ?? 'unknown'}</strong> ({org?.orgId ?? 'unknown'})
         </p>

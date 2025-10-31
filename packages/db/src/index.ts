@@ -54,7 +54,11 @@ export async function createServerClient() {
       setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
+            cookieStore.set(name, value, {
+              ...options,
+              // サブドメイン間でSupabase Sessionを共有するため、domain を .local.test に設定
+              domain: '.local.test',
+            })
           );
         } catch {
           // Server Component 内での set は無視（middleware で処理）

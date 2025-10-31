@@ -1,10 +1,12 @@
 /**
  * 認証・組織コンテキスト取得
  *
- * Supabaseセッションとorg_id CookieからユーザーのロールとアクティブなorgIdを取得。
- * middlewareがorg_idを前提に動作し、アクティブな組織コンテキストを管理する。
+ * Supabaseセッションから user_id を取得し、user_org_context テーブルからアクティブな org_id を取得。
+ * Cookie には org_id/role を保存せず、すべて DB で解決する設計。
  *
  * 重要な設計方針:
+ * - Cookie は Supabase セッション (sb-access-token, sb-refresh-token) のみ
+ * - org_id/role は DB で毎回取得（Cookie には書き込まない）
  * - Server Actionでは `{ success, nextUrl }` を返し、`redirect()`は使用しない。
  * - 画面遷移はクライアント側で `router.push(nextUrl)` 等を使って行う。
  * - org_idベースのアクセス制御とRLSは必須であり、バイパスは許可しない。
@@ -13,7 +15,6 @@
  */
 
 import { createServerClient } from '@repo/db';
-import { getOrgIdCookie } from './cookies';
 
 export type Role = 'member' | 'admin' | 'owner' | 'ops';
 
@@ -29,10 +30,12 @@ export interface RoleContext {
 /**
  * 現在アクティブな組織コンテキストを取得
  *
- * CookieからアクティブなorgIdを取得し、organizationsテーブルから組織情報を取得。
+ * user_org_context テーブルからアクティブな org_id を取得し、
+ * organizations テーブルから組織情報を取得。
  *
  * 【重要な制約】
- * - Cookie に org_id が無い場合は null を返す（デフォルト組織は設定しない）
+ * - Session が無い場合は null を返す
+ * - user_org_context に org_id が無い場合は null を返す（デフォルト組織は設定しない）
  * - 組織が見つからない場合は null を返す
  * - redirect() は使用しない（呼び出し側で nextUrl を使って遷移する）
  * - Server Component / Server Action のみで使用
@@ -41,24 +44,41 @@ export interface RoleContext {
  */
 export async function getCurrentOrg(): Promise<OrgContext | null> {
   try {
-    // 1. Cookie から org_id を取得
-    const orgId = await getOrgIdCookie();
-    if (!orgId) {
-      // 組織が選択されていない → null を返す（呼び出し側で /switch-org へ誘導）
+    // 1. Supabase Session から user_id を取得
+    const supabase = await createServerClient();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.user?.id) {
+      // セッションが無い → 未認証 → null を返す
       return null;
     }
 
-    // 2. Supabase で組織情報を取得
-    const supabase = await createServerClient();
-    const { data: org, error } = await supabase
+    const userId = session.user.id;
+
+    // 2. user_org_context から active org_id を取得
+    const { data: context, error: contextError } = await supabase
+      .from('user_org_context')
+      .select('org_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (contextError || !context) {
+      // アクティブな組織が無い → null を返す（呼び出し側で /switch-org へ誘導）
+      return null;
+    }
+
+    const orgId = context.org_id;
+
+    // 3. organizations から組織情報を取得
+    const { data: org, error: orgError } = await supabase
       .from('organizations')
       .select('id, name')
       .eq('id', orgId)
       .single();
 
-    if (error || !org) {
-      console.error('[getCurrentOrg] Organization not found:', { orgId, error });
-      // 組織が見つからない → Cookie が無効 → null を返す
+    if (orgError || !org) {
+      console.error('[getCurrentOrg] Organization not found:', { orgId, error: orgError });
+      // 組織が見つからない → null を返す
       return null;
     }
 
@@ -75,12 +95,12 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
 /**
  * 現在のユーザーのロールを取得
  *
- * Supabase Sessionから user_id を取得し、Cookieから org_id を取得して、
+ * Supabase Sessionから user_id を取得し、user_org_context から active org_id を取得して、
  * profiles テーブルから該当ユーザーのロールを取得。
  *
  * 【重要な制約】
  * - Session が無い場合は null を返す（デフォルトでmemberにしない）
- * - Cookie に org_id が無い場合は null を返す
+ * - user_org_context に org_id が無い場合は null を返す
  * - ユーザーが指定orgに所属していない場合は null を返す（未所属orgへのアクセス禁止）
  * - redirect() は使用しない（呼び出し側で nextUrl を使って遷移する）
  * - Server Component / Server Action のみで使用
@@ -103,12 +123,19 @@ export async function getCurrentRole(): Promise<RoleContext | null> {
 
     const userId = session.user.id;
 
-    // 2. Cookie から org_id を取得
-    const orgId = await getOrgIdCookie();
-    if (!orgId) {
-      // 組織が選択されていない → null を返す
+    // 2. user_org_context から active org_id を取得
+    const { data: context, error: contextError } = await supabase
+      .from('user_org_context')
+      .select('org_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (contextError || !context) {
+      // アクティブな組織が無い → null を返す
       return null;
     }
+
+    const orgId = context.org_id;
 
     // 3. profiles テーブルから role を SELECT
     const { data: profile, error: profileError } = await supabase

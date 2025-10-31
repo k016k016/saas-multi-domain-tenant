@@ -8,9 +8,10 @@ test.describe('www/login >> cookies-await-smoke', () => {
     const response = await page.goto('/www/login');
     expect(response).toBeTruthy();
     const status = response!.status();
+    // HTTPステータスコードが200番台または300番台であることを確認
     expect(status).toBeGreaterThanOrEqual(200);
-    expect(status).toBeLessThan(500);
-    const content = await page.content();
-    expect(content).not.toContain('500');
+    expect(status).toBeLessThan(400);
+    // ログインフォームが表示されていることを確認
+    await expect(page.getByRole('button', { name: /ログイン|login/i })).toBeVisible();
   });
 });

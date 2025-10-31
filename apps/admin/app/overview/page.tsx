@@ -11,11 +11,17 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
+import { notFound } from 'next/navigation';
 
 export default async function OverviewPage() {
   const org = await getCurrentOrg();
   const roleContext = await getCurrentRole();
   const role = roleContext?.role;
+
+  // ADMIN domain: admin/owner のみアクセス可能
+  if (!role || (role !== 'admin' && role !== 'owner')) {
+    notFound();
+  }
 
   // TODO: 実際にはSupabaseから組織情報を取得
   const orgDetails = {

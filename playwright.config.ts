@@ -18,6 +18,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    navigationTimeout: 20_000, // ページ遷移タイムアウト（ログイン後の遷移など）
   },
   projects: [
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },

@@ -11,7 +11,6 @@
  */
 
 import { createServerClient, logActivity } from '@repo/db';
-import { setOrgIdCookie } from '@repo/config';
 import type { ActionResult } from '@repo/config';
 
 interface SwitchOrgData {
@@ -65,8 +64,22 @@ export async function switchOrganization(
       };
     }
 
-    // 4. org_id と role Cookie を設定
-    await setOrgIdCookie(targetOrgId, profile.role);
+    // 4. active org を DB に保存（Cookie は使わない）
+    const { error: updateError } = await supabase
+      .from('user_org_context')
+      .upsert({
+        user_id: userId,
+        org_id: targetOrgId,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (updateError) {
+      console.error('[switchOrganization] Failed to update user_org_context:', updateError);
+      return {
+        success: false,
+        error: '組織の切り替えに失敗しました',
+      };
+    }
 
     // 5. 監査ログ記録
     const logResult = await logActivity(supabase, {

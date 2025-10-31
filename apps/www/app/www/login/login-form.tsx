@@ -35,13 +35,12 @@ export function LoginForm() {
           setMessage({ type: 'error', text: result.error });
         } else {
           // ログイン成功 → Server Action が返した nextUrl へ遷移
-          if (result.nextUrl) {
-            // nextUrl が相対パスの場合は router.push、フルURLの場合は location.assign
-            if (result.nextUrl.startsWith('/')) {
-              router.push(result.nextUrl);
-            } else {
-              window.location.assign(result.nextUrl);
-            }
+          const nextUrl = result.nextUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
+          // nextUrl が相対パスの場合は router.push、フルURLの場合は location.assign
+          if (nextUrl.startsWith('/')) {
+            router.push(nextUrl);
+          } else {
+            window.location.assign(nextUrl);
           }
         }
       } else {
@@ -66,7 +65,7 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} data-testid="login-form">
       {/* モード切替タブ */}
       <div style={{ display: 'flex', marginBottom: '1.5rem', borderBottom: '1px solid #d1d5db' }}>
         <button

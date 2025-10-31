@@ -2,8 +2,10 @@
  * このmiddlewareは app ドメイン専用。
  *
  * - 許可ロール: 'member', 'admin', 'owner' 全員OK。
- * - Edge Runtime 対応: DB接続なし、Cookie読み取りのみ
+ * - Edge Runtime 対応: DB接続なし、Supabase Session Cookie読み取りのみ
  * - 粗いゲート：本検証はサーバ側で行う
+ *
+ * 重要: org_id/roleはCookieではなくDBで管理
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -11,20 +13,25 @@ import { DOMAINS } from '@repo/config-edge'
 
 export function middleware(req: NextRequest) {
   const url = new URL(req.url)
-  const orgId = req.cookies.get('org_id')?.value
-  const role  = req.cookies.get('role')?.value
 
   // /switch-org は認証不要でアクセス可能
   if (url.pathname.startsWith('/switch-org')) {
     return NextResponse.next()
   }
 
-  // 未ログイン相当は /login へ
-  if (!orgId || !role) {
+  // Supabase Session Cookie の存在確認（認証状態チェック）
+  // NOTE: Supabase の Cookie 名は `sb-<project-ref>-auth-token` の形式
+  // 正確な名前を確認するため、すべてのCookieをチェック
+  const hasSupabaseSession = Array.from(req.cookies.getAll()).some(
+    cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')
+  )
+
+  // 未ログインの場合は /login へリダイレクト
+  if (!hasSupabaseSession) {
     return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(url.href)}`)
   }
 
-  // member/admin/ownerは通す（本検証はサーバで再度行う）
+  // 認証済みユーザーは通す（org/role検証はサーバ側で行う）
   return NextResponse.next()
 }
 

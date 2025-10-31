@@ -14,7 +14,6 @@
 
 import { createServerClient } from '@repo/db';
 import type { ActionResult } from '@repo/config';
-import { setOrgIdCookie } from '@repo/config';
 
 /**
  * OTP (Magic Link) を送信する
@@ -81,37 +80,17 @@ export async function signInWithPassword(
       };
     }
 
-    const userId = data.session.user.id;
+    // Supabase Session は createServerClient() が自動的に Cookie を管理
+    // ログイン成功後は app ドメインに遷移（org/role は DB で解決）
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      'http://app.local.test:3002';
 
-    // ユーザーが所属する組織を取得
-    const { data: profiles, error: profileError } = await supabase
-      .from('profiles')
-      .select('org_id, role')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true });
-
-    if (profileError) {
-      console.error('[signInWithPassword] Profile fetch failed:', JSON.stringify(profileError, null, 2));
-    }
-
-    // 最初の組織を org_id として設定し、roleもCookieに保存
-    if (profiles && profiles.length > 0) {
-      const firstOrg = profiles[0];
-      await setOrgIdCookie(firstOrg.org_id, firstOrg.role);
-
-      // ログイン成功後は app ドメインに遷移
-      return {
-        success: true,
-        nextUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002',
-      };
-    } else {
-      // 組織に所属していない場合は組織切替ページへ
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
-      return {
-        success: true,
-        nextUrl: `${appUrl}/switch-org`,
-      };
-    }
+    return {
+      success: true,
+      nextUrl: appUrl,
+    };
   } catch (err) {
     console.error('予期しないエラー:', err);
     return {

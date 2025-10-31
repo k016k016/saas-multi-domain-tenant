@@ -16,9 +16,16 @@
  */
 
 import { getCurrentRole } from '@repo/config';
+import { notFound } from 'next/navigation';
 
 export default async function OpsHomePage() {
   const roleContext = await getCurrentRole();
+  const role = roleContext?.role;
+
+  // OPS domain: ops のみアクセス可能
+  if (!role || role !== 'ops') {
+    notFound();
+  }
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -30,7 +37,7 @@ export default async function OpsHomePage() {
           このドメインは事業者側（SaaS提供者）の内部コンソール領域です。
         </p>
         <p style={{ fontSize: '0.875rem', color: '#c7d2fe' }}>
-          現在のロール: <strong>{roleContext?.role ?? 'unknown'}</strong>
+          現在のロール: <strong>{role}</strong>
         </p>
       </section>
 

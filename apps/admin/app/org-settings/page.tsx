@@ -21,31 +21,23 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
+import { notFound } from 'next/navigation';
 
 export default async function OrgSettingsPage() {
   const org = await getCurrentOrg();
   const roleContext = await getCurrentRole();
   const role = roleContext?.role;
 
-  // owner専用ページであることを明示
-  // TODO: 実際にはmiddlewareでロールチェック済み
-  const isOwner = role === 'owner';
+  // ADMIN domain: owner のみアクセス可能
+  if (!role || role !== 'owner') {
+    notFound();
+  }
 
   return (
     <div style={{ padding: '2rem' }}>
       <h1>組織設定 (Owner専用)</h1>
 
-      {!isOwner && (
-        <section style={{ marginTop: '2rem', padding: '1rem', background: '#fee2e2', borderRadius: '4px' }}>
-          <h3 style={{ margin: 0, color: '#dc2626' }}>アクセス拒否</h3>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-            このページはowner専用です。adminはアクセスできません。
-          </p>
-        </section>
-      )}
-
-      {isOwner && (
-        <>
+      <>
           <section style={{ marginTop: '2rem' }}>
             <h2>現在のコンテキスト</h2>
             <p>組織: <strong>{org?.orgName ?? 'unknown'}</strong></p>
@@ -174,7 +166,6 @@ export default async function OrgSettingsPage() {
             </ul>
           </section>
         </>
-      )}
     </div>
   );
 }
