@@ -1,6 +1,19 @@
 {
   "root": true,
   "extends": ["next/core-web-vitals"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@repo/config/src/cookies",
+            "message": "旧Cookie管理は禁止。Supabaseセッションのみを使用してください。"
+          }
+        ]
+      }
+    ]
+  },
   "overrides": [
     {
       "files": ["apps/**/middleware.ts"],
@@ -8,6 +21,23 @@
         "no-restricted-imports": [
           "error",
           { "patterns": ["@repo/db*", "next/headers"] }
+        ]
+      }
+    },
+    {
+      "files": ["apps/**/app/**/actions.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "next/navigation",
+                "importNames": ["redirect"],
+                "message": "Server Actionでredirect()は禁止。ActionResultを返してクライアント側で遷移させてください。"
+              }
+            ]
+          }
         ]
       }
     }
