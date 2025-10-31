@@ -6,5 +6,6 @@ export async function uiLogin(page: Page, email: string, password: string) {
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
   await page.getByRole('button', { name: /sign in|login|ログイン/i }).click();
-  await page.waitForURL(new RegExp(`${DOMAINS.WWW}/?`));
+  // ログイン成功後はAPPドメインにリダイレクトされる
+  await page.waitForURL(new RegExp(`${DOMAINS.APP}/?`));
 }

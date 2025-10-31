@@ -65,8 +65,8 @@ export async function switchOrganization(
       };
     }
 
-    // 4. org_id Cookie を設定
-    await setOrgIdCookie(targetOrgId);
+    // 4. org_id と role Cookie を設定
+    await setOrgIdCookie(targetOrgId, profile.role);
 
     // 5. 監査ログ記録
     const logResult = await logActivity(supabase, {

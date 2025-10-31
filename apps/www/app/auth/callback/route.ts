@@ -46,10 +46,10 @@ export async function GET(request: NextRequest) {
       console.error('[auth/callback] Profile fetch failed:', JSON.stringify(profileError, null, 2));
     }
 
-    // 最初の組織を active_org_id として設定
+    // 最初の組織を org_id として設定し、roleもCookieに保存
     if (profiles && profiles.length > 0) {
       const firstOrg = profiles[0];
-      await setOrgIdCookie(firstOrg.org_id);
+      await setOrgIdCookie(firstOrg.org_id, firstOrg.role);
 
       // app ドメインへリダイレクト
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
