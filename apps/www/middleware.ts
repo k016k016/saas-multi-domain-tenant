@@ -17,12 +17,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 認証済みユーザー（org_idとroleがあれば）は app ドメインへリダイレクト
-  const orgId = request.cookies.get('org_id')?.value
-  const role  = request.cookies.get('role')?.value
+  // Supabase Session Cookieの存在確認
+  // NOTE: Supabase の Cookie 名は `sb-<project-ref>-auth-token` の形式
+  const hasSupabaseSession = Array.from(request.cookies.getAll()).some(
+    cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')
+  )
 
-  if (orgId && role) {
-    // 認証済み → app ドメインへリダイレクト
+  // 認証済みかつログインページ以外にいる場合は app ドメインへリダイレクト
+  if (hasSupabaseSession && !pathname.startsWith('/www/login')) {
     return NextResponse.redirect(DOMAINS.app)
   }
 
