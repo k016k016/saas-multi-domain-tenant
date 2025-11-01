@@ -13,7 +13,7 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import InviteUserForm from './invite-user-form';
 import MemberList from './member-list';
 
@@ -26,10 +26,8 @@ export default async function MembersPage() {
   const currentUserRole = roleContext?.role;
 
   // ADMIN domain: admin/owner のみアクセス可能
-  // Next.jsではServer ComponentからHTTPステータスコードを直接返せないため
-  // notFound()で404を返す（実運用では専用のエラーページを作成推奨）
   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
-    notFound();
+    redirect('/unauthorized');
   }
 
   // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得

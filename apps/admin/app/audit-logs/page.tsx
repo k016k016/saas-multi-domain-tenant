@@ -11,7 +11,7 @@
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
 import { getSupabaseAdmin, type AuditAction } from '@repo/db';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 // cookies()を使用するため、動的レンダリングを強制
 export const dynamic = 'force-dynamic';
@@ -46,7 +46,7 @@ export default async function AuditLogsPage({
 
   // ADMIN domain: admin/owner のみアクセス可能
   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
-    notFound();
+    redirect('/unauthorized');
   }
 
   if (!org) {
