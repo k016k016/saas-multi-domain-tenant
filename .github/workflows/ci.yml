@@ -1,11 +1,12 @@
-name: edge-guard
+name: CI Guard
 on: [pull_request]
 jobs:
   guard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: forbid @repo/db import in middleware
+
+      - name: Edge-safe middleware check
         run: |
           set -e
           hits=$(grep -R "import .*@repo/db" apps/**/middleware.ts || true)
@@ -15,4 +16,13 @@ jobs:
           bad=$(grep -R "from 'next/headers'" apps/**/middleware.ts || true)
           if [ -n "$bad" ]; then
             echo "::error::Do not use next/headers::cookies() in middleware"; echo "$bad"; exit 1
+          fi
+
+      - name: Server Action redirect() check
+        run: |
+          set -e
+          # Server Actionでのredirect()を禁止（middlewareは除外）
+          bad=$(grep -R "redirect(" apps/**/actions.ts packages/**/actions.ts 2>/dev/null || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Server Actions must return ActionResult, not redirect()"; echo "$bad"; exit 1
           fi

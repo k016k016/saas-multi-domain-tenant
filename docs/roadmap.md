@@ -8,7 +8,7 @@
 ## ✅ Done（v0 Foundations）
 
 - **モノレポ分離**: `www / app / admin / ops` を独立アプリとして配置
-- **Edge-safe middleware**: DB/Supabase/`next/headers`/`cookies()` を未使用（`.github/workflows/edge-guard.yml` で検証）
+- **Edge-safe middleware**: DB/Supabase/`next/headers`/`cookies()` を未使用（`.github/workflows/ci.yml` で検証）
 - **RLS前提のスキーマ**: `organizations / profiles / activity_logs` 実装済み（`infra/supabase/migrations/` でRLS導入）
 - **Cookie方針の統一**: `sb-<project-ref>-auth-token` のみ使用（`docs/patterns/cookies-and-sessions.md`、`role/active org` は常にDB解決）
 - **E2E基盤**: 境界（ドメイン×ロール）テストは通過状態まで到達（`e2e/tests/` 配下に実装）
@@ -22,9 +22,9 @@
 ## ▶ Next（P0: 必須・安全性）
 
 1) **CIゲート（部分実装）**
-   - ✅ Edge-safe検証（実装済み: `.github/workflows/edge-guard.yml`）
-   - ❌ E2E自動実行（担当: 自分）→ `.github/workflows/edge-guard.yml` に `pnpm -w test:e2e` を追加
-   - ❌ Server Action内の `redirect()` 検出（担当: 自分）→ `.github/workflows/edge-guard.yml` にgrep検証ステップを追加（middleware除外）
+   - ✅ Edge-safe検証（実装済み: `.github/workflows/ci.yml`）
+   - ✅ Server Action内の `redirect()` 検出（実装済み: `.github/workflows/ci.yml`）
+   - ❌ E2E自動実行（担当: 自分）→ `.github/workflows/ci.yml` に `pnpm -w test:e2e` を追加
 
 ---
 
