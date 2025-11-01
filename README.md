@@ -131,7 +131,7 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提に、SaaSの�
 
 - 1ユーザーは複数の組織(org)に所属できる
 - ユーザーは「現在アクティブな組織(org_id)」をUIから切り替えられる
-- 現在のorg_idはサーバー側セッション＋Cookieで保持される
+- 現在のorg_idはDB（user_org_context）で保持される
 - すべてのデータ取得・表示は「いまのorg_id」のコンテキストで行われる
 - middlewareはorg_idを前提にしてアクセス制御・ガードを行う  
   → middlewareを「テストしやすいからオフ」「全部1ドメインでよくない？」みたいにするのは不可

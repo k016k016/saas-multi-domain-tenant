@@ -10,7 +10,7 @@
 - DBはPostgres/Supabaseを想定
 - Supabase Authが認証のソースオブトゥルース
 - すべてのテーブルは `organization_id` でテナント境界を持っている
-- 現在のアクティブな組織IDはセッションとCookieで保持される
+- 現在のアクティブな組織IDはDB（user_org_context）で保持される
 - 参考: [CLAUDE_RUNTIME_MIN.md](../../CLAUDE_RUNTIME_MIN.md)
 
 ## 正常フロー
@@ -19,7 +19,7 @@
 - **1ユーザーは複数の組織(org)に所属できる**
 - **ユーザーはUI上で「現在アクティブな組織(org_id)」を切り替えることができる**
   - 詳細は [組織切り替え仕様](./organization-switching.md) を参照
-- **現在のorg_idはサーバー側セッションとCookieで保持**
+- **現在のorg_idはDB（user_org_context）で保持**
   - middlewareはこのorg_idを前提にルーティング・アクセス制御を行う
   - middlewareの挙動を勝手に簡略化・変更しない
 

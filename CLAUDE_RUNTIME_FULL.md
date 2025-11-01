@@ -101,7 +101,7 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提とする。
 
 - 1ユーザーは複数組織(org)に所属できる。
 - ユーザーはUIでアクティブな組織(org_id)を切り替える。
-- 現在のorg_idはサーバー側セッション＋Cookieに保持する。
+- 現在のorg_idはDB（user_org_context）に保持する。
 - middlewareはこのorg_idを前提にアクセス制御を行う。middlewareのロジックを「簡略化」の名目で勝手に変更/撤廃しない。
 - DBはSupabase(Postgres)を前提とし、org_id単位でRow Level Security (RLS) を敷く。
 - RLSを無効化・バイパスする・「テストなので全件見えるようにします」という提案は禁止。
