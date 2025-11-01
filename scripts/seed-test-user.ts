@@ -2,8 +2,10 @@
  * CI環境用テストユーザーのシードスクリプト
  *
  * 責務:
+ * - E2Eテスト用の組織(organizations)を作成/更新する
  * - E2Eテスト用のユーザーを作成/更新する
  * - Supabase Auth の admin API を使用して確実にユーザーを準備
+ * - profilesテーブルにuser_id, org_id, roleを挿入してアプリケーションで使えるようにする
  * - 複数のロール（member, owner）を持つテストユーザーを作成
  *
  * 使い方:
@@ -19,12 +21,36 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// E2Eテスト用の組織ID（固定値）
+const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
+const TEST_ORG_NAME = 'Test Organization';
+
 // E2Eテストで使用するテストユーザー
 // ロールごとに異なるメールアドレスを使用
 const TEST_USERS = [
   { email: 'member1@example.com', role: 'member' },
   { email: 'owner1@example.com', role: 'owner' },
 ] as const;
+
+async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
+  console.log(`🏢 Upserting test organization (${TEST_ORG_NAME})...`);
+
+  const { error } = await supabase
+    .from('organizations')
+    .upsert({
+      id: TEST_ORG_ID,
+      name: TEST_ORG_NAME,
+      plan: 'business',
+      is_active: true,
+    })
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to upsert organization: ${error.message}`);
+  }
+
+  console.log(`✅ Test organization upserted successfully (ID: ${TEST_ORG_ID})`);
+}
 
 async function upsertUser(
   supabase: ReturnType<typeof createClient>,
@@ -46,6 +72,8 @@ async function upsertUser(
     (u) => (u.email || '').toLowerCase() === email.toLowerCase()
   );
 
+  let userId: string;
+
   if (existingUser) {
     // 既存ユーザーのパスワードを更新
     console.log(
@@ -64,6 +92,7 @@ async function upsertUser(
       throw new Error(`Failed to update ${role} user: ${updateError.message}`);
     }
 
+    userId = existingUser.id;
     console.log(`✅ ${role} user password updated successfully`);
   } else {
     // 新規ユーザーを作成
@@ -79,8 +108,28 @@ async function upsertUser(
       throw new Error(`Failed to create ${role} user: ${createError.message}`);
     }
 
-    console.log(`✅ ${role} user created successfully (ID: ${createData.user.id})`);
+    userId = createData.user.id;
+    console.log(`✅ ${role} user created successfully (ID: ${userId})`);
   }
+
+  // profilesテーブルにレコードを作成/更新（アプリケーションがuser_id, org_id, roleを使用するため）
+  console.log(`📝 Upserting ${role} user profile in profiles table...`);
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert({
+      user_id: userId,
+      org_id: TEST_ORG_ID,
+      role: role,
+      metadata: {},
+    })
+    .select();
+
+  if (profileError) {
+    throw new Error(`Failed to upsert ${role} user profile: ${profileError.message}`);
+  }
+
+  console.log(`✅ ${role} user profile upserted successfully`);
 }
 
 async function main() {
@@ -99,8 +148,9 @@ async function main() {
     throw new Error('Missing environment variable: E2E_TEST_PASSWORD');
   }
 
-  console.log('🔧 Seeding test users for E2E tests...');
+  console.log('🔧 Seeding test organization and users for E2E tests...');
   console.log(`🌐 Supabase URL: ${url}`);
+  console.log(`🏢 Organization: ${TEST_ORG_NAME} (ID: ${TEST_ORG_ID})`);
   console.log(`👥 Creating ${TEST_USERS.length} test users...`);
 
   // Service Role Key で Admin API を使用
@@ -111,12 +161,15 @@ async function main() {
     },
   });
 
+  // テスト用組織を作成/更新
+  await upsertOrganization(supabase);
+
   // 各テストユーザーを作成/更新
   for (const user of TEST_USERS) {
     await upsertUser(supabase, user.email, password, user.role);
   }
 
-  console.log('🎉 All test users seeding completed');
+  console.log('🎉 All test organization and users seeding completed');
 }
 
 main().catch((error) => {
