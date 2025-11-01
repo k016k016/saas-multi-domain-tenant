@@ -13,7 +13,8 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
-import { redirect } from 'next/navigation';
+import { createServerClient } from '@repo/db';
+import { notFound, redirect } from 'next/navigation';
 import InviteUserForm from './invite-user-form';
 import MemberList from './member-list';
 
@@ -30,41 +31,33 @@ export default async function MembersPage() {
     redirect('/unauthorized');
   }
 
-  // TODO: 実際にはSupabase profilesテーブルから組織のメンバー一覧を取得
-  // SELECT user_id, email, role, status, created_at, invited_by
-  // FROM profiles
-  // WHERE org_id = $1
-  // ORDER BY created_at DESC
-  const members = [
-    {
-      userId: 'user_owner_123',
-      email: 'owner@example.com',
-      role: 'owner' as const,
-      status: 'active' as const,
-      createdAt: '2025-01-01',
-    },
-    {
-      userId: 'user_admin_456',
-      email: 'admin@example.com',
-      role: 'admin' as const,
-      status: 'active' as const,
-      createdAt: '2025-01-10',
-    },
-    {
-      userId: 'user_member_789',
-      email: 'member@example.com',
-      role: 'member' as const,
-      status: 'active' as const,
-      createdAt: '2025-01-15',
-    },
-    {
-      userId: 'user_pending_abc',
-      email: 'pending@example.com',
-      role: 'member' as const,
-      status: 'pending' as const,
-      createdAt: '2025-01-20',
-    },
-  ];
+  if (!org) {
+    notFound();
+  }
+
+  // Supabase profilesテーブルから組織のメンバー一覧を取得
+  const supabase = await createServerClient();
+  const { data: profilesData, error: profilesError } = await supabase
+    .from('profiles')
+    .select('user_id, role, created_at')
+    .eq('org_id', org.orgId)
+    .order('created_at', { ascending: false });
+
+  if (profilesError) {
+    console.error('[MembersPage] Failed to fetch profiles:', profilesError);
+  }
+
+  // auth.usersテーブルからメールアドレスを取得（Service Role Key必要）
+  // 注: 現在はメールアドレス取得が難しいため、user_idのみ表示
+  // 将来的にはSupabase Admin APIまたはAuth Adminを使用してメールを取得
+  const members =
+    profilesData?.map((profile) => ({
+      userId: profile.user_id,
+      email: `${profile.user_id.substring(0, 8)}@...`, // 暫定: user_idの一部を表示
+      role: profile.role as 'owner' | 'admin' | 'member',
+      status: 'active' as const, // 現在のスキーマにはstatusカラムがないため固定
+      createdAt: new Date(profile.created_at).toLocaleDateString('ja-JP'),
+    })) || [];
 
   return (
     <div style={{ padding: '2rem' }}>
