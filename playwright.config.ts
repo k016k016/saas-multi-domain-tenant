@@ -11,21 +11,21 @@ const OPS_URL = process.env.NEXT_PUBLIC_OPS_URL ?? 'http://ops.local.test:3004';
 
 export default defineConfig({
   testDir: './e2e/tests',
-  timeout: 30_000,
-  expect: { timeout: 10_000 },
+  timeout: CI ? 60_000 : 30_000, // CI環境では60秒に延長
+  expect: { timeout: CI ? 15_000 : 10_000 },
   workers: CI ? 2 : undefined,
   reporter: CI ? 'github' : [['list'], ['html', { open: 'never' }]],
   use: {
-    trace: 'on-first-retry',
+    trace: CI ? 'retain-on-failure' : 'on-first-retry', // CI環境では失敗時にtrace保存
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    navigationTimeout: 20_000,
+    navigationTimeout: CI ? 30_000 : 20_000, // CI環境では30秒に延長
   },
   webServer: CI ? [
-    { command: 'pnpm --filter www start', port: 3001, reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter app start', port: 3002, reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter admin start', port: 3003, reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter ops start', port: 3004, reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter www start', url: 'http://localhost:3001', reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter app start', url: 'http://localhost:3002', reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter admin start', url: 'http://localhost:3003', reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter ops start', url: 'http://localhost:3004', reuseExistingServer: true, timeout: 120_000 },
   ] : undefined,
   projects: [
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },

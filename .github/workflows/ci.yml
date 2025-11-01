@@ -59,7 +59,7 @@ jobs:
         run: pnpm -w lint
 
       - name: Install Playwright
-        run: pnpm dlx playwright install --with-deps
+        run: pnpm dlx playwright install --with-deps chromium
 
       # E2E（playwright.config.ts で webServer/baseURL を管理）
       - name: Run E2E

@@ -7,5 +7,9 @@ export async function uiLogin(page: Page, email: string, password: string) {
   await page.locator('#password').fill(password);
   await page.getByRole('button', { name: /sign in|login|ログイン/i }).click();
   // ログイン成功後はAPPドメインにリダイレクトされる
-  await page.waitForURL(new RegExp(`${DOMAINS.APP}/?`));
+  // CI環境を考慮してタイムアウトを60秒に延長し、ネットワークが安定するまで待機
+  await page.waitForURL(new RegExp(`${DOMAINS.APP}/?`), {
+    timeout: 60_000,
+    waitUntil: 'networkidle',
+  });
 }
