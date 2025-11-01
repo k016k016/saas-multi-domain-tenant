@@ -46,7 +46,7 @@ sequenceDiagram
 
     User->>WWW: POST /www/login (email, password)
     WWW->>Supabase: auth.signInWithPassword()
-    Supabase-->>WWW: Session Cookie (sb-*-auth-token)
+    Supabase-->>WWW: Session Cookie (sb-<project-ref>-auth-token)
     WWW->>DB: INSERT user_org_context (user_id, org_id)
     DB-->>WWW: OK
     WWW-->>User: Redirect to app.local.test

@@ -84,7 +84,7 @@ jar.set({ name: 'sb-refresh-token', value: session.refresh_token, ...common })
 	•	await cookies() を忘れて Next 16 でランタイムエラー
 
 7. 変更履歴
-	•	v0.3 (2025-10-31): 旧Cookie管理コード（`@repo/config/src/cookies.ts`）を完全削除 / ESLintルールで機械的に強制 / Cookie名を実際の形式（`sb-*-auth-token`）に明記 / ADR-006を追加
+	•	v0.3 (2025-10-31): 旧Cookie管理コード（`@repo/config/src/cookies.ts`）を完全削除 / ESLintルールで機械的に強制 / Cookie名を実際の形式（`sb-<project-ref>-auth-token`）に明記 / ADR-006, ADR-007を追加
 	•	v0.2: Cookieは sb-セッションのみ／role・active org のCookie保存廃止／active orgはDB保持に統一／Server Actionは { success, nextUrl } へ統一／Next16の await cookies() を前提化
 
 ## 参考資料
