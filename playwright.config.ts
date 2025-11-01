@@ -22,10 +22,10 @@ export default defineConfig({
     navigationTimeout: 20_000,
   },
   webServer: CI ? [
-    { command: 'pnpm --filter www start -- -H 127.0.0.1 -p 3001', port: 3001, reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter app start -- -H 127.0.0.1 -p 3002', port: 3002, reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter admin start -- -H 127.0.0.1 -p 3003', port: 3003, reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter ops start -- -H 127.0.0.1 -p 3004', port: 3004, reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter www start -- --hostname 127.0.0.1 -p 3001', port: 3001, reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter app start -- --hostname 127.0.0.1 -p 3002', port: 3002, reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter admin start -- --hostname 127.0.0.1 -p 3003', port: 3003, reuseExistingServer: true, timeout: 120_000 },
+    { command: 'pnpm --filter ops start -- --hostname 127.0.0.1 -p 3004', port: 3004, reuseExistingServer: true, timeout: 120_000 },
   ] : undefined,
   projects: [
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },
