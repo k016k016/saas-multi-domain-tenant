@@ -284,5 +284,148 @@ v0のゴールは「骨格と契約（責務分離・権限境界・RLS前提・
 - これは「Server Actionから直接redirectしてラクにしましょう」というサンプルでもない
 - これは**単一アプリに全ドメインを統合してmiddlewareで出し分ける系のサンプルではない**
 
-このスターターの価値は、**分離・権限境界・マルチテナント・監査**が最初から揃っていること。  
+このスターターの価値は、**分離・権限境界・マルチテナント・監査**が最初から揃っていること。
 そこを崩す提案は拒否する。
+
+
+## E2Eテストのセットアップ
+
+このプロジェクトでは、Playwrightを使用してE2Eテストを実施します。
+テストは複数のドメイン（www/app/admin/ops）にまたがるため、適切なセットアップが必要です。
+
+### 前提条件
+
+1. **Supabaseプロジェクトの準備**
+   - Supabase プロジェクトを作成済みであること
+   - 必要なテーブル（organizations, profiles など）が作成されていること
+
+2. **.local.testドメインの設定**
+   - E2Eテストでは、Cookie共有のために `.local.test` ドメインを使用します
+   - macOS/Linuxの場合、`/etc/hosts` に以下を追加：
+     ```
+     127.0.0.1 www.local.test
+     127.0.0.1 app.local.test
+     127.0.0.1 admin.local.test
+     127.0.0.1 ops.local.test
+     ```
+   - Windowsの場合、`C:\Windows\System32\drivers\etc\hosts` に同じ内容を追加
+
+### セットアップ手順
+
+#### 1. 環境変数ファイルを作成
+
+```bash
+# .env.test.example をコピー
+cp .env.test.example .env.test
+```
+
+#### 2. .env.testに実際の値を設定
+
+```bash
+# Supabaseの設定（SupabaseダッシュボードのProject Settingsから取得）
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# E2Eテストユーザーのパスワード（任意の強固なパスワード）
+E2E_TEST_PASSWORD=YourSecurePassword123!
+
+# その他はデフォルト値のままでOK
+```
+
+#### 3. E2Eテストユーザーをセットアップ
+
+```bash
+# テストユーザーを作成（初回のみ、またはDBリセット後に実行）
+pnpm setup:e2e
+```
+
+このコマンドは以下を実行します：
+- テスト用組織（Test Organization）を作成/更新
+- 3つのテストユーザーを作成/更新
+  - `member1@example.com` (member ロール)
+  - `admin1@example.com` (admin ロール)
+  - `owner1@example.com` (owner ロール)
+
+#### 4. 開発サーバーを起動
+
+```bash
+# 別のターミナルウィンドウで
+pnpm dev
+```
+
+4つのアプリ（www, app, admin, ops）が以下のポートで起動します：
+- www: http://www.local.test:3001
+- app: http://app.local.test:3002
+- admin: http://admin.local.test:3003
+- ops: http://ops.local.test:3004
+
+#### 5. E2Eテストを実行
+
+```bash
+# ヘッドレスモードで実行
+pnpm test:e2e
+
+# UIモードで実行（デバッグに便利）
+pnpm test:e2e:ui
+```
+
+### トラブルシューティング
+
+#### テストが「Invalid login credentials」で失敗する
+
+原因：テストユーザーがSupabaseに存在しない
+
+解決策：
+```bash
+# テストユーザーを再作成
+pnpm setup:e2e
+```
+
+#### 環境変数が見つからないエラー
+
+原因：`.env.test` ファイルが存在しないか、必要な環境変数が設定されていない
+
+解決策：
+1. `.env.test` ファイルが存在することを確認
+2. 以下の環境変数が全て設定されていることを確認
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `E2E_TEST_PASSWORD`
+
+#### .local.testドメインにアクセスできない
+
+原因：`/etc/hosts` の設定が正しくない
+
+解決策：
+```bash
+# macOS/Linux
+sudo nano /etc/hosts
+
+# 以下の行を追加
+127.0.0.1 www.local.test
+127.0.0.1 app.local.test
+127.0.0.1 admin.local.test
+127.0.0.1 ops.local.test
+```
+
+#### データベースをリセットした場合
+
+データベースを完全にリセット（テーブル削除など）した場合：
+
+1. マイグレーションを再実行
+2. テストユーザーを再作成：
+   ```bash
+   pnpm setup:e2e
+   ```
+
+### CI環境でのE2Eテスト
+
+GitHub Actionsでは、以下の環境変数をSecretsに設定する必要があります：
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `E2E_TEST_PASSWORD`
+
+CI環境では、テストユーザーのセットアップが自動的に実行されます（`.github/workflows/ci.yml` 参照）。

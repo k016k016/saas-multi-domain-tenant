@@ -10,6 +10,7 @@
     "clean": "turbo run clean",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "setup:e2e": "tsx scripts/seed-test-user.ts",
     "seed:create-users": "tsx infra/supabase/seeds/create-auth-users.ts",
     "seed:run": "./infra/supabase/seeds/run-seeds.sh",
     "seed:all": "pnpm seed:create-users && pnpm seed:run"
