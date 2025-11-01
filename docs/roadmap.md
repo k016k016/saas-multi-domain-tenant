@@ -16,15 +16,13 @@
 - **activity_logs実装**: `packages/db/src/audit.ts` で `logActivity()` 実装済み（組織切替／ユーザー招待・ロール変更・削除で使用中）
 - **組織切替の厳格化**: `apps/app/app/switch-org/actions.ts` で所属検証ロジック、`ActionResult` 形式返却、監査ログ記録を実装済み
 - **共通認可ガード**: `packages/config/src/auth.ts` で `getCurrentOrg()`, `getCurrentRole()`, `hasRole()` 実装済み（ロール階層に基づく権限チェック）
+- **CI自動化**: `.github/workflows/ci.yml` でEdge-safe検証、redirect()検出、E2E自動実行を実装済み（Playwrightによる本番ビルドテスト）
 
 ---
 
 ## ▶ Next（P0: 必須・安全性）
 
-1) **CIゲート（部分実装）**
-   - ✅ Edge-safe検証（実装済み: `.github/workflows/ci.yml`）
-   - ✅ Server Action内の `redirect()` 検出（実装済み: `.github/workflows/ci.yml`）
-   - ❌ E2E自動実行（担当: 自分）→ `.github/workflows/ci.yml` に `pnpm -w test:e2e` を追加
+現在、P0タスクはすべて完了しています。
 
 ---
 
@@ -51,8 +49,8 @@
 - [x] 認可ガード: app=全員 / admin=admin|owner / owner専用=ownerのみ（403動作）
 - [x] Server Actions: すべて `{ success, nextUrl }` 返却（`redirect()` 禁止）
 - [x] Cookie: `sb-<project-ref>-auth-token` のみ（`role/active org` はDB解決）
-- [ ] middleware: Edge-safe（DB/`@supabase/*`/`next/headers`/`cookies()` 不使用）※部分達成、継続監視が必要
-- [ ] CI: E2E とゲート検証が main/develop で自動実行
+- [x] middleware: Edge-safe（DB/`@supabase/*`/`next/headers`/`cookies()` 不使用）※CI で自動検証
+- [x] CI: E2E とゲート検証が main/develop で自動実行（`.github/workflows/ci.yml`）
 
 ---
 
