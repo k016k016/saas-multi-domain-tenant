@@ -52,7 +52,7 @@ jobs:
         run: bash scripts/ci/redirect_guard.sh
 
       - name: Type check
-        run: pnpm -w tsc --noEmit
+        run: pnpm typecheck
 
       - name: Lint
         run: pnpm -w lint
