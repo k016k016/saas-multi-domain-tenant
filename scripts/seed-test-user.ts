@@ -4,6 +4,7 @@
  * 責務:
  * - E2Eテスト用のユーザーを作成/更新する
  * - Supabase Auth の admin API を使用して確実にユーザーを準備
+ * - 複数のロール（member, owner）を持つテストユーザーを作成
  *
  * 使い方:
  * ```bash
@@ -13,41 +14,24 @@
  * 必要な環境変数:
  * - NEXT_PUBLIC_SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
- * - E2E_TEST_EMAIL
  * - E2E_TEST_PASSWORD
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-async function main() {
-  // 環境変数の検証
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const email = process.env.E2E_TEST_EMAIL || 'e2e.test@local.example';
-  const password = process.env.E2E_TEST_PASSWORD;
+// E2Eテストで使用するテストユーザー
+// ロールごとに異なるメールアドレスを使用
+const TEST_USERS = [
+  { email: 'member1@example.com', role: 'member' },
+  { email: 'owner1@example.com', role: 'owner' },
+] as const;
 
-  if (!url) {
-    throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
-  }
-  if (!serviceRoleKey) {
-    throw new Error('Missing environment variable: SUPABASE_SERVICE_ROLE_KEY');
-  }
-  if (!password) {
-    throw new Error('Missing environment variable: E2E_TEST_PASSWORD');
-  }
-
-  console.log('🔧 Seeding test user for E2E tests...');
-  console.log(`📧 Email: ${email}`);
-  console.log(`🌐 Supabase URL: ${url}`);
-
-  // Service Role Key で Admin API を使用
-  const supabase = createClient(url, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-
+async function upsertUser(
+  supabase: ReturnType<typeof createClient>,
+  email: string,
+  password: string,
+  role: string
+) {
   // 既存ユーザーを検索
   const { data: listData, error: listError } = await supabase.auth.admin.listUsers({
     page: 1,
@@ -64,7 +48,9 @@ async function main() {
 
   if (existingUser) {
     // 既存ユーザーのパスワードを更新
-    console.log(`👤 User already exists (ID: ${existingUser.id}). Updating password...`);
+    console.log(
+      `👤 ${role} user already exists (${email}, ID: ${existingUser.id}). Updating password...`
+    );
 
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       existingUser.id,
@@ -75,13 +61,13 @@ async function main() {
     );
 
     if (updateError) {
-      throw new Error(`Failed to update user: ${updateError.message}`);
+      throw new Error(`Failed to update ${role} user: ${updateError.message}`);
     }
 
-    console.log('✅ Password updated successfully');
+    console.log(`✅ ${role} user password updated successfully`);
   } else {
     // 新規ユーザーを作成
-    console.log('👤 Creating new user...');
+    console.log(`👤 Creating ${role} user (${email})...`);
 
     const { data: createData, error: createError } = await supabase.auth.admin.createUser({
       email,
@@ -90,13 +76,47 @@ async function main() {
     });
 
     if (createError) {
-      throw new Error(`Failed to create user: ${createError.message}`);
+      throw new Error(`Failed to create ${role} user: ${createError.message}`);
     }
 
-    console.log(`✅ User created successfully (ID: ${createData.user.id})`);
+    console.log(`✅ ${role} user created successfully (ID: ${createData.user.id})`);
+  }
+}
+
+async function main() {
+  // 環境変数の検証
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const password = process.env.E2E_TEST_PASSWORD;
+
+  if (!url) {
+    throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
+  }
+  if (!serviceRoleKey) {
+    throw new Error('Missing environment variable: SUPABASE_SERVICE_ROLE_KEY');
+  }
+  if (!password) {
+    throw new Error('Missing environment variable: E2E_TEST_PASSWORD');
   }
 
-  console.log('🎉 Test user seeding completed');
+  console.log('🔧 Seeding test users for E2E tests...');
+  console.log(`🌐 Supabase URL: ${url}`);
+  console.log(`👥 Creating ${TEST_USERS.length} test users...`);
+
+  // Service Role Key で Admin API を使用
+  const supabase = createClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  // 各テストユーザーを作成/更新
+  for (const user of TEST_USERS) {
+    await upsertUser(supabase, user.email, password, user.role);
+  }
+
+  console.log('🎉 All test users seeding completed');
 }
 
 main().catch((error) => {
