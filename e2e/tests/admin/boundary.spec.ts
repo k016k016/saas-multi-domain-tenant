@@ -12,11 +12,12 @@ test.describe('ADMIN domain boundary', () => {
     await expect(page).toHaveURL(new RegExp(`${DOMAINS.WWW}/login`));
   });
 
-  test('member → 404（アクセス拒否）', async ({ page }) => {
+  test('member → /unauthorizedにリダイレクト（アクセス拒否）', async ({ page }) => {
     await uiLogin(page, MEMBER.email, PASSWORD);
-    const res = await page.goto(`${DOMAINS.ADMIN}/members`);
-    // Next.jsではServer Componentから403を直接返せないため、notFound()で404を返す
-    expect(res?.status()).toBe(404);
+    await page.goto(`${DOMAINS.ADMIN}/members`);
+
+    // UX改善: 権限エラー時は専用の/unauthorizedページにリダイレクト
+    await expect(page).toHaveURL(new RegExp(`${DOMAINS.ADMIN}/unauthorized`));
   });
 
   test('owner → 200 でアクセス可能', async ({ page }) => {
