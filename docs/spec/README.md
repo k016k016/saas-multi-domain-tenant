@@ -23,7 +23,7 @@ spec配下は機能仕様を記述する場所。ドキュメントは以下の�
 - この機能が成立するために存在している前提を箇条書きで書く。
   - 例: 「ユーザーは複数組織に所属できる」
   - 例: 「組織にはownerが必ずいる」
-  - 例: 「現在のorganization_idはセッションとCookieで保持されている（詳細は spec/common/session-and-org-context.md を参照）」
+  - 例: 「現在のorganization_idはDB（user_org_context）で保持されている（詳細は spec/common/session-and-org-context.md を参照）」
 - ここに権限モデルへの参照も置いてよい（例: 「この操作はadmin以上のみ可能。roles-and-access.md参照」）
 
 ※ ここは「commonに書いてある用語前提で読め」というリンクを貼る場所。
