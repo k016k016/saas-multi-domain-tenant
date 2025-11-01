@@ -18,6 +18,9 @@
 import { getCurrentRole } from '@repo/config';
 import { notFound } from 'next/navigation';
 
+// cookies()を使用するため、動的レンダリングを強制
+export const dynamic = 'force-dynamic';
+
 export default async function OpsHomePage() {
   const roleContext = await getCurrentRole();
   const role = roleContext?.role;

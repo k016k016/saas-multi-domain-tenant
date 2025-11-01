@@ -17,6 +17,9 @@ import { notFound } from 'next/navigation';
 import InviteUserForm from './invite-user-form';
 import MemberList from './member-list';
 
+// cookies()を使用するため、動的レンダリングを強制
+export const dynamic = 'force-dynamic';
+
 export default async function MembersPage() {
   const org = await getCurrentOrg();
   const roleContext = await getCurrentRole();

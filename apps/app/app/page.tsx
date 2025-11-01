@@ -19,6 +19,9 @@
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
 
+// cookies()を使用するため、動的レンダリングを強制
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const org = await getCurrentOrg();
   const roleContext = await getCurrentRole();
