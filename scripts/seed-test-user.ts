@@ -29,6 +29,7 @@ const TEST_ORG_NAME = 'Test Organization';
 // ロールごとに異なるメールアドレスを使用
 const TEST_USERS = [
   { email: 'member1@example.com', role: 'member' },
+  { email: 'admin1@example.com', role: 'admin' },
   { email: 'owner1@example.com', role: 'owner' },
 ] as const;
 
@@ -159,7 +160,7 @@ async function main() {
   console.log('🔧 Seeding test organization and users for E2E tests...');
   console.log(`🌐 Supabase URL: ${url}`);
   console.log(`🏢 Organization: ${TEST_ORG_NAME} (ID: ${TEST_ORG_ID})`);
-  console.log(`👥 Creating ${TEST_USERS.length} test users...`);
+  console.log(`👥 Creating ${TEST_USERS.length} test users (member, admin, owner)...`);
 
   // Service Role Key で Admin API を使用
   const supabase = createClient(url, serviceRoleKey, {
