@@ -1,6 +1,6 @@
 export const DOMAINS = {
-  WWW: process.env.WWW_URL!,
-  APP: process.env.APP_URL!,
-  ADMIN: process.env.ADMIN_URL!,
-  OPS: process.env.OPS_URL!,
+  WWW: process.env.NEXT_PUBLIC_WWW_URL!,
+  APP: process.env.NEXT_PUBLIC_APP_URL!,
+  ADMIN: process.env.NEXT_PUBLIC_ADMIN_URL!,
+  OPS: process.env.NEXT_PUBLIC_OPS_URL!,
 } as const;
