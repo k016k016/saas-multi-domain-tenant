@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      NEXT_PUBLIC_WWW_URL: http://localhost:3001
-      NEXT_PUBLIC_APP_URL: http://localhost:3002
-      NEXT_PUBLIC_ADMIN_URL: http://localhost:3003
-      NEXT_PUBLIC_OPS_URL: http://localhost:3004
+      NEXT_PUBLIC_WWW_URL: http://www.local.test:3001
+      NEXT_PUBLIC_APP_URL: http://app.local.test:3002
+      NEXT_PUBLIC_ADMIN_URL: http://admin.local.test:3003
+      NEXT_PUBLIC_OPS_URL: http://ops.local.test:3004
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -40,6 +40,16 @@ jobs:
 
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      # CI環境で.local.testドメインを使えるように/etc/hostsを設定
+      # これにより異なるポート間でCookie共有が可能になる
+      - name: Setup local.test domains
+        run: |
+          echo "127.0.0.1 www.local.test" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 app.local.test" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 admin.local.test" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 ops.local.test" | sudo tee -a /etc/hosts
+          cat /etc/hosts
 
       # @repo/db を先にビルド（dist配布を前提）
       - name: Build workspace
