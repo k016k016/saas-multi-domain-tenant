@@ -115,9 +115,17 @@ async function upsertUser(
   // profilesテーブルにレコードを作成/更新（アプリケーションがuser_id, org_id, roleを使用するため）
   console.log(`📝 Upserting ${role} user profile in profiles table...`);
 
+  // まず既存のプロファイルを削除
+  await supabase
+    .from('profiles')
+    .delete()
+    .eq('user_id', userId)
+    .eq('org_id', TEST_ORG_ID);
+
+  // 新しいプロファイルを挿入
   const { error: profileError } = await supabase
     .from('profiles')
-    .upsert({
+    .insert({
       user_id: userId,
       org_id: TEST_ORG_ID,
       role: role,
@@ -126,7 +134,7 @@ async function upsertUser(
     .select();
 
   if (profileError) {
-    throw new Error(`Failed to upsert ${role} user profile: ${profileError.message}`);
+    throw new Error(`Failed to insert ${role} user profile: ${profileError.message}`);
   }
 
   console.log(`✅ ${role} user profile upserted successfully`);
