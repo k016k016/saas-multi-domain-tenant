@@ -8,14 +8,14 @@
 ## ✅ Done（v0 Foundations）
 
 - **モノレポ分離**: `www / app / admin / ops` を独立アプリとして配置
-- **Edge-safe middleware**: DB/Supabase/`next/headers`/`cookies()` を未使用
-- **RLS前提のスキーマ**: `organizations / profiles / activity_logs` 実装済み（RLS導入）
-- **Cookie方針の統一**: `sb-<project-ref>-auth-token` のみ使用（`role/active org` は常にDB解決）
-- **E2E基盤**: 境界（ドメイン×ロール）テストは通過状態まで到達
-- **Next.js 16対応**: Server Actions 側の `await cookies()` / `@repo/db` ビルド配布を適用済み
-- **activity_logs実装**: `logActivity()` ヘルパー実装済み（組織切替／ユーザー招待・ロール変更・削除で使用中）
-- **組織切替の厳格化**: 所属検証ロジック、`ActionResult` 形式返却、監査ログ記録を実装済み
-- **共通認可ガード**: `getCurrentOrg()`, `getCurrentRole()`, `hasRole()` 実装済み（ロール階層に基づく権限チェック）
+- **Edge-safe middleware**: DB/Supabase/`next/headers`/`cookies()` を未使用（`.github/workflows/edge-guard.yml` で検証）
+- **RLS前提のスキーマ**: `organizations / profiles / activity_logs` 実装済み（`infra/supabase/migrations/` でRLS導入）
+- **Cookie方針の統一**: `sb-<project-ref>-auth-token` のみ使用（`docs/patterns/cookies-and-sessions.md`、`role/active org` は常にDB解決）
+- **E2E基盤**: 境界（ドメイン×ロール）テストは通過状態まで到達（`e2e/tests/` 配下に実装）
+- **Next.js 16対応**: Server Actions 側の `await cookies()` / `@repo/db` ビルド配布を適用済み（`packages/db/src/index.ts`）
+- **activity_logs実装**: `packages/db/src/audit.ts` で `logActivity()` 実装済み（組織切替／ユーザー招待・ロール変更・削除で使用中）
+- **組織切替の厳格化**: `apps/app/app/switch-org/actions.ts` で所属検証ロジック、`ActionResult` 形式返却、監査ログ記録を実装済み
+- **共通認可ガード**: `packages/config/src/auth.ts` で `getCurrentOrg()`, `getCurrentRole()`, `hasRole()` 実装済み（ロール階層に基づく権限チェック）
 
 ---
 
@@ -23,8 +23,8 @@
 
 1) **CIゲート（部分実装）**
    - ✅ Edge-safe検証（実装済み: `.github/workflows/edge-guard.yml`）
-   - ❌ E2E自動実行（未実装: CI統合が必要）
-   - ❌ `redirect()` 検出スクリプト（未実装）
+   - ❌ E2E自動実行（担当: 自分）→ `.github/workflows/edge-guard.yml` に `pnpm -w test:e2e` を追加
+   - ❌ Server Action内の `redirect()` 検出（担当: 自分）→ `.github/workflows/edge-guard.yml` にgrep検証ステップを追加（middleware除外）
 
 ---
 
