@@ -1,3 +1,10 @@
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
+
 // src/index.ts
 import { createServerClient as createSupabaseServerClient } from "@supabase/ssr";
 import { createBrowserClient as createSupabseBrowserClient } from "@supabase/ssr";
@@ -64,8 +71,25 @@ function createBrowserClient() {
   }
   return createSupabseBrowserClient(supabaseUrl, supabaseAnonKey);
 }
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set. See infra/supabase/SETUP.md for setup instructions."
+    );
+  }
+  const { createClient } = __require("@supabase/supabase-js");
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+}
 export {
   createBrowserClient,
   createServerClient,
+  getSupabaseAdmin,
   logActivity
 };

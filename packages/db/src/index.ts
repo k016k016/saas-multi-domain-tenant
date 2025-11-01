@@ -98,6 +98,42 @@ export function createBrowserClient() {
   return createSupabseBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 
+/**
+ * Supabase Admin API クライアント（Service Role Key使用）
+ *
+ * RLSをバイパスして全データにアクセスできるため、使用は慎重に。
+ * サーバー側（Server Actions, Route Handlers）でのみ使用可能。
+ *
+ * 使用例:
+ * ```typescript
+ * import { getSupabaseAdmin } from '@repo/db';
+ *
+ * const supabase = getSupabaseAdmin();
+ * const { data, error } = await supabase.from('activity_logs').select('*');
+ * ```
+ */
+export function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set. ' +
+      'See infra/supabase/SETUP.md for setup instructions.'
+    );
+  }
+
+  // Service Role Keyを使用した Admin API クライアント
+  // 注意: RLSをバイパスするため、認可チェックはアプリケーション層で行う必要がある
+  const { createClient } = require('@supabase/supabase-js');
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
 // 将来的にはここでDatabase型定義をエクスポート
 // export type Database = ...
 

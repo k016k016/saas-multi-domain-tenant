@@ -108,5 +108,20 @@ declare function createServerClient(): Promise<_supabase_supabase_js.SupabaseCli
  * ```
  */
 declare function createBrowserClient(): _supabase_supabase_js.SupabaseClient<any, "public", "public", any, any>;
+/**
+ * Supabase Admin API クライアント（Service Role Key使用）
+ *
+ * RLSをバイパスして全データにアクセスできるため、使用は慎重に。
+ * サーバー側（Server Actions, Route Handlers）でのみ使用可能。
+ *
+ * 使用例:
+ * ```typescript
+ * import { getSupabaseAdmin } from '@repo/db';
+ *
+ * const supabase = getSupabaseAdmin();
+ * const { data, error } = await supabase.from('activity_logs').select('*');
+ * ```
+ */
+declare function getSupabaseAdmin(): any;
 
-export { type AuditAction, type AuditLogPayload, createBrowserClient, createServerClient, logActivity };
+export { type AuditAction, type AuditLogPayload, createBrowserClient, createServerClient, getSupabaseAdmin, logActivity };
