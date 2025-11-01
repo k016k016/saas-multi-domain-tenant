@@ -22,7 +22,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+      E2E_TEST_EMAIL: e2e.test@local.example
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
@@ -62,9 +62,9 @@ jobs:
       # 環境変数の存在チェック
       - name: Validate E2E environment variables
         run: |
-          test -n "$E2E_TEST_EMAIL" || (echo "❌ Missing E2E_TEST_EMAIL secret" && exit 1)
           test -n "$E2E_TEST_PASSWORD" || (echo "❌ Missing E2E_TEST_PASSWORD secret" && exit 1)
           test -n "$NEXT_PUBLIC_SUPABASE_URL" || (echo "❌ Missing NEXT_PUBLIC_SUPABASE_URL secret" && exit 1)
+          test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" || (echo "❌ Missing NEXT_PUBLIC_SUPABASE_ANON_KEY secret" && exit 1)
           test -n "$SUPABASE_SERVICE_ROLE_KEY" || (echo "❌ Missing SUPABASE_SERVICE_ROLE_KEY secret" && exit 1)
           echo "✅ All required E2E environment variables are set"
 

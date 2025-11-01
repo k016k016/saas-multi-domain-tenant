@@ -23,7 +23,7 @@ async function main() {
   // 環境変数の検証
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const email = process.env.E2E_TEST_EMAIL;
+  const email = process.env.E2E_TEST_EMAIL || 'e2e.test@local.example';
   const password = process.env.E2E_TEST_PASSWORD;
 
   if (!url) {
@@ -31,9 +31,6 @@ async function main() {
   }
   if (!serviceRoleKey) {
     throw new Error('Missing environment variable: SUPABASE_SERVICE_ROLE_KEY');
-  }
-  if (!email) {
-    throw new Error('Missing environment variable: E2E_TEST_EMAIL');
   }
   if (!password) {
     throw new Error('Missing environment variable: E2E_TEST_PASSWORD');
