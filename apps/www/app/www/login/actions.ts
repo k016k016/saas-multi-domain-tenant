@@ -73,7 +73,10 @@ export async function signInWithPassword(
     });
 
     if (error || !data.session) {
-      console.error('Password ログインエラー:', error);
+      // テスト環境ではログを抑制（本番環境ではセキュリティ監査のため記録）
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Password ログインエラー:', error);
+      }
       return {
         success: false,
         error: 'メールアドレスまたはパスワードが正しくありません',
