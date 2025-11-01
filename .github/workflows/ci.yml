@@ -37,6 +37,9 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
       # @repo/db を先にビルド（dist配布を前提）
       - name: Build workspace
         run: pnpm -w build
