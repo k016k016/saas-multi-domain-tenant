@@ -71,6 +71,7 @@
 
 ## 関連参照
 - [CLAUDE_RUNTIME_MIN.md](../../CLAUDE_RUNTIME_MIN.md)
+- [Cookies & Sessions 最小ポリシー](../patterns/cookies-and-sessions.md)
 - [権限モデル仕様書](./roles-and-access.md)
 - [組織切り替え仕様](./organization-switching.md)
 - [マルチドメインパターン](../patterns/multi-domain.md)

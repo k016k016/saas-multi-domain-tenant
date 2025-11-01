@@ -114,3 +114,5 @@ AIアシスタントは以上を前提に作業すること。
 - middleware では `next/headers` 禁止。`NextRequest/NextResponse.cookies` を使う。
 - middleware で **@repo/db import 禁止**（ESLint/CIで強制）。
 - Server Action は **redirect() 禁止**。`{ success, nextUrl }` を返す。
+
+> Cookie/Sessionの細則は `docs/patterns/cookies-and-sessions.md` を参照。
