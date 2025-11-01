@@ -142,8 +142,12 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提に、SaaSの�
 - 組織切替
 - adminが行うユーザー管理操作（招待 / 無効化 / ロール変更など）
 - ownerが行う高リスク操作（支払い変更 / 組織凍結 / 組織廃止 / owner権限の譲渡 / admin権限の付け替え）
-これらはすべて `activity_logs` に残す前提で設計する。  
+これらはすべて `activity_logs` に残す前提で設計する。
 「ログはあとでいい」はなし。
+
+詳細は以下を参照：
+- [Cookies & Sessions 最小ポリシー](docs/patterns/cookies-and-sessions.md)
+- [テナンシー仕様](docs/spec/tenancy.md)
 
 
 ## v0スケルトンで入るもの
