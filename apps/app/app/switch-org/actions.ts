@@ -26,8 +26,13 @@ interface SwitchOrgData {
 export async function switchOrganization(
   targetOrgId: string
 ): Promise<ActionResult<SwitchOrgData>> {
+  const reqId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  console.log('[SWITCH_ORG][START]', { reqId, targetOrgId });
+  console.log('[SWITCH_ORG][RECV]', { targetOrgId });
+
   // 1. 入力バリデーション
   if (!targetOrgId || typeof targetOrgId !== 'string') {
+    console.log('[SWITCH_ORG][INVALID_INPUT]', { reqId, targetOrgId });
     return {
       success: false,
       error: '組織IDが不正です',
@@ -38,8 +43,10 @@ export async function switchOrganization(
     // 2. 現在のユーザーを取得
     const supabase = await createServerClient();
     const { data: { session } } = await supabase.auth.getSession();
+    console.log('[SWITCH_ORG][AUTH]', { reqId, uid: session?.user?.id });
 
     if (!session?.user) {
+      console.log('[SWITCH_ORG][NO_AUTH]', { reqId });
       return {
         success: false,
         error: '認証が必要です',
@@ -56,8 +63,16 @@ export async function switchOrganization(
       .eq('org_id', targetOrgId)
       .single();
 
+    console.log('[SWITCH_ORG][MEMBERSHIP]', {
+      reqId,
+      hasProfile: !!profile,
+      profileError: profileError?.message || null,
+      profileCode: profileError?.code || null,
+    });
+
     if (profileError || !profile) {
       console.error('[switchOrganization] User not member of org:', { userId, targetOrgId, error: profileError });
+      console.log('[SWITCH_ORG][DENY]', { reqId });
       return {
         success: false,
         error: 'この組織にはアクセス権がありません',
