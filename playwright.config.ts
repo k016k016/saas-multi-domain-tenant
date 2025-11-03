@@ -28,6 +28,29 @@ export default defineConfig({
     { command: 'pnpm --filter ops start', url: 'http://localhost:3004', reuseExistingServer: true, timeout: 120_000 },
   ] : undefined,
   projects: [
+    // Phase 1: 基盤テスト（chromium + firefox のみ）
+    {
+      name: 'p1-chromium',
+      testMatch: /e2e\/tests\/p1-baseline\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'p1-firefox',
+      testMatch: /e2e\/tests\/p1-baseline\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    // Phase 2: 新機能テスト（chromium + firefox）
+    {
+      name: 'p2-chromium',
+      testMatch: /e2e\/tests\/p2-members-audit\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'p2-firefox',
+      testMatch: /e2e\/tests\/p2-members-audit\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    // 旧プロジェクト定義（互換性のため残す）
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },
     { name: 'app', use: { baseURL: APP_URL, ...devices['Desktop Chrome'] } },
     { name: 'admin', use: { baseURL: ADMIN_URL, ...devices['Desktop Chrome'] } },
