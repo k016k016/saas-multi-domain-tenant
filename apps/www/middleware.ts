@@ -23,18 +23,12 @@ export function middleware(request: NextRequest) {
     cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')
   )
 
-  // 認証済みかつログインページ以外にいる場合は app ドメインへリダイレクト
-  if (hasSupabaseSession && !pathname.startsWith('/www/login')) {
+  // 認証済みユーザーは app ドメインへリダイレクト
+  if (hasSupabaseSession) {
     return NextResponse.redirect(DOMAINS.app)
   }
 
-  // wwwドメインのリクエストをwwwディレクトリにリライト
-  if (pathname.startsWith('/www')) {
-    return NextResponse.next()
-  }
-
-  const rewriteUrl = new URL(`/www${pathname}`, request.url)
-  return NextResponse.rewrite(rewriteUrl)
+  return NextResponse.next()
 }
 
 export const config = {

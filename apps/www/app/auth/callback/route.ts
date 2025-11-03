@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         process.env.NEXT_PUBLIC_WWW_URL ||
         process.env.WWW_URL ||
         'http://www.local.test:3001';
-      return NextResponse.redirect(`${wwwUrl}/www/login?error=auth_failed`);
+      return NextResponse.redirect(`${wwwUrl}/login?error=auth_failed`);
     }
 
     // Supabase Session は createServerClient() が自動的に Cookie を管理
@@ -49,5 +49,5 @@ export async function GET(request: NextRequest) {
     process.env.NEXT_PUBLIC_WWW_URL ||
     process.env.WWW_URL ||
     'http://www.local.test:3001';
-  return NextResponse.redirect(`${wwwUrl}/www/login`);
+  return NextResponse.redirect(`${wwwUrl}/login`);
 }

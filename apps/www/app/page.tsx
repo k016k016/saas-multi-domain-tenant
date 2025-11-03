@@ -37,7 +37,7 @@ export default function HomePage() {
         </p>
         <div style={{ marginTop: '1rem' }}>
           <a
-            href="/www/login"
+            href="/login"
             style={{
               display: 'inline-block',
               padding: '0.5rem 1rem',

@@ -6,11 +6,11 @@ const MEMBER = { email: 'member1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('認証済みユーザーのWWWリダイレクト', () => {
-  test('ログイン済み → www/loginアクセス → APPへリダイレクト', async ({ page }) => {
+  test('ログイン済み → /loginアクセス → APPへリダイレクト', async ({ page }) => {
     // ログイン
     await uiLogin(page, MEMBER.email, PASSWORD);
 
-    // ログイン済みの状態でwww/loginにアクセス
+    // ログイン済みの状態で/loginにアクセス
     await page.goto(`${DOMAINS.WWW}/login`);
 
     // APPダッシュボードへリダイレクトされることを確認

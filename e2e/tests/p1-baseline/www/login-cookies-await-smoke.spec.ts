@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 
-// www/login >> cookies-await-smoke
+// /login >> cookies-await-smoke
 // 目的: Next.js 16 で cookies() が async になっても 500 を起こさないことのスモーク
 
-test.describe('www/login >> cookies-await-smoke', () => {
-  test('GET /www/login returns 200-ish and not 500', async ({ page }) => {
+test.describe('/login >> cookies-await-smoke', () => {
+  test('GET /login returns 200-ish and not 500', async ({ page }) => {
     const response = await page.goto(`${DOMAINS.WWW}/login`);
     expect(response).toBeTruthy();
     const status = response!.status();
