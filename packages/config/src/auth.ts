@@ -157,7 +157,6 @@ export async function getCurrentRole(): Promise<RoleContext | null> {
       return null;
     }
 
-    console.log('[getCurrentRole] Success:', { userId, orgId, role: profile.role });
     return {
       role: profile.role as Role,
     };

@@ -26,14 +26,8 @@ export default async function MembersPage() {
   const roleContext = await getCurrentRole();
   const currentUserRole = roleContext?.role;
 
-  // DEBUG: ロール情報をログ出力
-  console.log('[MembersPage] org:', org);
-  console.log('[MembersPage] roleContext:', roleContext);
-  console.log('[MembersPage] currentUserRole:', currentUserRole);
-
   // ADMIN domain: admin/owner のみアクセス可能
   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
-    console.log('[MembersPage] Access denied - redirecting to /unauthorized');
     redirect('/unauthorized');
   }
 
