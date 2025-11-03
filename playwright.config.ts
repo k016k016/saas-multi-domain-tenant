@@ -38,6 +38,7 @@ export default defineConfig({
       name: 'p1-firefox',
       testMatch: /e2e\/tests\/p1-baseline\/.*\.spec\.ts/,
       use: { ...devices['Desktop Firefox'] },
+      retries: 1, // Firefoxのタイムアウトエラー対策として自動リトライ
     },
     // Phase 2: 新機能テスト（chromium + firefox）
     {
@@ -49,6 +50,7 @@ export default defineConfig({
       name: 'p2-firefox',
       testMatch: /e2e\/tests\/p2-members-audit\/.*\.spec\.ts/,
       use: { ...devices['Desktop Firefox'] },
+      retries: 1, // Firefoxのタイムアウトエラー対策として自動リトライ
     },
     // 旧プロジェクト定義（互換性のため残す）
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },

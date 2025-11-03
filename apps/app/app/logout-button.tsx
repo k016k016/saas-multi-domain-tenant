@@ -26,7 +26,8 @@ export default function LogoutButton() {
         window.location.assign(result.nextUrl);
       } else {
         // エラーメッセージを表示（オプション）
-        alert(result.error || 'ログアウトに失敗しました');
+        const errorMessage = !result.success ? result.error : 'ログアウトに失敗しました';
+        alert(errorMessage);
         setIsLoading(false);
       }
     } catch (err) {
