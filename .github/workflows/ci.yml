@@ -51,6 +51,10 @@ jobs:
           echo "127.0.0.1 ops.local.test" | sudo tee -a /etc/hosts
           cat /etc/hosts
 
+      # ビルドキャッシュをクリア（next.config.mjsの変更を確実に反映させるため）
+      - name: Clean build cache
+        run: rm -rf apps/*/.next apps/*/.turbo .turbo
+
       # @repo/db を先にビルド（dist配布を前提）
       - name: Build workspace
         run: pnpm -w build
