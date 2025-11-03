@@ -11,7 +11,7 @@
  * - このClient ComponentがnextUrlに基づいて遷移する
  */
 
-import { createServerClient } from '@repo/db';
+import { createServerClient, getSupabaseAdmin } from '@repo/db';
 import { getCurrentOrg } from '@repo/config';
 import SwitchOrgForm from './switch-org-form';
 
@@ -32,12 +32,28 @@ export default async function SwitchOrgPage() {
   const userId = session.user.id;
 
   // 2. ユーザーが所属する組織一覧を取得
-  const { data: profiles, error } = await supabase
+  // 注: Admin クライアントを使用することで、RLS ポリシーをバイパスして
+  //     ユーザー自身の全ての組織プロファイルを取得できる
+  //     （セキュリティ上問題なし: 自分自身の情報のみ取得）
+  const adminSupabase = getSupabaseAdmin();
+
+  // まずprofilesを取得
+  const { data: profiles, error: profilesError } = await adminSupabase
     .from('profiles')
-    .select('org_id, role, organizations(id, name)')
+    .select('org_id, role')
     .eq('user_id', userId);
 
-  if (error || !profiles || profiles.length === 0) {
+  if (profilesError) {
+    console.error('[SwitchOrgPage] Failed to fetch profiles:', profilesError);
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+        <h1 style={{ marginBottom: '1rem' }}>エラーが発生しました</h1>
+        <p>組織情報の取得に失敗しました。</p>
+      </div>
+    );
+  }
+
+  if (!profiles || profiles.length === 0) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
         <h1 style={{ marginBottom: '1rem' }}>組織が見つかりません</h1>
@@ -49,14 +65,36 @@ export default async function SwitchOrgPage() {
     );
   }
 
-  // 3. 組織データを整形
+  // 組織IDのリストを取得
+  const orgIds = profiles.map(p => p.org_id);
+
+  // 組織情報を別途取得
+  const { data: organizations, error: orgsError } = await adminSupabase
+    .from('organizations')
+    .select('id, name')
+    .in('id', orgIds);
+
+  if (orgsError || !organizations) {
+    console.error('[SwitchOrgPage] Failed to fetch organizations:', orgsError);
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+        <h1 style={{ marginBottom: '1rem' }}>エラーが発生しました</h1>
+        <p>組織情報の取得に失敗しました。</p>
+      </div>
+    );
+  }
+
+  // 3. 組織データを整形（profilesとorganizationsをマージ）
   const userOrganizations = profiles
-    .filter((p): p is typeof p & { organizations: { id: string; name: string } } => !!p.organizations)
-    .map(p => ({
-      id: p.organizations.id,
-      name: p.organizations.name,
-      role: p.role,
-    }));
+    .map(p => {
+      const org = organizations.find(o => o.id === p.org_id);
+      return org ? {
+        id: org.id,
+        name: org.name,
+        role: p.role,
+      } : null;
+    })
+    .filter((org): org is { id: string; name: string; role: string } => org !== null);
 
   // 4. 現在の組織を取得
   const org = await getCurrentOrg();
@@ -69,7 +107,7 @@ export default async function SwitchOrgPage() {
         <section style={{ marginTop: '2rem' }}>
           <h2>現在の組織</h2>
           <p>
-            <strong>{org.orgName}</strong> ({org.orgId})
+            <strong data-testid="current-org">{org.orgName}</strong> ({org.orgId})
           </p>
         </section>
       )}

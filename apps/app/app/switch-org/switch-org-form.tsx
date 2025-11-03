@@ -54,7 +54,7 @@ export default function SwitchOrgForm({
         }
       } else {
         // 失敗: エラーメッセージを表示
-        setError(result.error);
+        setError(result.error || '組織の切り替えに失敗しました');
         setIsLoading(false);
       }
     } catch (err) {
@@ -89,6 +89,7 @@ export default function SwitchOrgForm({
         </label>
         <select
           id="org-select"
+          name="org_id"
           value={selectedOrgId}
           onChange={(e) => setSelectedOrgId(e.target.value)}
           disabled={isLoading}

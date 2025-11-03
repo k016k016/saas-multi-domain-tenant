@@ -1,31 +1,35 @@
 /**
  * app ドメイン: /unauthorized
  *
- * 権限不足エラーページ
+ * 責務:
+ * - アクセス権限がないユーザーに403エラーページを表示
+ * - ホームへの戻るリンクを提供
  */
 
 import Link from 'next/link';
 
 export default function UnauthorizedPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div className="text-center">
-          <h1 className="text-6xl font-bold text-gray-900 mb-4">403</h1>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">アクセス権限がありません</h2>
-          <p className="text-gray-600 mb-8">
-            このページにアクセスする権限がありません。
-          </p>
-          <div className="space-y-4">
-            <Link
-              href="/"
-              className="inline-block w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              ホームに戻る
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div style={{ padding: '2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+      <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>403</h1>
+      <h2 style={{ marginBottom: '1rem' }}>アクセス権限がありません</h2>
+      <p style={{ marginBottom: '2rem', color: '#a0a0a0' }}>
+        このページにアクセスする権限がありません。<br />
+        必要な権限については、組織の管理者にお問い合わせください。
+      </p>
+      <Link
+        href="/"
+        style={{
+          display: 'inline-block',
+          padding: '0.75rem 1.5rem',
+          background: '#3b82f6',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '4px',
+        }}
+      >
+        ホームに戻る
+      </Link>
     </div>
   );
 }

@@ -22,7 +22,10 @@ export function middleware(req: NextRequest) {
 
   // 未ログインの場合は /login へリダイレクト
   if (!hasSupabaseSession) {
-    return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(url.href)}`)
+    // url.hrefではなくDOMAINS.opsを使用してリダイレクト先を構築
+    // req.urlはlocalhostになる場合があるため、環境変数から取得したドメインを使用
+    const nextUrl = `${DOMAINS.ops}${url.pathname}${url.search}`
+    return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(nextUrl)}`)
   }
 
   // 認証済みユーザーは通す

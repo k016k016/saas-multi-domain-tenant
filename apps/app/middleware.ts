@@ -14,11 +14,6 @@ import { DOMAINS } from '@repo/config-edge'
 export function middleware(req: NextRequest) {
   const url = new URL(req.url)
 
-  // /switch-org は認証不要でアクセス可能
-  if (url.pathname.startsWith('/switch-org')) {
-    return NextResponse.next()
-  }
-
   // Supabase Session Cookie の存在確認（認証状態チェック）
   // NOTE: Supabase の Cookie 名は `sb-<project-ref>-auth-token` の形式
   // 正確な名前を確認するため、すべてのCookieをチェック
@@ -28,7 +23,10 @@ export function middleware(req: NextRequest) {
 
   // 未ログインの場合は /login へリダイレクト
   if (!hasSupabaseSession) {
-    return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(url.href)}`)
+    // url.hrefではなくDOMAINS.appを使用してリダイレクト先を構築
+    // req.urlはlocalhostになる場合があるため、環境変数から取得したドメインを使用
+    const nextUrl = `${DOMAINS.app}${url.pathname}${url.search}`
+    return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(nextUrl)}`)
   }
 
   // 認証済みユーザーは通す（org/role検証はサーバ側で行う）

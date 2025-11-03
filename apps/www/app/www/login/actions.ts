@@ -79,7 +79,7 @@ export async function signInWithPassword(
       }
       return {
         success: false,
-        error: 'メールアドレスまたはパスワードが正しくありません',
+        error: 'メールアドレスまたはパスワードが無効です',
       };
     }
 
