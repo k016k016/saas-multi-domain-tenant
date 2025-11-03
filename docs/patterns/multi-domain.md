@@ -8,10 +8,10 @@
 
 | ドメイン | ローカル | 本番 | 用途 | ルートグループ |
 |---------|---------|------|------|--------------|
-| WWW | `www.local.test:3000` | `www.domain.com` | マーケティング、認証 | `(www)` |
-| APP | `app.local.test:3000` | `app.domain.com` | メインアプリ | `(app)` |
-| ADMIN | `admin.local.test:3000` | `admin.domain.com` | 管理ダッシュボード | `(admin)` |
-| OPS | `ops.local.test:3000` | `ops.domain.com` | 運用ツール（IP制限） | `(ops)` |
+| WWW | `www.local.test:3001` | `www.domain.com` | マーケティング、認証 | `(www)` |
+| APP | `app.local.test:3002` | `app.domain.com` | メインアプリ | `(app)` |
+| ADMIN | `admin.local.test:3003` | `admin.domain.com` | 管理ダッシュボード | `(admin)` |
+| OPS | `ops.local.test:3004` | `ops.domain.com` | 運用ツール（IP制限） | `(ops)` |
 
 ---
 
@@ -61,7 +61,7 @@ export async function createItem() {
   // ... 処理
 
   // ❌ 絶対URLは localhost に丸められる
-  redirect('http://app.local.test:3000/items/123')
+  redirect('http://app.local.test:3002/items/123')
 }
 ```
 

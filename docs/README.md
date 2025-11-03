@@ -6,25 +6,28 @@
 
 - **spec/** - 仕様書
   - `tenancy.md` - マルチテナント仕様
-  - `roles-and-access.md` - ロールとアクセス制御（将来追加予定）
-  - `organization-switching.md` - 組織切替の仕様（将来追加予定）
+  - `roles-and-access.md` - ロールとアクセス制御
+  - `organization-switching.md` - 組織切替の仕様
+  - `member-management.md` - メンバー管理の仕様
 
-- **patterns/** - 実装パターン（将来追加予定）
+- **patterns/** - 実装パターン
   - `multi-domain.md` - マルチドメイン構成のパターン
   - `server-actions.md` - Server Actions の実装パターン
   - `e2e-testing.md` - E2Eテストのパターン
+  - `e2e-test-templates.md` - E2Eテストテンプレート
+  - `e2e-test-rules.md` - E2Eテスト追加ルール
+  - `rls-testing.md` - RLSテストパターン
+  - `edge-middleware.md` - Edge Middlewareパターン
+  - `cookies-and-sessions.md` - Cookie/Sessionパターン
+  - `authentication-authorization.md` - 認証・認可パターン
+
+- **adr/** - アーキテクチャ決定記録 (ADR)
+  - `ADR-005-edge-middleware-separation.md` - Edge Middleware と Node サーバ処理の分離
+  - `ADR-006-supabase-session-only-authentication.md` - Supabase Session Cookie 専用認証への移行
+  - `ADR-007-org-context-in-database.md` - 組織コンテキストのDB管理（Cookie禁止）
 
 - **checklists/** - 実装チェックリスト（将来追加予定）
-  - `pre-implementation.md` - 実装前チェックリスト
-  - `server-action-checklist.md` - Server Action実装チェックリスト
-  - `e2e-test-checklist.md` - E2Eテスト実装チェックリスト
-
-- **decisions/** - アーキテクチャ決定記録 (ADR)（将来追加予定）
-  - `001-multi-domain-architecture.md` - マルチドメイン構成の採用理由
-  - `003-e2e-auth-bypass.md` - E2Eテスト用認証バイパス
-
 - **troubleshooting/** - トラブルシューティング（将来追加予定）
-  - `server-action-redirect.md` - Server Actionでのリダイレクト問題
 
 ## 重要な原則
 

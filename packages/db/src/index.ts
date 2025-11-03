@@ -10,6 +10,7 @@
 
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
 import { createBrowserClient as createSupabseBrowserClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 /**
@@ -125,7 +126,6 @@ export function getSupabaseAdmin() {
 
   // Service Role Keyを使用した Admin API クライアント
   // 注意: RLSをバイパスするため、認可チェックはアプリケーション層で行う必要がある
-  const { createClient } = require('@supabase/supabase-js');
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,

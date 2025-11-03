@@ -2,7 +2,23 @@
 
 このプロジェクトでは、以下のパターンを標準とする。
 「別のやり方のほうがキレイです」「一般的にはこうします」というだけの理由で変更してはならない。
-例外が必要な場合は ADR (`docs/decisions/`) を追加してからにすること。
+例外が必要な場合は ADR (`docs/adr/`) を追加してからにすること。
+
+---
+
+## 📚 パターンファイル一覧
+
+| ファイル | 概要 |
+|---------|------|
+| `server-actions.md` | Server Actionsの実装パターン（redirect禁止、結果オブジェクト返却） |
+| `multi-domain.md` | マルチドメイン構成のパターン（Cookie共有、ドメイン間遷移） |
+| `edge-middleware.md` | Edge Middlewareパターン（やってよいこと・やってはいけないこと） |
+| `cookies-and-sessions.md` | Cookie/Sessionパターン（Supabase Session Cookie専用） |
+| `authentication-authorization.md` | 認証・認可パターン（RLS、権限チェック） |
+| `e2e-testing.md` | E2Eテストのパターン（境界テスト、ドメイン分離） |
+| `e2e-test-templates.md` | E2Eテストテンプレート（テストファイルの構造、サンプルコード） |
+| `e2e-test-rules.md` | E2Eテスト追加ルール（フェーズ分離、命名規則、チェックリスト） |
+| `rls-testing.md` | RLSテストパターン（Row Level Security の検証） |
 
 ---
 

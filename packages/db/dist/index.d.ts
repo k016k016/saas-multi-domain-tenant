@@ -122,6 +122,6 @@ declare function createBrowserClient(): _supabase_supabase_js.SupabaseClient<any
  * const { data, error } = await supabase.from('activity_logs').select('*');
  * ```
  */
-declare function getSupabaseAdmin(): any;
+declare function getSupabaseAdmin(): _supabase_supabase_js.SupabaseClient<any, "public", "public", any, any>;
 
 export { type AuditAction, type AuditLogPayload, createBrowserClient, createServerClient, getSupabaseAdmin, logActivity };

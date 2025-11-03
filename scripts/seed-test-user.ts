@@ -19,11 +19,19 @@
  * - E2E_TEST_PASSWORD
  */
 
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+
+// .env.testファイルから環境変数を読み込む
+config({ path: '.env.test' });
 
 // E2Eテスト用の組織ID（固定値）
 const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
 const TEST_ORG_NAME = 'Test Organization';
+
+// 組織切替テスト用の2つ目の組織
+const TEST_ORG_ID_2 = '00000000-0000-0000-0000-000000000002';
+const TEST_ORG_NAME_2 = 'Test Organization Beta';
 
 // E2Eテストで使用するテストユーザー
 // ロールごとに異なるメールアドレスを使用
@@ -51,6 +59,26 @@ async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
   }
 
   console.log(`✅ Test organization upserted successfully (ID: ${TEST_ORG_ID})`);
+}
+
+async function upsertOrganization2(supabase: ReturnType<typeof createClient>) {
+  console.log(`🏢 Upserting second test organization (${TEST_ORG_NAME_2})...`);
+
+  const { error } = await supabase
+    .from('organizations')
+    .upsert({
+      id: TEST_ORG_ID_2,
+      name: TEST_ORG_NAME_2,
+      plan: 'business',
+      is_active: true,
+    })
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to upsert second organization: ${error.message}`);
+  }
+
+  console.log(`✅ Second test organization upserted successfully (ID: ${TEST_ORG_ID_2})`);
 }
 
 async function upsertUser(
@@ -116,29 +144,50 @@ async function upsertUser(
   // profilesテーブルにレコードを作成/更新（アプリケーションがuser_id, org_id, roleを使用するため）
   console.log(`📝 Upserting ${role} user profile in profiles table...`);
 
-  // まず既存のプロファイルを削除
+  // まず既存のプロファイルを削除（全組織）
   await supabase
     .from('profiles')
     .delete()
-    .eq('user_id', userId)
-    .eq('org_id', TEST_ORG_ID);
+    .eq('user_id', userId);
 
-  // 新しいプロファイルを挿入
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert({
+  // member1の場合は両方の組織にプロファイルを作成（組織切替テストのため）
+  const orgIds = email === 'member1@example.com' ? [TEST_ORG_ID, TEST_ORG_ID_2] : [TEST_ORG_ID];
+
+  for (const orgId of orgIds) {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        user_id: userId,
+        org_id: orgId,
+        role: role,
+        metadata: {},
+      })
+      .select();
+
+    if (profileError) {
+      throw new Error(`Failed to insert ${role} user profile for org ${orgId}: ${profileError.message}`);
+    }
+
+    console.log(`✅ ${role} user profile upserted successfully for org ${orgId}`);
+  }
+
+  // user_org_context テーブルにアクティブ組織を設定
+  console.log(`🔄 Upserting ${role} user active organization context...`);
+
+  const { error: contextError } = await supabase
+    .from('user_org_context')
+    .upsert({
       user_id: userId,
       org_id: TEST_ORG_ID,
-      role: role,
-      metadata: {},
+      updated_at: new Date().toISOString(),
     })
     .select();
 
-  if (profileError) {
-    throw new Error(`Failed to insert ${role} user profile: ${profileError.message}`);
+  if (contextError) {
+    throw new Error(`Failed to upsert ${role} user context: ${contextError.message}`);
   }
 
-  console.log(`✅ ${role} user profile upserted successfully`);
+  console.log(`✅ ${role} user context upserted successfully`);
 }
 
 async function main() {
@@ -172,13 +221,14 @@ async function main() {
 
   // テスト用組織を作成/更新
   await upsertOrganization(supabase);
+  await upsertOrganization2(supabase);
 
   // 各テストユーザーを作成/更新
   for (const user of TEST_USERS) {
     await upsertUser(supabase, user.email, password, user.role);
   }
 
-  console.log('🎉 All test organization and users seeding completed');
+  console.log('🎉 All test organizations and users seeding completed');
 }
 
 main().catch((error) => {

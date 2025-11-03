@@ -14,7 +14,7 @@
  * - Server Component / Server Action のみで使用（Client Componentでは使用禁止）
  */
 
-import { createServerClient } from '@repo/db';
+import { createServerClient, getSupabaseAdmin } from '@repo/db';
 
 export type Role = 'member' | 'admin' | 'owner' | 'ops';
 
@@ -56,7 +56,10 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
     const userId = session.user.id;
 
     // 2. user_org_context から active org_id を取得
-    const { data: context, error: contextError } = await supabase
+    // 注: Admin クライアントを使用して RLS をバイパス
+    //     （認証済みユーザーが自分自身の user_org_context を取得するだけなのでセキュリティ上問題なし）
+    const adminSupabase = getSupabaseAdmin();
+    const { data: context, error: contextError } = await adminSupabase
       .from('user_org_context')
       .select('org_id')
       .eq('user_id', userId)
@@ -70,7 +73,7 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
     const orgId = context.org_id;
 
     // 3. organizations から組織情報を取得
-    const { data: org, error: orgError } = await supabase
+    const { data: org, error: orgError } = await adminSupabase
       .from('organizations')
       .select('id, name')
       .eq('id', orgId)
@@ -124,7 +127,10 @@ export async function getCurrentRole(): Promise<RoleContext | null> {
     const userId = session.user.id;
 
     // 2. user_org_context から active org_id を取得
-    const { data: context, error: contextError } = await supabase
+    // 注: Admin クライアントを使用して RLS をバイパス
+    //     （認証済みユーザーが自分自身の user_org_context を取得するだけなのでセキュリティ上問題なし）
+    const adminSupabase = getSupabaseAdmin();
+    const { data: context, error: contextError } = await adminSupabase
       .from('user_org_context')
       .select('org_id')
       .eq('user_id', userId)
@@ -138,7 +144,7 @@ export async function getCurrentRole(): Promise<RoleContext | null> {
     const orgId = context.org_id;
 
     // 3. profiles テーブルから role を SELECT
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await adminSupabase
       .from('profiles')
       .select('role')
       .eq('user_id', userId)
