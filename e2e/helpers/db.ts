@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const TEST_ORG_ID = 'org1'; // scripts/seed-test-user.ts と同じ値
+const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001'; // scripts/seed-test-user.ts と同じ値（UUID形式）
 
 /**
  * Supabase Admin Clientを作成
