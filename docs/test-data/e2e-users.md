@@ -8,17 +8,22 @@
 
 **実際のseed済みユーザー**（`scripts/seed-test-user.ts` で作成）:
 
-| メールアドレス | 組織 | 権限 | 主な用途 |
-|--------------|------|------|----------|
-| `member1@example.com` | Test Organization | member | 一般メンバー機能、権限制限テスト |
-| `admin1@example.com` | Test Organization | admin | 管理者機能（メンバー招待、ロール変更等） |
-| `owner1@example.com` | Test Organization | owner | 組織オーナー機能全般（支払い、組織設定等） |
+| メールアドレス | 組織1 (Test Organization) | 組織2 (Test Organization Beta) | 主な用途 |
+|--------------|--------------------------|-------------------------------|----------|
+| `member1@example.com` | member | admin | ロール変化パターン（member→admin）、組織切替 |
+| `admin1@example.com` | admin | member | ロール変化パターン（admin→member）、権限低下テスト |
+| `owner1@example.com` | owner | - | 組織オーナー機能全般（支払い、組織設定等） |
+| `owner2@example.com` | - | owner | 組織2のオーナー（仕様遵守: 各組織に必ず1人のowner） |
 
 **組織情報**:
-- 組織ID: `00000000-0000-0000-0000-000000000001`
-- 組織名: `Test Organization`
-- プラン: `business`
-- 状態: `is_active: true`
+- **組織1**:
+  - ID: `00000000-0000-0000-0000-000000000001`
+  - 名前: `Test Organization`
+  - プラン: `pro`
+- **組織2**:
+  - ID: `00000000-0000-0000-0000-000000000002`
+  - 名前: `Test Organization Beta`
+  - プラン: `business`
 
 ---
 

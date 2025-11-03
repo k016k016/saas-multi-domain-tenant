@@ -39,6 +39,7 @@ const TEST_USERS = [
   { email: 'member1@example.com', role: 'member' },
   { email: 'admin1@example.com', role: 'admin' },
   { email: 'owner1@example.com', role: 'owner' },
+  { email: 'owner2@example.com', role: 'owner' },
 ] as const;
 
 async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
@@ -150,25 +151,45 @@ async function upsertUser(
     .delete()
     .eq('user_id', userId);
 
-  // member1の場合は両方の組織にプロファイルを作成（組織切替テストのため）
-  const orgIds = email === 'member1@example.com' ? [TEST_ORG_ID, TEST_ORG_ID_2] : [TEST_ORG_ID];
+  // ユーザーごとに所属組織とロールを決定
+  let orgRoles: Array<{ orgId: string; role: string }>;
 
-  for (const orgId of orgIds) {
+  if (email === 'member1@example.com') {
+    // member1: org1ではmember、org2ではadmin（ロール変化パターン）
+    orgRoles = [
+      { orgId: TEST_ORG_ID, role: 'member' },
+      { orgId: TEST_ORG_ID_2, role: 'admin' },
+    ];
+  } else if (email === 'admin1@example.com') {
+    // admin1: org1ではadmin、org2ではmember（ロール変化パターン）
+    orgRoles = [
+      { orgId: TEST_ORG_ID, role: 'admin' },
+      { orgId: TEST_ORG_ID_2, role: 'member' },
+    ];
+  } else if (email === 'owner2@example.com') {
+    // owner2: org2のみ（仕様遵守: 各組織に必ず1人のowner）
+    orgRoles = [{ orgId: TEST_ORG_ID_2, role: 'owner' }];
+  } else {
+    // owner1など: org1のみ
+    orgRoles = [{ orgId: TEST_ORG_ID, role }];
+  }
+
+  for (const { orgId, role: orgRole } of orgRoles) {
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
         user_id: userId,
         org_id: orgId,
-        role: role,
+        role: orgRole,
         metadata: {},
       })
       .select();
 
     if (profileError) {
-      throw new Error(`Failed to insert ${role} user profile for org ${orgId}: ${profileError.message}`);
+      throw new Error(`Failed to insert ${orgRole} user profile for org ${orgId}: ${profileError.message}`);
     }
 
-    console.log(`✅ ${role} user profile upserted successfully for org ${orgId}`);
+    console.log(`✅ ${orgRole} user profile upserted successfully for org ${orgId}`);
   }
 
   // user_org_context テーブルにアクティブ組織を設定
@@ -209,7 +230,7 @@ async function main() {
   console.log('🔧 Seeding test organization and users for E2E tests...');
   console.log(`🌐 Supabase URL: ${url}`);
   console.log(`🏢 Organization: ${TEST_ORG_NAME} (ID: ${TEST_ORG_ID})`);
-  console.log(`👥 Creating ${TEST_USERS.length} test users (member, admin, owner)...`);
+  console.log(`👥 Creating ${TEST_USERS.length} test users (member, admin, owner x2)...`);
 
   // Service Role Key で Admin API を使用
   const supabase = createClient(url, serviceRoleKey, {

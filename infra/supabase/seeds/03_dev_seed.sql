@@ -6,6 +6,7 @@
 --    - member1@example.com
 --    - admin1@example.com
 --    - owner1@example.com
+--    - owner2@example.com
 --  - パスワードは E2E_TEST_PASSWORD 環境変数で管理（scripts/seed-test-user.ts で設定）
 --  - RLSは有効のままでOK（Service Roleで実行される想定）
 -- 目的:
@@ -21,6 +22,7 @@ DECLARE
   v_member   UUID;
   v_admin    UUID;
   v_owner    UUID;
+  v_owner2   UUID;
 BEGIN
   -- 固定組織IDで作成 or 取得（seed-test-user.ts と統一）
   INSERT INTO organizations (id, name, plan, is_active, created_at)
@@ -38,8 +40,9 @@ BEGIN
   SELECT id INTO v_member FROM auth.users WHERE email = 'member1@example.com';
   SELECT id INTO v_admin  FROM auth.users WHERE email = 'admin1@example.com';
   SELECT id INTO v_owner  FROM auth.users WHERE email = 'owner1@example.com';
+  SELECT id INTO v_owner2 FROM auth.users WHERE email = 'owner2@example.com';
 
-  IF v_member IS NULL OR v_admin IS NULL OR v_owner IS NULL THEN
+  IF v_member IS NULL OR v_admin IS NULL OR v_owner IS NULL OR v_owner2 IS NULL THEN
     RAISE EXCEPTION 'Auth user not found. Seed auth users first.';
   END IF;
 
@@ -60,19 +63,32 @@ BEGIN
   ON CONFLICT (user_id, org_id) DO UPDATE
     SET role = excluded.role, updated_at = now();
 
-  -- member1を2つ目の組織にも追加（組織切替テストのため）
+  -- member1を2つ目の組織にadminとして追加（ロール変化パターン: member → admin）
   INSERT INTO profiles (user_id, org_id, role, metadata, updated_at)
-  VALUES (v_member, v_org_id_2, 'member', '{}'::jsonb, now())
+  VALUES (v_member, v_org_id_2, 'admin', '{}'::jsonb, now())
   ON CONFLICT (user_id, org_id) DO UPDATE
     SET role = excluded.role, updated_at = now();
 
-  -- ownerが1名であることの軽い検証（各組織ごと）
+  -- admin1を2つ目の組織にmemberとして追加（ロール変化パターン: admin → member）
+  INSERT INTO profiles (user_id, org_id, role, metadata, updated_at)
+  VALUES (v_admin, v_org_id_2, 'member', '{}'::jsonb, now())
+  ON CONFLICT (user_id, org_id) DO UPDATE
+    SET role = excluded.role, updated_at = now();
+
+  -- owner2を2つ目の組織のownerとして追加（仕様遵守：各組織に必ず1人のowner）
+  INSERT INTO profiles (user_id, org_id, role, metadata, updated_at)
+  VALUES (v_owner2, v_org_id_2, 'owner', '{}'::jsonb, now())
+  ON CONFLICT (user_id, org_id) DO UPDATE
+    SET role = excluded.role, updated_at = now();
+
+  -- ownerが1名であることの検証（各組織ごと）
   IF (SELECT count(*) FROM profiles WHERE org_id = v_org_id AND role = 'owner') <> 1 THEN
     RAISE EXCEPTION 'owner must be exactly 1 per org (org_id=%)', v_org_id;
   END IF;
 
-  -- 2つ目の組織にはownerがいないため、この検証はスキップ
-  -- （必要に応じて2つ目の組織にもowner2を追加可能）
+  IF (SELECT count(*) FROM profiles WHERE org_id = v_org_id_2 AND role = 'owner') <> 1 THEN
+    RAISE EXCEPTION 'owner must be exactly 1 per org (org_id=%)', v_org_id_2;
+  END IF;
 END$$;
 
 -- 確認用（必要なら実行）

@@ -16,6 +16,7 @@ import { switchOrganization } from './actions';
 interface Organization {
   id: string;
   name: string;
+  role: string;
 }
 
 interface SwitchOrgFormProps {
@@ -104,7 +105,7 @@ export default function SwitchOrgForm({
         >
           {organizations.map((org) => (
             <option key={org.id} value={org.id}>
-              {org.name} {org.id === currentOrgId && '(現在)'}
+              {org.name} ({org.role}) {org.id === currentOrgId && '(現在)'}
             </option>
           ))}
         </select>
