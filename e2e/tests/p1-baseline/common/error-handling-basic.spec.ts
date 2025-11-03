@@ -1,12 +1,18 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
+import { resetUserToOrg1 } from '../../../helpers/db';
 
 const MEMBER = { email: 'member1@example.com' };
 const ADMIN = { email: 'admin1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('エラーハンドリング（基本）', () => {
+  // 各テスト前にmember1をorg1（member権限）にリセット
+  // これにより他のテスト（特にorg-switching.spec.ts）による状態汚染を防ぐ
+  test.beforeEach(async () => {
+    await resetUserToOrg1(MEMBER.email);
+  });
   test('未認証 → 保護されたページにアクセス → ログインページにリダイレクト', async ({ page }) => {
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
