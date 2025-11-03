@@ -13,7 +13,7 @@ export default defineConfig({
   testDir: './e2e/tests',
   timeout: CI ? 60_000 : 30_000, // CI環境では60秒に延長
   expect: { timeout: CI ? 15_000 : 10_000 },
-  workers: CI ? 2 : undefined,
+  workers: CI ? 1 : undefined, // CI環境では直列実行してテスト間のデータ競合を防ぐ
   reporter: CI ? 'github' : [['list'], ['html', { open: 'never' }]],
   use: {
     trace: CI ? 'retain-on-failure' : 'on-first-retry', // CI環境では失敗時にtrace保存
