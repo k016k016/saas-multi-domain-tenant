@@ -27,10 +27,10 @@ E2Eテストの目的は「動くかどうか」ではなく「境界が破ら�
 
 各アプリは別ポートで `next dev` を起動してよい:
 
-* `apps/www`   → `www.local.test:3000`
-* `apps/app`   → `app.local.test:3001`
-* `apps/admin` → `admin.local.test:3002`
-* `apps/ops`   → `ops.local.test:3003`
+* `apps/www`   → `www.local.test:3001`
+* `apps/app`   → `app.local.test:3002`
+* `apps/admin` → `admin.local.test:3003`
+* `apps/ops`   → `ops.local.test:3004`
 
 1ポートに統合するためのリバースプロキシやgatewayを今は作らない。
 `www` をゲートウェイに昇格させないことが重要。
