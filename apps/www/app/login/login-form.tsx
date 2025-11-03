@@ -6,18 +6,17 @@
  * 責務:
  * - メールアドレス・パスワード入力UI
  * - フォーム送信とローディング状態管理
- * - OTP/Password 両方をサポート
+ * - パスワード認証のみをサポート
  */
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { sendOTP, signInWithPassword } from './actions';
+import { signInWithPassword } from './actions';
 
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'otp' | 'password'>('password'); // デフォルトはpassword
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -27,34 +26,18 @@ export function LoginForm() {
     setMessage(null);
 
     try {
-      if (mode === 'password') {
-        // Password ログイン
-        const result = await signInWithPassword(email, password);
+      const result = await signInWithPassword(email, password);
 
-        if (!result.success) {
-          setMessage({ type: 'error', text: result.error });
-        } else {
-          // ログイン成功 → Server Action が返した nextUrl へ遷移
-          const nextUrl = result.nextUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
-          // nextUrl が相対パスの場合は router.push、フルURLの場合は location.assign
-          if (nextUrl.startsWith('/')) {
-            router.push(nextUrl);
-          } else {
-            window.location.assign(nextUrl);
-          }
-        }
+      if (!result.success) {
+        setMessage({ type: 'error', text: result.error });
       } else {
-        // OTP ログイン
-        const result = await sendOTP(email);
-
-        if (!result.success) {
-          setMessage({ type: 'error', text: result.error });
+        // ログイン成功 → Server Action が返した nextUrl へ遷移
+        const nextUrl = result.nextUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
+        // nextUrl が相対パスの場合は router.push、フルURLの場合は location.assign
+        if (nextUrl.startsWith('/')) {
+          router.push(nextUrl);
         } else {
-          setMessage({
-            type: 'success',
-            text: 'ログインリンクをメールで送信しました。メールをご確認ください。'
-          });
-          setEmail('');
+          window.location.assign(nextUrl);
         }
       }
     } catch (err) {
@@ -66,42 +49,6 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} data-testid="login-form">
-      {/* モード切替タブ */}
-      <div style={{ display: 'flex', marginBottom: '1.5rem', borderBottom: '1px solid #d1d5db' }}>
-        <button
-          type="button"
-          onClick={() => setMode('password')}
-          style={{
-            flex: 1,
-            padding: '0.75rem',
-            background: 'none',
-            border: 'none',
-            borderBottom: mode === 'password' ? '2px solid #0070f3' : '2px solid transparent',
-            color: mode === 'password' ? '#0070f3' : '#6b7280',
-            fontWeight: mode === 'password' ? '600' : '400',
-            cursor: 'pointer',
-          }}
-        >
-          パスワード
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('otp')}
-          style={{
-            flex: 1,
-            padding: '0.75rem',
-            background: 'none',
-            border: 'none',
-            borderBottom: mode === 'otp' ? '2px solid #0070f3' : '2px solid transparent',
-            color: mode === 'otp' ? '#0070f3' : '#6b7280',
-            fontWeight: mode === 'otp' ? '600' : '400',
-            cursor: 'pointer',
-          }}
-        >
-          Magic Link
-        </button>
-      </div>
-
       <div style={{ marginBottom: '1rem' }}>
         <label
           htmlFor="email"
@@ -127,32 +74,30 @@ export function LoginForm() {
         />
       </div>
 
-      {mode === 'password' && (
-        <div style={{ marginBottom: '1rem' }}>
-          <label
-            htmlFor="password"
-            style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}
-          >
-            パスワード
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required={mode === 'password'}
-            disabled={loading}
-            placeholder="••••••••"
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '1rem',
-            }}
-          />
-        </div>
-      )}
+      <div style={{ marginBottom: '1rem' }}>
+        <label
+          htmlFor="password"
+          style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}
+        >
+          パスワード
+        </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          disabled={loading}
+          placeholder="••••••••"
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            border: '1px solid #d1d5db',
+            borderRadius: '4px',
+            fontSize: '1rem',
+          }}
+        />
+      </div>
 
       {message && (
         <div
@@ -184,13 +129,11 @@ export function LoginForm() {
           cursor: loading ? 'not-allowed' : 'pointer',
         }}
       >
-        {loading ? '送信中...' : mode === 'password' ? 'ログイン' : 'ログインリンクを送信'}
+        {loading ? '送信中...' : 'ログイン'}
       </button>
 
       <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-        {mode === 'password'
-          ? 'メールアドレスとパスワードでログインします。'
-          : 'メールアドレスにログインリンクが送信されます。'}
+        メールアドレスとパスワードでログインします。
       </p>
     </form>
   );
