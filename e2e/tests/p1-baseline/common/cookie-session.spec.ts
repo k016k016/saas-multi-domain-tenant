@@ -1,11 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
+import { resetUserToOrg1 } from '../../../helpers/db';
 
 const MEMBER = { email: 'member1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('Cookie・セッション管理', () => {
+  // 各テスト前にmember1をorg1（member権限）にリセット
+  // これにより他のテスト（特にorg-switching.spec.ts）による状態汚染を防ぐ
+  test.beforeEach(async () => {
+    await resetUserToOrg1(MEMBER.email);
+  });
   test('ログイン → Supabase Session Cookieの保持確認', async ({ page, context }) => {
     // ログイン前のCookieを確認（セッションCookieが無いはず）
     const cookiesBeforeLogin = await context.cookies();
