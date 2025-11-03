@@ -25,7 +25,8 @@ export function middleware(req: NextRequest) {
     // url.hrefではなくDOMAINS.adminを使用してリダイレクト先を構築
     // req.urlはlocalhostになる場合があるため、環境変数から取得したドメインを使用
     const nextUrl = `${DOMAINS.admin}${url.pathname}${url.search}`
-    return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(nextUrl)}`)
+    const redirectUrl = `${DOMAINS.www}/login?next=${encodeURIComponent(nextUrl)}`
+    return NextResponse.redirect(redirectUrl)
   }
 
   // 認証済みユーザーは通す
