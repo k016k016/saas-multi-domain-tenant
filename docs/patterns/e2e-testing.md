@@ -8,13 +8,15 @@ E2Eテストの目的は「動くかどうか」ではなく「境界が破ら�
 ```text
 127.0.0.1 www.local.test
 127.0.0.1 app.local.test
+127.0.0.1 acme.app.local.test
+127.0.0.1 contoso.app.local.test
 127.0.0.1 admin.local.test
 127.0.0.1 ops.local.test
 ```
 
 * `localhost` は使わない。
-* 4つとも127.0.0.1で構わない。
-* ブラウザやPlaywrightは `www.local.test`, `app.local.test` ... という別オリジンとして扱う。
+* すべて127.0.0.1で構わない。
+* ブラウザやPlaywrightは `www.local.test`, `app.local.test`, `acme.app.local.test` ... という別オリジンとして扱う。
 
 禁止:
 
@@ -37,7 +39,7 @@ E2Eテストの目的は「動くかどうか」ではなく「境界が破ら�
 
 ## 3. クッキー / SSO想定
 
-* セッションCookieは将来的に `Domain=.local.test`（本番は`.example.com`）で発行し、サブドメイン間(app/adminなど)で共有する想定。
+* セッションCookieは `Domain=.local.test`（本番は`.example.com`）で発行し、サブドメイン間(www/app/admin/ops および orgサブドメイン)で共有する。
 * ただしアクセス可否は各アプリのmiddlewareが決める。
 
   * `admin.local.test` は `admin` / `owner` 以外403。
@@ -63,7 +65,7 @@ E2Eテストの目的は「動くかどうか」ではなく「境界が破ら�
 ## 5. org切り替えの検証
 
 * `/switch-org` のような画面で所属org一覧が出ること。
-* 任意のorgを選択するとServer Actionが `{ success: true, nextUrl: "/dashboard" }` のようなレスポンスを返すこと。
+* 任意のorgを選択するとServer Actionが `{ success: true, nextUrl: "https://acme.app.local.test:3002/dashboard" }` など、対象 org のサブドメインを前提にしたURLを返す、もしくは現在の org サブドメインを前提とした相対パスを返すこと。
 * クライアント側で `router.push(nextUrl)` すること。
 * Server Action内で `redirect()` を呼んでいないこと。
 * 所属していないorg_idを指定すると `{ success: false, error: "...", nextUrl: "/unauthorized" }` が返り、`/unauthorized` 側に遷移すること。

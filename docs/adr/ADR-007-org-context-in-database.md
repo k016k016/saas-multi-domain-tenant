@@ -5,9 +5,10 @@
 
 ## 決定
 - **active org / role を Cookie に保存しない**
-- **組織コンテキストは DB のみで管理**（`user_org_context` テーブル）
+- **組織コンテキストは DB のみで管理**（`user_org_context` テーブルおよび `organizations` / `memberships`）
 - **role は DB から毎リクエスト取得**（`profiles` テーブル）
 - **組織切り替えは DB の UPDATE 操作**（Cookie 操作なし）
+- **app ドメインにおける org の決定は「Host の orgSlug → DB 解決」を優先し、user_org_context はサブドメイン未指定時のデフォルト org として利用する**
 
 ## ステータス
 承認・実装済み
@@ -56,16 +57,39 @@ create policy "Users can update their own context"
 create unique index profiles_org_user_uniq on profiles(org_id, id);
 ```
 
-### 2. 実装パターン
+### 2. 実装パターン（サブドメイン前提を含む）
 
 #### 組織コンテキストの取得（getCurrentOrg）
 ```typescript
-export async function getCurrentOrg(): Promise<OrgContext | null> {
+export async function getCurrentOrg(opts?: { orgSlug?: string }): Promise<OrgContext | null> {
   const supabase = await createServerClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user?.id) return null;
 
-  // user_org_context から active org を取得
+  // 1. Host などから渡された orgSlug があれば優先して解決
+  if (opts?.orgSlug) {
+    const { data: org } = await supabase
+      .from('organizations')
+      .select('id, name, slug')
+      .eq('slug', opts.orgSlug)
+      .single();
+
+    if (!org) return null;
+
+    // membership チェック（所属していない orgSlug は 404 / 403 相当扱い）
+    const { data: membership } = await supabase
+      .from('memberships')
+      .select('org_id')
+      .eq('org_id', org.id)
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!membership) return null;
+
+    return { orgId: org.id, orgName: org.name };
+  }
+
+  // 2. orgSlug がない場合は user_org_context をデフォルト org として利用
   const { data: context } = await supabase
     .from('user_org_context')
     .select('org_id')
@@ -151,7 +175,7 @@ export async function switchOrganization(
 
 ### 3. アクセスパターン
 
-#### Server Component での認可チェック
+#### Server Component での認可チェック（apps/app, apps/admin 共通）
 ```typescript
 // apps/admin/app/members/page.tsx
 export default async function MembersPage() {

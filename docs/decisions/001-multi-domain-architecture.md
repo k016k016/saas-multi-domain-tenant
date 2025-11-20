@@ -62,6 +62,7 @@ B2B SaaSアプリケーションとして、以下の異なる用途のUIを提�
 - `app.domain.com` → `(app)/`
 - `admin.domain.com` → `(admin)/`
 - `ops.domain.com` → `(ops)/`
+- 将来的に、app ドメインの配下で org ごとに `{orgSlug}.app.domain.com` のサブドメインを張り出す（同一の app アプリに到達し、org コンテキストだけが異なる）
 
 **メリット**:
 - 論理的な分離（ルートグループ）

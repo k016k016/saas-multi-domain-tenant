@@ -9,7 +9,7 @@
 | ドメイン | ローカル | 本番 | 用途 | ルートグループ |
 |---------|---------|------|------|--------------|
 | WWW | `www.local.test:3001` | `www.domain.com` | マーケティング、認証 | `(www)` |
-| APP | `app.local.test:3002` | `app.domain.com` | メインアプリ | `(app)` |
+| APP | `app.local.test:3002` / `acme.app.local.test:3002` | `app.domain.com` / `acme.app.domain.com` | メインアプリ（orgごとにサブドメインで分離） | `(app)` |
 | ADMIN | `admin.local.test:3003` | `admin.domain.com` | 管理ダッシュボード | `(admin)` |
 | OPS | `ops.local.test:3004` | `ops.domain.com` | 運用ツール（IP制限） | `(ops)` |
 
@@ -44,6 +44,8 @@ cookies().set({
 127.0.0.1 local.test
 127.0.0.1 www.local.test
 127.0.0.1 app.local.test
+127.0.0.1 acme.app.local.test
+127.0.0.1 contoso.app.local.test
 127.0.0.1 admin.local.test
 127.0.0.1 ops.local.test
 ```
@@ -151,7 +153,7 @@ export async function middleware(request: NextRequest) {
 - [ ] ドメイン間遷移は絶対URL（`window.location.href`）を使用
 - [ ] `/etc/hosts`にサブドメインを登録している（ローカル開発）
 - [ ] Middlewareで適切なルートグループにリライトしている
-- [ ] E2Eテストでドメインが維持されることを確認している
+- [ ] E2Eテストでドメイン（orgサブドメインを含む）が維持されることを確認している
 
 ---
 

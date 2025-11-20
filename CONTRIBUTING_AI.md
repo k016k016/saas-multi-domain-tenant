@@ -107,7 +107,7 @@ AIアシスタントは以上を前提に作業すること。
 - Server Action は **redirect() 禁止**。**{ success, nextUrl }** を返す。
 
 ## ドキュメント編集ポリシー
-- `docs/**` と `CLAUDE_RUNTIME*.md` は**無断変更禁止**。変更時は PR に理由と対象箇所を明記。
+- `docs/**` と `CLAUDE_RUNTIME*.md` は**原則として無断変更禁止**。変更時は PR に理由と対象箇所を明記すること（ただしリポジトリオーナーが明示的に例外を指示した場合はその指示に従う）。
 
 ## Cookies / Runtime ルール
 - Server側（Route/Action/RSC）は **`await cookies()` 必須**。同期扱い禁止。
@@ -115,4 +115,4 @@ AIアシスタントは以上を前提に作業すること。
 - middleware で **@repo/db import 禁止**（ESLint/CIで強制）。
 - Server Action は **redirect() 禁止**。`{ success, nextUrl }` を返す。
 
-> Cookie/Sessionの細則は `docs/patterns/cookies-and-sessions.md` を参照。
+> Cookie/Sessionの細則は `docs/patterns/cookies-and-sessions.md` を参照。orgコンテキストは Cookie ではなく Host(orgSlug) と DB（user_org_context / organizations / memberships）で決定する。

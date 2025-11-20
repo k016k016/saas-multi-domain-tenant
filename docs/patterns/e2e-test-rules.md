@@ -17,6 +17,7 @@
 - 認証（ログイン/ログアウト）
 - ドメイン境界制御（未認証リダイレクト、ドメイン間のアクセス制御）
 - ロール境界制御（member/admin/owner の基本的なアクセス制限）
+- orgサブドメイン（例: `acme.app.local.test`）を跨いだアクセス制御
 - 基本的なエラーページ（404, /unauthorized）
 - Cookie/Session の基本動作
 

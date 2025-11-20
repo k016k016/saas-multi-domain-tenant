@@ -10,7 +10,8 @@
 - DBはPostgres/Supabaseを想定
 - Supabase Authが認証のソースオブトゥルース
 - すべてのテーブルは `organization_id` でテナント境界を持っている
-- 現在のアクティブな組織IDはDB（user_org_context）で保持される
+- 組織コンテキスト（active org）は DB（`user_org_context` / `organizations` / `memberships`）で管理される
+- app ドメインでは Host の orgSlug（`{orgSlug}.app.example.com`）を優先して org を決定し、サブドメインがない場合のみ `user_org_context` をデフォルト org として利用する
 - 参考: [CLAUDE_RUNTIME_MIN.md](../../CLAUDE_RUNTIME_MIN.md)
 
 ## 正常フロー
@@ -39,7 +40,7 @@
 
 ### ドメイン責務（混ぜない）
 - **`www`**: LP/説明/ログイン導線
-- **`app`**: 日常業務UI（orgコンテキストに依存）
+- **`app`**: 日常業務UI（orgコンテキストに依存）。org ごとに `{orgSlug}.app` サブドメインで分離され、同一ユーザーが複数 org を別タブで開ける。
 - **`admin`**: 組織管理・契約・支払い・凍結・権限管理（memberは403）
 - **`ops`**: 事業者側社内用（今はダミー）
 詳細: [マルチドメインパターン](../patterns/multi-domain.md)

@@ -101,8 +101,9 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提とする。
 
 - 1ユーザーは複数組織(org)に所属できる。
 - ユーザーはUIでアクティブな組織(org_id)を切り替える。
-- 現在のorg_idはDB（user_org_context）に保持する。
-- middlewareはこのorg_idを前提にアクセス制御を行う。middlewareのロジックを「簡略化」の名目で勝手に変更/撤廃しない。
+- 組織コンテキスト（active org）のソースオブトゥルースはDB（user_org_context / organizations / memberships）にある。
+- app ドメインでは Host の orgSlug（`{orgSlug}.app.example.com`）を優先して org を決定し、サブドメインがない場合のみ user_org_context をデフォルト org として利用する。
+- middlewareは Host から orgSlug を抽出してServer側に渡すだけとし、org/role の本検証は Server Component / Server Action で DB + RLS を前提に行う。middlewareのロジックを「簡略化」の名目で勝手に変更/撤廃しない。
 - DBはSupabase(Postgres)を前提とし、org_id単位でRow Level Security (RLS) を敷く。
 - RLSを無効化・バイパスする・「テストなので全件見えるようにします」という提案は禁止。
 - owner不在の組織状態は作らない。テスト目的でも禁止。各組織には常にownerが1人必要。
@@ -274,6 +275,7 @@ pnpm --filter ops dev &
   - app.example.com → Vercel Project (Root: `apps/app`)
   - admin.example.com → Vercel Project (Root: `apps/admin`)
   - ops.example.com → Vercel Project (Root: `apps/ops`)
+  - 必要に応じて、app プロジェクトに `*.app.example.com`（orgごとのサブドメイン）を追加で割り当てる。どの org サブドメインも同一の app アプリに到達し、org コンテキストだけが異なる。
 - **4アプリ分割の理由**: 監査・権限境界・障害分離のため。コスト理由で統合しない
 - **禁止**: コスト理由での統合提案
 - **禁止**: 1つのNext.jsアプリでhostヘッダやmiddlewareで分岐する案（セキュリティ・監査・ロールバック分離・権限境界を崩すため）

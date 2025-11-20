@@ -4,6 +4,7 @@
 - ドメイン判定（文字列処理）
 - `NextRequest/NextResponse` 経由の Cookie 読取/設定
 - 粗い遮断（未ログイン・role=member の admin 侵入拒否）
+- app ドメインにおける Host からの orgSlug 抽出（`acme.app.example.com` → `acme`）
 
 ## やってはいけない
 - DB/Supabase クライアント生成やクエリ
@@ -41,9 +42,10 @@ export function middleware(req: NextRequest) {
 **現在の方針:**
 - org_id/roleは**Cookieに保存せず、DBから取得する**（ADR-006/007参照）
 - middlewareではSupabase Session Cookieの存在のみを確認
+- app ドメインでは Host から orgSlug を抽出し、クエリやヘッダに載せて Node Runtime 側に渡す（文字列処理のみ）
 - 詳細な認可チェックは**Route Handler/Server Action/Page**で行う
 
 サーバ側（本検証）
 - Route Handler / Server Action / Page で runtime='nodejs' を明示し、Supabase + RLS で再検証する。
-
+- org の決定は「middleware から渡された orgSlug（あれば）→ DB 解決 → membership/RLS 検証」「なければ user_org_context を fallback」という順序で行う。
 
