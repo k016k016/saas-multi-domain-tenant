@@ -214,6 +214,56 @@ async function upsertUser(
   console.log(`✅ ${role} user context upserted successfully`);
 }
 
+async function cleanupTestUsers(supabase: ReturnType<typeof createClient>) {
+  console.log('🧹 Cleaning up test users (test-*@example.com)...');
+
+  // 全ユーザーを取得
+  const { data: listData, error: listError } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+
+  if (listError) {
+    throw new Error(`Failed to list users: ${listError.message}`);
+  }
+
+  // test-*@example.com パターンにマッチするユーザーを抽出
+  const testUsers = listData.users.filter(
+    (u) => u.email && /^test-\d+@example\.com$/.test(u.email)
+  );
+
+  if (testUsers.length === 0) {
+    console.log('✅ No test users to cleanup');
+    return;
+  }
+
+  console.log(`🗑️ Found ${testUsers.length} test users to delete`);
+
+  for (const user of testUsers) {
+    // profilesテーブルから削除
+    await supabase
+      .from('profiles')
+      .delete()
+      .eq('user_id', user.id);
+
+    // user_org_contextテーブルから削除
+    await supabase
+      .from('user_org_context')
+      .delete()
+      .eq('user_id', user.id);
+
+    // auth.usersから削除
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+    if (deleteError) {
+      console.warn(`⚠️ Failed to delete user ${user.email}: ${deleteError.message}`);
+    } else {
+      console.log(`🗑️ Deleted test user: ${user.email}`);
+    }
+  }
+
+  console.log(`✅ Cleanup completed: ${testUsers.length} test users deleted`);
+}
+
 async function main() {
   // 環境変数の検証
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -242,6 +292,9 @@ async function main() {
       persistSession: false,
     },
   });
+
+  // テストで作成されたユーザーをクリーンアップ
+  await cleanupTestUsers(supabase);
 
   // テスト用組織を作成/更新
   await upsertOrganization(supabase);

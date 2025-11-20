@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
-import { resetUserToOrg1, createTestUser, deleteTestUser, resetUserPassword } from '../../../helpers/db';
+import { resetUserToOrg1, createTestUser, deleteTestUser } from '../../../helpers/db';
 
 const ADMIN = { email: 'admin1@example.com' };
 const OWNER = { email: 'owner1@example.com' };
@@ -271,42 +271,37 @@ test.describe('admin/members CRUD', () => {
   test('admin → パスワード変更が成功し、新パスワードでログイン可能', async ({ page }) => {
     const NEW_PASSWORD = 'NewPassword123!';
 
-    try {
-      await uiLogin(page, ADMIN.email, PASSWORD);
-      await page.goto(`${DOMAINS.ADMIN}/members`);
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/members`);
 
-      // member1の編集ボタンをクリック
-      const memberRow = page.locator('tr', { hasText: MEMBER.email });
-      await memberRow.getByRole('button', { name: /編集/i }).click();
+    // member1の編集ボタンをクリック
+    const memberRow = page.locator('tr', { hasText: MEMBER.email });
+    await memberRow.getByRole('button', { name: /編集/i }).click();
 
-      // モーダルが表示される
-      await expect(page.getByRole('heading', { name: /ユーザー情報を編集/i })).toBeVisible();
+    // モーダルが表示される
+    await expect(page.getByRole('heading', { name: /ユーザー情報を編集/i })).toBeVisible();
 
-      // パスワードを変更
-      await page.locator('input#edit-password').fill(NEW_PASSWORD);
-      await page.locator('input#edit-password-confirm').fill(NEW_PASSWORD);
+    // パスワードを変更
+    await page.locator('input#edit-password').fill(NEW_PASSWORD);
+    await page.locator('input#edit-password-confirm').fill(NEW_PASSWORD);
 
-      // 保存
-      await page.getByRole('button', { name: /保存/i }).click();
+    // 保存
+    await page.getByRole('button', { name: /保存/i }).click();
 
-      // モーダルが閉じる
-      await expect(page.getByRole('heading', { name: /ユーザー情報を編集/i })).not.toBeVisible();
+    // モーダルが閉じる
+    await expect(page.getByRole('heading', { name: /ユーザー情報を編集/i })).not.toBeVisible();
 
-      // Cookieをクリアして新しいセッションでログイン確認
-      await page.context().clearCookies();
+    // Cookieをクリアして新しいセッションでログイン確認
+    await page.context().clearCookies();
 
-      // ログインページへ遷移
-      await page.goto(`${DOMAINS.WWW}/login`);
-      await page.locator('#email').fill(MEMBER.email);
-      await page.locator('#password').fill(NEW_PASSWORD);
-      await page.getByRole('button', { name: /sign in|login|サインイン/i }).click();
+    // ログインページへ遷移
+    await page.goto(`${DOMAINS.WWW}/login`);
+    await page.locator('#email').fill(MEMBER.email);
+    await page.locator('#password').fill(NEW_PASSWORD);
+    await page.getByRole('button', { name: /sign in|login|サインイン/i }).click();
 
-      // ログイン成功（ダッシュボードにリダイレクト）
-      await expect(page).toHaveURL(new RegExp(`${DOMAINS.APP}`));
-    } finally {
-      // パスワードを元に戻す
-      await resetUserPassword(MEMBER.email, PASSWORD);
-    }
+    // ログイン成功（ダッシュボードにリダイレクト）
+    await expect(page).toHaveURL(new RegExp(`${DOMAINS.APP}`));
   });
 
   test('admin → パスワード不一致でエラー表示', async ({ page }) => {

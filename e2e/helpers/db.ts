@@ -148,42 +148,6 @@ export async function createTestUser(
  * 用途:
  * - テスト後のクリーンアップ
  */
-/**
- * ユーザーのパスワードをリセット
- *
- * @param email - ユーザーのメールアドレス
- * @param password - 新しいパスワード
- *
- * 用途:
- * - パスワード変更テスト後のクリーンアップ
- */
-export async function resetUserPassword(email: string, password: string): Promise<void> {
-  const supabase = getSupabaseAdmin();
-
-  // メールアドレスからuser_idを取得
-  const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-
-  if (userError) {
-    throw new Error(`Failed to list users: ${userError.message}`);
-  }
-
-  const user = userData.users.find(u => u.email === email);
-  if (!user) {
-    throw new Error(`User not found: ${email}`);
-  }
-
-  // パスワードを更新
-  const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
-    password: password,
-  });
-
-  if (updateError) {
-    throw new Error(`Failed to reset password: ${updateError.message}`);
-  }
-
-  console.log(`✅ [DB Helper] Reset password for ${email}`);
-}
-
 export async function deleteTestUser(email: string): Promise<void> {
   const supabase = getSupabaseAdmin();
 
