@@ -17,6 +17,8 @@ import type { Role } from '@repo/config';
 export default function InviteUserForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [role, setRole] = useState<'member' | 'admin'>('member');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -30,13 +32,15 @@ export default function InviteUserForm() {
 
     try {
       // Server Actionを呼び出す
-      const result = await inviteUser(email, role as Role);
+      const result = await inviteUser(email, password, name, role as Role);
 
       if (result.success) {
         // 成功: フォームをリセットして成功メッセージを表示
         setEmail('');
+        setPassword('');
+        setName('');
         setRole('member');
-        setSuccess(`${email} に招待メールを送信しました`);
+        setSuccess(`${name || email} を追加しました`);
         setIsLoading(false);
 
         // ページをリフレッシュしてメンバーリストを更新
@@ -84,7 +88,34 @@ export default function InviteUserForm() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px auto', gap: '1rem', alignItems: 'end' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 120px auto', gap: '0.75rem', alignItems: 'end' }}>
+        {/* 氏名入力 */}
+        <div>
+          <label
+            htmlFor="name"
+            style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}
+          >
+            氏名
+          </label>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={isLoading}
+            required
+            placeholder="山田 太郎"
+            style={{
+              width: '100%',
+              padding: '0.5rem',
+              background: '#1a1a1a',
+              color: '#e5e5e5',
+              border: '1px solid #404040',
+              borderRadius: '4px',
+            }}
+          />
+        </div>
+
         {/* メールアドレス入力 */}
         <div>
           <label
@@ -101,6 +132,33 @@ export default function InviteUserForm() {
             disabled={isLoading}
             required
             placeholder="user@example.com"
+            style={{
+              width: '100%',
+              padding: '0.5rem',
+              background: '#1a1a1a',
+              color: '#e5e5e5',
+              border: '1px solid #404040',
+              borderRadius: '4px',
+            }}
+          />
+        </div>
+
+        {/* パスワード入力 */}
+        <div>
+          <label
+            htmlFor="password"
+            style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}
+          >
+            パスワード
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            required
+            placeholder="••••••••"
             style={{
               width: '100%',
               padding: '0.5rem',
@@ -139,21 +197,21 @@ export default function InviteUserForm() {
           </select>
         </div>
 
-        {/* 招待ボタン */}
+        {/* 追加ボタン */}
         <button
           type="submit"
-          disabled={isLoading || !email}
+          disabled={isLoading || !email || !password || !name}
           style={{
-            padding: '0.5rem 1.5rem',
-            background: !email || isLoading ? '#404040' : '#3b82f6',
+            padding: '0.5rem 1rem',
+            background: !email || !password || !name || isLoading ? '#404040' : '#3b82f6',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: !email || isLoading ? 'not-allowed' : 'pointer',
+            cursor: !email || !password || !name || isLoading ? 'not-allowed' : 'pointer',
             whiteSpace: 'nowrap',
           }}
         >
-          {isLoading ? '送信中...' : '招待する'}
+          {isLoading ? '追加中...' : '追加'}
         </button>
       </div>
     </form>

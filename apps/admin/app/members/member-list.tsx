@@ -22,6 +22,7 @@ import type { Role } from '@repo/config';
 interface Member {
   userId: string;
   email: string;
+  name: string;
   role: 'owner' | 'admin' | 'member';
   status: 'active' | 'pending' | 'inactive';
   createdAt: string;
@@ -136,6 +137,7 @@ export default function MemberList({ members, currentUserRole }: MemberListProps
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#262626', borderBottom: '1px solid #404040' }}>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>氏名</th>
               <th style={{ padding: '1rem', textAlign: 'left' }}>メールアドレス</th>
               <th style={{ padding: '1rem', textAlign: 'left' }}>ロール</th>
               <th style={{ padding: '1rem', textAlign: 'left' }}>ステータス</th>
@@ -156,6 +158,7 @@ export default function MemberList({ members, currentUserRole }: MemberListProps
                     background: isLoading ? '#262626' : 'transparent',
                   }}
                 >
+                  <td style={{ padding: '1rem' }}>{member.name || '-'}</td>
                   <td style={{ padding: '1rem' }}>{member.email}</td>
                   <td style={{ padding: '1rem' }}>
                     {isOwner ? (

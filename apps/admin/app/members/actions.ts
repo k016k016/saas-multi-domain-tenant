@@ -11,19 +11,23 @@
  * - すべての操作はactivity_logsに記録する（将来実装）
  */
 
-import { createServerClient, logActivity } from '@repo/db';
+import { createServerClient, getSupabaseAdmin, logActivity } from '@repo/db';
 import { getCurrentOrg, getCurrentRole, hasRole } from '@repo/config';
 import type { ActionResult, Role } from '@repo/config';
 
 /**
- * ユーザーを招待する
+ * ユーザーを追加する
  *
- * @param email - 招待するユーザーのメールアドレス
+ * @param email - 追加するユーザーのメールアドレス
+ * @param password - 初期パスワード
+ * @param name - 氏名
  * @param role - 初期ロール（member/admin）
  * @returns ActionResult
  */
 export async function inviteUser(
   email: string,
+  password: string,
+  name: string,
   role: Role
 ): Promise<ActionResult> {
   // 1. 入力バリデーション
@@ -40,6 +44,20 @@ export async function inviteUser(
     return {
       success: false,
       error: 'メールアドレスの形式が正しくありません',
+    };
+  }
+
+  if (!password || password.length < 6) {
+    return {
+      success: false,
+      error: 'パスワードは6文字以上で指定してください',
+    };
+  }
+
+  if (!name || name.trim().length === 0) {
+    return {
+      success: false,
+      error: '氏名を入力してください',
     };
   }
 
@@ -80,63 +98,68 @@ export async function inviteUser(
     };
   }
 
-  // 5. ユーザー招待処理
-  // 5-1. 同じメールアドレスのユーザーが既に存在するか確認
-  const { data: existingUser } = await supabase
-    .from('profiles')
-    .select('id, email')
-    .eq('org_id', org.orgId)
-    .eq('email', email)
-    .single();
+  // 5. ユーザー作成処理（Service Role Key使用）
+  const supabaseAdmin = getSupabaseAdmin();
 
-  if (existingUser) {
-    return { success: false, error: 'このメールアドレスは既に登録されています' };
-  }
-
-  // 5-2. Supabase Auth経由で招待メールを送信
-  // ※ Service Role Key使用時のみ利用可能
-  const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+  // 5-1. Supabase Authでユーザーを作成
+  const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
     email,
-    {
-      data: {
-        org_id: org.orgId,
-        role: role,
-        invited_by: currentUserId,
-      },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    }
-  );
+    password,
+    email_confirm: true,
+    user_metadata: {
+      name: name.trim(),
+    },
+  });
 
-  if (inviteError) {
-    console.error('[inviteUser] Invite error:', inviteError);
-    return { success: false, error: '招待メールの送信に失敗しました' };
+  if (createError) {
+    console.error('[inviteUser] Create user error:', createError);
+    // メールアドレス重複の場合
+    if (createError.message.includes('already been registered')) {
+      return { success: false, error: 'このメールアドレスは既に登録されています' };
+    }
+    return { success: false, error: 'ユーザーの作成に失敗しました' };
   }
 
-  // 5-3. profilesテーブルに仮ユーザーレコードを作成
-  const { error: profileError } = await supabase
+  const userId = createData.user.id;
+
+  // 5-2. profilesテーブルにユーザーレコードを作成
+  const { error: profileError } = await supabaseAdmin
     .from('profiles')
     .insert({
-      user_id: inviteData.user.id, // 招待されたユーザーのID
+      user_id: userId,
       org_id: org.orgId,
-      email: email,
       role: role,
-      status: 'pending', // 招待メール未承認状態
-      invited_at: new Date().toISOString(),
-      invited_by: currentUserId,
     });
 
   if (profileError) {
     console.error('[inviteUser] Profile creation error:', profileError);
+    // Authユーザーは作成されたがprofile作成に失敗した場合、Authユーザーを削除
+    await supabaseAdmin.auth.admin.deleteUser(userId);
     return { success: false, error: 'ユーザーレコードの作成に失敗しました' };
   }
 
+  // 5-3. user_org_contextを設定
+  const { error: contextError } = await supabaseAdmin
+    .from('user_org_context')
+    .upsert({
+      user_id: userId,
+      org_id: org.orgId,
+      updated_at: new Date().toISOString(),
+    });
+
+  if (contextError) {
+    console.error('[inviteUser] Context creation error:', contextError);
+    // 致命的ではないのでワーニングのみ
+  }
+
   // 6. 監査ログ記録
-  const logResult = await logActivity(supabase, {
+  const logResult = await logActivity(supabaseAdmin, {
     orgId: org.orgId,
     userId: currentUserId,
     action: 'user_invited',
     payload: {
       invited_email: email,
+      invited_name: name.trim(),
       invited_role: role,
       timestamp: new Date().toISOString(),
     },
@@ -144,7 +167,6 @@ export async function inviteUser(
 
   if (logResult.error) {
     console.warn('[inviteUser] Activity log failed:', logResult.error);
-    // 監査ログ失敗は致命的エラーではないが、ワーニングを出す
   }
 
   // 7. 成功を返す
@@ -348,9 +370,11 @@ export async function removeUser(
     };
   }
 
-  // 6. ユーザー削除処理
-  // 物理削除を実施（profilesテーブルから削除）
-  const { error: deleteError } = await supabase
+  // 6. ユーザー削除処理（Service Role Key使用）
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // 6-1. profilesテーブルから削除
+  const { error: deleteError } = await supabaseAdmin
     .from('profiles')
     .delete()
     .eq('user_id', targetUserId)
@@ -361,8 +385,14 @@ export async function removeUser(
     return { success: false, error: 'ユーザーの削除に失敗しました' };
   }
 
-  // 6-2. Supabase Authからもユーザーを削除
-  const { error: authDeleteError } = await supabase.auth.admin.deleteUser(targetUserId);
+  // 6-2. user_org_contextから削除
+  await supabaseAdmin
+    .from('user_org_context')
+    .delete()
+    .eq('user_id', targetUserId);
+
+  // 6-3. Supabase Authからもユーザーを削除
+  const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
 
   if (authDeleteError) {
     console.error('[removeUser] Auth delete error:', authDeleteError);
@@ -371,7 +401,7 @@ export async function removeUser(
   }
 
   // 7. 監査ログ記録
-  const logResult = await logActivity(supabase, {
+  const logResult = await logActivity(supabaseAdmin, {
     orgId: org.orgId,
     userId: currentUserId,
     action: 'user_removed',

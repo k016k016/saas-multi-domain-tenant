@@ -13,7 +13,7 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
-import { createServerClient } from '@repo/db';
+import { createServerClient, getSupabaseAdmin } from '@repo/db';
 import { notFound, redirect } from 'next/navigation';
 import InviteUserForm from './invite-user-form';
 import MemberList from './member-list';
@@ -47,17 +47,36 @@ export default async function MembersPage() {
     console.error('[MembersPage] Failed to fetch profiles:', profilesError);
   }
 
-  // auth.usersテーブルからメールアドレスを取得（Service Role Key必要）
-  // 注: 現在はメールアドレス取得が難しいため、user_idのみ表示
-  // 将来的にはSupabase Admin APIまたはAuth Adminを使用してメールを取得
+  // auth.usersテーブルからメールアドレスと氏名を取得（Service Role Key使用）
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+
+  if (usersError) {
+    console.error('[MembersPage] Failed to fetch users:', usersError);
+  }
+
+  // user_idをキーにしたマップを作成
+  const userMap = new Map<string, { email: string; name: string }>();
+  usersData?.users?.forEach((user) => {
+    userMap.set(user.id, {
+      email: user.email || '',
+      name: user.user_metadata?.name || '',
+    });
+  });
+
+  // profilesとusersをマージしてメンバー一覧を作成
   const members =
-    profilesData?.map((profile) => ({
-      userId: profile.user_id,
-      email: `${profile.user_id.substring(0, 8)}@...`, // 暫定: user_idの一部を表示
-      role: profile.role as 'owner' | 'admin' | 'member',
-      status: 'active' as const, // 現在のスキーマにはstatusカラムがないため固定
-      createdAt: new Date(profile.created_at).toLocaleDateString('ja-JP'),
-    })) || [];
+    profilesData?.map((profile) => {
+      const userInfo = userMap.get(profile.user_id);
+      return {
+        userId: profile.user_id,
+        email: userInfo?.email || `${profile.user_id.substring(0, 8)}@...`,
+        name: userInfo?.name || '',
+        role: profile.role as 'owner' | 'admin' | 'member',
+        status: 'active' as const,
+        createdAt: new Date(profile.created_at).toLocaleDateString('ja-JP'),
+      };
+    }) || [];
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -82,7 +101,7 @@ export default async function MembersPage() {
         }}
       >
         <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
-          新規ユーザーを招待
+          組織「{org.orgName}」に新規ユーザーを招待
         </h2>
         <InviteUserForm />
       </section>
