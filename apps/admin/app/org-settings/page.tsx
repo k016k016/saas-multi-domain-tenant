@@ -21,19 +21,24 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 // cookies()を使用するため、動的レンダリングを強制
 export const dynamic = 'force-dynamic';
 
-export default async function OrgSettingsPage() {
-  const org = await getCurrentOrg();
+export default async function OrgSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ org?: string }>;
+}) {
+  const { org: orgSlug } = await searchParams;
+  const org = await getCurrentOrg(orgSlug ? { orgSlug } : undefined);
   const roleContext = await getCurrentRole();
   const role = roleContext?.role;
 
   // ADMIN domain: owner のみアクセス可能
   if (!role || role !== 'owner') {
-    notFound();
+    redirect('/unauthorized');
   }
 
   return (

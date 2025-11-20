@@ -228,10 +228,11 @@ test.describe('RLS Data Isolation', () => {
 
       // org2に切り替え（DBヘルパーで強制）
       await setUserActiveOrg('member1@example.com', ORG_IDS.SECONDARY);
-      await page.reload();
+      await page.context().clearCookies();
+      await uiLogin(page, 'member1@example.com', PASSWORD);
 
       // org2のコンテキストでadmin domainへ
-      await page.goto('http://admin.local.test:3003/members');
+      await page.goto('http://admin.local.test:3003/members?org=beta');
       await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
 
       // org2のメンバーのみ表示
@@ -246,7 +247,7 @@ test.describe('RLS Data Isolation', () => {
       await setUserActiveOrg('member1@example.com', ORG_IDS.PRIMARY);
 
       // org1のコンテキストではmember権限なので403/unauthorized
-      await page.goto('http://admin.local.test:3003/members');
+      await page.goto('http://admin.local.test:3003/members?org=acme');
       await expect(page).toHaveURL(/unauthorized/);
     });
   });
