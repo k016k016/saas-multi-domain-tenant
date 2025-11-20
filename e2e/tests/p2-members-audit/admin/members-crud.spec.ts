@@ -5,7 +5,7 @@ import { resetUserToOrg1, createTestUser, deleteTestUser } from '../../../helper
 
 const ADMIN = { email: 'admin1@example.com' };
 const OWNER = { email: 'owner1@example.com' };
-const MEMBER = { email: 'member1@example.com' };
+const MEMBER = { email: 'member-switcher@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 // テスト用ユーザー

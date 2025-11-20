@@ -47,6 +47,7 @@ const TEST_USERS = [
   { email: 'admin2@example.com', role: 'admin', name: '伊藤 四郎' },
   { email: 'owner2@example.com', role: 'owner', name: '佐藤 次郎' },
   { email: 'ops1@example.com', role: 'ops', name: 'OPS管理者' },
+  { email: 'member-switcher@example.com', role: 'member', name: '組織 切替' },
 ] as const;
 
 async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
@@ -206,6 +207,12 @@ async function upsertUser(
     orgRoles = [
       { orgId: TEST_ORG_ID, role: 'admin' },
       { orgId: TEST_ORG_ID_2, role: 'member' },
+    ];
+  } else if (email === 'member-switcher@example.com') {
+    // 組織切替専用ユーザー: org1ではmember、org2ではadmin
+    orgRoles = [
+      { orgId: TEST_ORG_ID, role: 'member' },
+      { orgId: TEST_ORG_ID_2, role: 'admin' },
     ];
   } else if (email === 'member2@example.com') {
     // member2: org2のみ（org2専用のmember）

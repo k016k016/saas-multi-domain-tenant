@@ -13,10 +13,14 @@
  * - owner2@example.com は Test Organization Beta のowner
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { uiLogin } from '../../helpers/auth';
 
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
+const orgSummary = (page: Page, name: string) =>
+  page.locator('p', { hasText: '組織:' }).locator('strong', { hasText: name }).first();
+const orgHeading = (page: Page, name: string) =>
+  page.getByRole('heading', { name }).first();
 
 test.describe('Admin URL-based Organization Resolution', () => {
   test('動的ルート /org/acme/members で Test Organization のメンバー一覧が表示される', async ({ page }) => {
@@ -28,7 +32,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
 
     // ページタイトルとメンバー一覧が表示される
     await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
-    await expect(page.getByText('Test Organization')).toBeVisible();
+    await expect(orgSummary(page, 'Test Organization')).toBeVisible();
 
     // owner1@example.com がメンバー一覧に表示される
     await expect(page.getByText('owner1@example.com')).toBeVisible();
@@ -43,7 +47,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
 
     // ページタイトルとメンバー一覧が表示される
     await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
-    await expect(page.getByText('Test Organization Beta')).toBeVisible();
+    await expect(orgSummary(page, 'Test Organization Beta')).toBeVisible();
 
     // owner2@example.com がメンバー一覧に表示される
     await expect(page.getByText('owner2@example.com')).toBeVisible();
@@ -58,7 +62,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
 
     // ページタイトルとメンバー一覧が表示される
     await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
-    await expect(page.getByText('Test Organization')).toBeVisible();
+    await expect(orgSummary(page, 'Test Organization')).toBeVisible();
 
     // owner1@example.com がメンバー一覧に表示される
     await expect(page.getByText('owner1@example.com')).toBeVisible();
@@ -73,7 +77,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
 
     // ページタイトルとメンバー一覧が表示される
     await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
-    await expect(page.getByText('Test Organization Beta')).toBeVisible();
+    await expect(orgSummary(page, 'Test Organization Beta')).toBeVisible();
 
     // owner2@example.com がメンバー一覧に表示される
     await expect(page.getByText('owner2@example.com')).toBeVisible();
@@ -88,7 +92,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
 
     // 組織設定ページが表示される
     await expect(page.getByRole('heading', { name: '組織設定' })).toBeVisible();
-    await expect(page.getByText('Test Organization')).toBeVisible();
+    await expect(orgHeading(page, 'Test Organization')).toBeVisible();
   });
 
   test('動的ルート /org/acme/audit-logs で Test Organization の監査ログが表示される', async ({ page }) => {
@@ -100,7 +104,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
 
     // 監査ログページが表示される
     await expect(page.getByRole('heading', { name: '監査ログ' })).toBeVisible();
-    await expect(page.getByText('Test Organization')).toBeVisible();
+    await expect(orgHeading(page, 'Test Organization')).toBeVisible();
   });
 
   test('存在しない組織slugでアクセスすると404が表示される', async ({ page }) => {

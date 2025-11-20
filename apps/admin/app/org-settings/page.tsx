@@ -33,7 +33,7 @@ export default async function OrgSettingsPage() {
 
   // ADMIN domain: owner のみアクセス可能
   if (!role || role !== 'owner') {
-    redirect('/unauthorized');
+    notFound();
   }
 
   return (

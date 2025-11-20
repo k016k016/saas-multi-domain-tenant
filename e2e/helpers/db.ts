@@ -8,7 +8,13 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001'; // scripts/seed-test-user.ts と同じ値（UUID形式）
+
+export const ORG_IDS = {
+  PRIMARY: '00000000-0000-0000-0000-000000000001',
+  SECONDARY: '00000000-0000-0000-0000-000000000002',
+} as const;
+
+const TEST_ORG_ID = ORG_IDS.PRIMARY; // scripts/seed-test-user.ts と同じ値（UUID形式）
 
 /**
  * Supabase Admin Clientを作成
@@ -24,6 +30,50 @@ function getSupabaseAdmin() {
   });
 }
 
+async function findUserByEmail(supabase: ReturnType<typeof getSupabaseAdmin>, email: string) {
+  const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+
+  if (userError) {
+    throw new Error(`Failed to list users: ${userError.message}`);
+  }
+
+  const user = userData.users.find((u) => (u.email || '').toLowerCase() === email.toLowerCase());
+  if (!user) {
+    throw new Error(`User not found: ${email}`);
+  }
+
+  return user;
+}
+
+async function upsertUserOrgContext(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  userId: string,
+  orgId: string,
+) {
+  const { error } = await supabase
+    .from('user_org_context')
+    .upsert({
+      user_id: userId,
+      org_id: orgId,
+      updated_at: new Date().toISOString(),
+    })
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to set active org context: ${error.message}`);
+  }
+}
+
+export async function setUserActiveOrg(email: string, orgId: string): Promise<void> {
+  const supabase = getSupabaseAdmin();
+  const user = await findUserByEmail(supabase, email);
+  await upsertUserOrgContext(supabase, user.id, orgId);
+  console.log(`✅ [DB Helper] Set ${email} active org to ${orgId}`);
+}
+
 /**
  * 指定ユーザーのアクティブ組織をorg1（member権限）にリセット
  *
@@ -35,32 +85,8 @@ function getSupabaseAdmin() {
  */
 export async function resetUserToOrg1(email: string): Promise<void> {
   const supabase = getSupabaseAdmin();
-
-  // メールアドレスからuser_idを取得
-  const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-
-  if (userError) {
-    throw new Error(`Failed to list users: ${userError.message}`);
-  }
-
-  const user = userData.users.find(u => u.email === email);
-  if (!user) {
-    throw new Error(`User not found: ${email}`);
-  }
-
-  // user_org_contextをorg1にリセット
-  const { error: contextError } = await supabase
-    .from('user_org_context')
-    .upsert({
-      user_id: user.id,
-      org_id: TEST_ORG_ID,
-      updated_at: new Date().toISOString(),
-    })
-    .select();
-
-  if (contextError) {
-    throw new Error(`Failed to reset user org context: ${contextError.message}`);
-  }
+  const user = await findUserByEmail(supabase, email);
+  await upsertUserOrgContext(supabase, user.id, TEST_ORG_ID);
 
   // member1の場合はroleもmemberにリセット
   if (email === 'member1@example.com') {

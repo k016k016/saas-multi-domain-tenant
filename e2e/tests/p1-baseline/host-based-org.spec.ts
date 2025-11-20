@@ -24,7 +24,7 @@ test.describe('Host-based Organization Resolution', () => {
     await expect(page.getByRole('heading', { name: 'ダッシュボード' })).toBeVisible();
 
     // 組織名がTest Organization（acmeのslugを持つ組織）であることを確認
-    await expect(page.getByText(/Test Organization/)).toBeVisible();
+    await expect(page.locator('dd').filter({ hasText: 'Test Organization' }).first()).toBeVisible();
   });
 
   test('beta.app.local.test → Test Organization Beta', async ({ page }) => {
@@ -38,7 +38,7 @@ test.describe('Host-based Organization Resolution', () => {
     await expect(page.getByRole('heading', { name: 'ダッシュボード' })).toBeVisible();
 
     // 組織名がTest Organization Beta（betaのslugを持つ組織）であることを確認
-    await expect(page.getByText(/Test Organization Beta/)).toBeVisible();
+    await expect(page.locator('dd').filter({ hasText: 'Test Organization Beta' }).first()).toBeVisible();
   });
 
   test('同一ユーザーで別タブで異なる組織が表示される', async ({ browser }) => {
@@ -52,13 +52,13 @@ test.describe('Host-based Organization Resolution', () => {
     await uiLogin(page1, 'owner1@example.com', PASSWORD);
     await page1.goto('http://acme.app.local.test:3002/dashboard');
     await expect(page1.getByRole('heading', { name: 'ダッシュボード' })).toBeVisible();
-    await expect(page1.getByText('Test Organization')).toBeVisible();
+    await expect(page1.locator('dd').filter({ hasText: 'Test Organization' }).first()).toBeVisible();
 
     // タブ2: owner2でログイン → beta組織にアクセス
     await uiLogin(page2, 'owner2@example.com', PASSWORD);
     await page2.goto('http://beta.app.local.test:3002/dashboard');
     await expect(page2.getByRole('heading', { name: 'ダッシュボード' })).toBeVisible();
-    await expect(page2.getByText(/Test Organization Beta/)).toBeVisible();
+    await expect(page2.locator('dd').filter({ hasText: 'Test Organization Beta' }).first()).toBeVisible();
 
     await context.close();
   });

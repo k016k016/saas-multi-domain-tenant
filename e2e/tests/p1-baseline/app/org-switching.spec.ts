@@ -1,11 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
+import { ORG_IDS, setUserActiveOrg } from '../../../helpers/db';
 
-const MEMBER = { email: 'member1@example.com' };
+const MEMBER = { email: 'member-switcher@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('APP 組織切替機能', () => {
+  test.beforeEach(async () => {
+    await setUserActiveOrg(MEMBER.email, ORG_IDS.PRIMARY);
+  });
+
   test('member → 組織一覧が表示される', async ({ page }) => {
     await uiLogin(page, MEMBER.email, PASSWORD);
     await page.goto(`${DOMAINS.APP}/switch-org`);
@@ -108,7 +113,17 @@ test.describe('APP 組織切替機能', () => {
 
         // 成功メッセージまたはリダイレクトを確認
         const hasSuccessMessage = await page.getByText(/切替|成功|switched/i).isVisible().catch(() => false);
-        const isRedirected = page.url().includes(DOMAINS.APP) && !page.url().includes('/switch-org');
+        let isRedirected = false;
+        try {
+          const currentUrl = new URL(page.url());
+          const baseHost = new URL(DOMAINS.APP).host;
+          const movedAwayFromSwitchOrg = !currentUrl.pathname.includes('/switch-org');
+          const hostMatchesBase = currentUrl.host === baseHost;
+          const hostMatchesSubdomain = currentUrl.host.endsWith(`.${baseHost}`);
+          isRedirected = movedAwayFromSwitchOrg && (hostMatchesBase || hostMatchesSubdomain);
+        } catch {
+          isRedirected = false;
+        }
 
         console.log(`[観察] 成功メッセージ: ${hasSuccessMessage}`);
         console.log(`[観察] リダイレクト: ${isRedirected}`);

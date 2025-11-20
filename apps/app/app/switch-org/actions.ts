@@ -131,15 +131,29 @@ export async function switchOrganization(
     }
 
     // サブドメインURLを生成
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const baseHost = process.env.NEXT_PUBLIC_APP_DOMAIN || 'app.local.test:3002';
-    // ベースホストから最初のサブドメインを削除（例: app.local.test:3002 → local.test:3002）
-    const hostParts = baseHost.split('.');
-    if (hostParts.length > 1) {
-      hostParts.shift(); // 最初の部分（既存のサブドメイン）を削除
+    const fallbackProtocol = process.env.NODE_ENV === 'production' ? 'https:' : 'http:';
+    const appUrlFromEnv = process.env.NEXT_PUBLIC_APP_URL;
+    let parsedAppUrl: URL | null = null;
+
+    if (appUrlFromEnv) {
+      try {
+        parsedAppUrl = new URL(appUrlFromEnv);
+      } catch {
+        try {
+          parsedAppUrl = new URL(`${fallbackProtocol}//${appUrlFromEnv}`);
+        } catch {
+          parsedAppUrl = null;
+        }
+      }
     }
-    const domainWithPort = hostParts.join('.');
-    const nextUrl = `${protocol}://${org.slug}.${domainWithPort}/`;
+
+    const protocol = parsedAppUrl?.protocol ?? fallbackProtocol;
+    const baseHost =
+      process.env.NEXT_PUBLIC_APP_DOMAIN?.replace(/^https?:\/\//, '') ??
+      parsedAppUrl?.host ??
+      'app.local.test:3002';
+
+    const nextUrl = `${protocol}//${org.slug}.${baseHost}/dashboard`;
 
     // 7. 成功を返す
     // 重要: redirect()は使用しない。nextUrlを返してクライアント側で遷移させる

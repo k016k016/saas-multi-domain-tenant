@@ -4,7 +4,7 @@ import { uiLogin } from '../../../helpers/auth';
 import { resetUserToOrg1 } from '../../../helpers/db';
 
 const ADMIN = { email: 'admin1@example.com' };
-const MEMBER = { email: 'member1@example.com' };
+const MEMBER = { email: 'member-switcher@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('エラーハンドリング（フォーム）', () => {
