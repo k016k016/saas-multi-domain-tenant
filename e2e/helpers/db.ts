@@ -181,3 +181,64 @@ export async function deleteTestUser(email: string): Promise<void> {
 
   console.log(`✅ [DB Helper] Deleted test user ${email}`);
 }
+
+/**
+ * テスト用組織を作成
+ *
+ * @param name - 組織名
+ * @param slug - スラッグ（任意）
+ * @returns 作成された組織のID
+ *
+ * 用途:
+ * - 組織CRUD機能のテスト
+ */
+export async function createTestOrganization(
+  name: string,
+  slug?: string
+): Promise<string> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from('organizations')
+    .insert({
+      name,
+      slug: slug || null,
+      plan: 'free',
+      is_active: true,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create organization: ${error.message}`);
+  }
+
+  console.log(`✅ [DB Helper] Created test organization ${name} (${data.id})`);
+  return data.id;
+}
+
+/**
+ * テスト用組織を削除
+ *
+ * @param orgId - 組織ID
+ *
+ * 用途:
+ * - テスト後のクリーンアップ
+ */
+export async function deleteTestOrganization(orgId: string): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  // 組織に紐づくメンバーを削除
+  await supabase
+    .from('profiles')
+    .delete()
+    .eq('org_id', orgId);
+
+  // 組織を削除
+  await supabase
+    .from('organizations')
+    .delete()
+    .eq('id', orgId);
+
+  console.log(`✅ [DB Helper] Deleted test organization ${orgId}`);
+}

@@ -189,3 +189,46 @@ export function hasRole(userRole: Role, requiredRole: Role): boolean {
 
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
 }
+
+/**
+ * ユーザーがops権限を持っているかチェック
+ *
+ * OPS System Organization (固定UUID) のメンバーであるかで判定。
+ * org_idは不要（opsは組織に依存しない権限）。
+ *
+ * @returns boolean - ops権限を持つ場合true
+ */
+export async function isOpsUser(): Promise<boolean> {
+  try {
+    const supabase = await createServerClient();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.user?.id) {
+      return false;
+    }
+
+    const userId = session.user.id;
+    const adminSupabase = getSupabaseAdmin();
+
+    // OPS System Organizationの固定UUID
+    const OPS_ORG_ID = '00000000-0000-0000-0000-000000000099';
+
+    // profilesテーブルでOPS組織のメンバーかチェック
+    const { data: profile, error: profileError } = await adminSupabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('org_id', OPS_ORG_ID)
+      .limit(1)
+      .single();
+
+    if (profileError || !profile) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('[isOpsUser] Unexpected error:', error);
+    return false;
+  }
+}

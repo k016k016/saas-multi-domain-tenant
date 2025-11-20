@@ -15,32 +15,38 @@
  * - システム設定
  */
 
-import { getCurrentRole } from '@repo/config';
+import { isOpsUser } from '@repo/config';
 import { notFound } from 'next/navigation';
 
 // cookies()を使用するため、動的レンダリングを強制
 export const dynamic = 'force-dynamic';
 
 export default async function OpsHomePage() {
-  const roleContext = await getCurrentRole();
-  const role = roleContext?.role;
+  // OPS domain: ops権限のみアクセス可能
+  const hasOpsPermission = await isOpsUser();
 
-  // OPS domain: ops のみアクセス可能
-  if (!role || role !== 'ops') {
+  if (!hasOpsPermission) {
     notFound();
   }
 
+  const role = 'ops';
+
   return (
     <div style={{ padding: '2rem' }}>
-      <h1>Ops コンソール</h1>
+      <header style={{ marginBottom: '2rem' }}>
+        <h1>Ops コンソール</h1>
+        <p style={{ color: '#a1a1aa', marginTop: '0.5rem' }}>
+          内部管理コンソール
+        </p>
+        <p style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>
+          現在のロール: <strong>{role}</strong>
+        </p>
+      </header>
 
       <section style={{ marginTop: '2rem', padding: '2rem', border: '2px solid #6366f1', borderRadius: '4px', background: '#1e1b4b', textAlign: 'center' }}>
         <h2 style={{ color: '#a5b4fc' }}>Internal Only / Ops Only</h2>
         <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#c7d2fe' }}>
           このドメインは事業者側（SaaS提供者）の内部コンソール領域です。
-        </p>
-        <p style={{ fontSize: '0.875rem', color: '#c7d2fe' }}>
-          現在のロール: <strong>{role}</strong>
         </p>
       </section>
 

@@ -54,6 +54,12 @@ export default defineConfig({
     //   use: { ...devices['Desktop Firefox'] },
     //   retries: 1,
     // },
+    // Phase 3: OPS組織管理テスト（chromium のみ）
+    {
+      name: 'p3-chromium',
+      testMatch: /e2e\/tests\/p3-ops-orgs\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
     // 旧プロジェクト定義（互換性のため残す）
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },
     { name: 'app', use: { baseURL: APP_URL, ...devices['Desktop Chrome'] } },

@@ -5,14 +5,20 @@
  * - Edge Runtime 対応: DB接続なし、Supabase Session Cookie読み取りのみ
  * - 粗いゲート：認証チェックのみ、role検証はサーバ側で行う
  *
- * 重要: roleはCookieではなくDBで管理
+ * 重要:
+ * - roleはCookieではなくDBで管理
+ * - 未認証者は404を返す（opsドメインは非公開、導線不要）
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { DOMAINS } from '@repo/config-edge'
 
 export function middleware(req: NextRequest) {
   const url = new URL(req.url)
+
+  // /login パスは認証チェックをスキップ（ログインページ自体なので）
+  if (url.pathname === '/login') {
+    return NextResponse.next()
+  }
 
   // Supabase Session Cookie の存在確認（認証状態チェック）
   // NOTE: Supabase の Cookie 名は `sb-<project-ref>-auth-token` の形式
@@ -20,12 +26,11 @@ export function middleware(req: NextRequest) {
     cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')
   )
 
-  // 未サインインの場合は /login へリダイレクト
+  // 未認証の場合は404を返す（完全な404、ヘッダなし）
+  // opsドメインは非公開、一般ユーザーへの導線は不要
+  // ops関係者は直接 ops/login にアクセスする
   if (!hasSupabaseSession) {
-    // url.hrefではなくDOMAINS.opsを使用してリダイレクト先を構築
-    // req.urlはlocalhostになる場合があるため、環境変数から取得したドメインを使用
-    const nextUrl = `${DOMAINS.ops}${url.pathname}${url.search}`
-    return NextResponse.redirect(`${DOMAINS.www}/login?next=${encodeURIComponent(nextUrl)}`)
+    return new NextResponse(null, { status: 404 })
   }
 
   // 認証済みユーザーは通す
