@@ -17,11 +17,14 @@ test.describe('エラーハンドリング（フォーム）', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
+    // フォームに入力（氏名とパスワードも必要）
+    await page.locator('input#name').fill('テストユーザー');
     // ブラウザのHTML5バリデーションを通過するが、サーバー側で無効なメール
     // @とドメイン部分が必要だが、TLDがない形式
     await page.locator('input#email').fill('invalid@test');
+    await page.locator('input#password').fill(PASSWORD);
     await page.locator('select#role').selectOption('member');
-    await page.getByRole('button', { name: /招待する/i }).click();
+    await page.getByRole('button', { name: /追加/i }).click();
 
     // エラーメッセージ: "メールアドレスの形式が正しくありません"
     await expect(page.getByText(/形式が正しくありません/i)).toBeVisible();
