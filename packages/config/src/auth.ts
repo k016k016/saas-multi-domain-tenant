@@ -32,9 +32,10 @@ export interface RoleContext {
 /**
  * 現在アクティブな組織コンテキストを取得
  *
- * Phase 2対応:
- * - X-Org-Slugヘッダーがある場合: slugから組織を解決（Host-based organization resolution）
- * - X-Org-Slugヘッダーがない場合: user_org_contextからorg_idを取得（従来方式）
+ * Phase 2/3対応:
+ * - options.orgSlugがある場合: パラメータのslugから組織を解決（Phase 3: admin用）
+ * - X-Org-Slugヘッダーがある場合: slugから組織を解決（Phase 2: Host-based resolution）
+ * - どちらもない場合: user_org_contextからorg_idを取得（従来方式）
  *
  * 【重要な制約】
  * - Session が無い場合は null を返す
@@ -43,9 +44,10 @@ export interface RoleContext {
  * - redirect() は使用しない（呼び出し側で nextUrl を使って遷移する）
  * - Server Component / Server Action のみで使用
  *
+ * @param options - オプション（orgSlug指定可能）
  * @returns OrgContext | null
  */
-export async function getCurrentOrg(): Promise<OrgContext | null> {
+export async function getCurrentOrg(options?: { orgSlug?: string }): Promise<OrgContext | null> {
   try {
     // 1. Supabase Session から user_id を取得
     const supabase = await createServerClient();
@@ -58,6 +60,38 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
 
     const userId = session.user.id;
     const adminSupabase = getSupabaseAdmin();
+
+    // Phase 3: options.orgSlugが指定されている場合は優先
+    if (options?.orgSlug) {
+      const { data: org, error: orgError } = await adminSupabase
+        .from('organizations')
+        .select('id, name')
+        .eq('slug', options.orgSlug)
+        .single();
+
+      if (orgError || !org) {
+        console.error('[getCurrentOrg] Organization not found by slug (options):', { orgSlug: options.orgSlug, error: orgError });
+        return null;
+      }
+
+      // ユーザーがその組織のメンバーかチェック
+      const { data: profile, error: profileError } = await adminSupabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('org_id', org.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('[getCurrentOrg] User not a member of organization (options):', { userId, orgId: org.id, error: profileError });
+        return null;
+      }
+
+      return {
+        orgId: org.id,
+        orgName: org.name,
+      };
+    }
 
     // Phase 2: X-Org-Slug ヘッダーをチェック
     const headersList = await headers();

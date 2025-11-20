@@ -113,12 +113,40 @@ export async function switchOrganization(
       // 監査ログ失敗は致命的エラーではないが、ワーニングを出す
     }
 
-    // 6. 成功を返す
+    // 6. Phase 3: 組織のslugを取得してサブドメインURLを生成
+    const { data: org, error: orgError } = await adminSupabase
+      .from('organizations')
+      .select('slug')
+      .eq('id', targetOrgId)
+      .single();
+
+    if (orgError || !org?.slug) {
+      console.error('[switchOrganization] Failed to get organization slug:', orgError);
+      // slugが取得できない場合は従来の方法にフォールバック
+      return {
+        success: true,
+        data: { targetOrgId },
+        nextUrl: '/', // APPドメインのダッシュボードに戻る
+      };
+    }
+
+    // サブドメインURLを生成
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const baseHost = process.env.NEXT_PUBLIC_APP_DOMAIN || 'app.local.test:3002';
+    // ベースホストから最初のサブドメインを削除（例: app.local.test:3002 → local.test:3002）
+    const hostParts = baseHost.split('.');
+    if (hostParts.length > 1) {
+      hostParts.shift(); // 最初の部分（既存のサブドメイン）を削除
+    }
+    const domainWithPort = hostParts.join('.');
+    const nextUrl = `${protocol}://${org.slug}.${domainWithPort}/`;
+
+    // 7. 成功を返す
     // 重要: redirect()は使用しない。nextUrlを返してクライアント側で遷移させる
     return {
       success: true,
       data: { targetOrgId },
-      nextUrl: '/', // APPドメインのダッシュボードに戻る
+      nextUrl, // サブドメインURLへ遷移
     };
   } catch (err) {
     console.error('[switchOrganization] Unexpected error:', err);
