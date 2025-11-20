@@ -43,6 +43,8 @@ const TEST_USERS = [
   { email: 'member1@example.com', role: 'member', name: '田中 太郎' },
   { email: 'admin1@example.com', role: 'admin', name: '鈴木 花子' },
   { email: 'owner1@example.com', role: 'owner', name: '山田 一郎' },
+  { email: 'member2@example.com', role: 'member', name: '高橋 三郎' },
+  { email: 'admin2@example.com', role: 'admin', name: '伊藤 四郎' },
   { email: 'owner2@example.com', role: 'owner', name: '佐藤 次郎' },
   { email: 'ops1@example.com', role: 'ops', name: 'OPS管理者' },
 ] as const;
@@ -205,6 +207,12 @@ async function upsertUser(
       { orgId: TEST_ORG_ID, role: 'admin' },
       { orgId: TEST_ORG_ID_2, role: 'member' },
     ];
+  } else if (email === 'member2@example.com') {
+    // member2: org2のみ（org2専用のmember）
+    orgRoles = [{ orgId: TEST_ORG_ID_2, role: 'member' }];
+  } else if (email === 'admin2@example.com') {
+    // admin2: org2のみ（org2専用のadmin）
+    orgRoles = [{ orgId: TEST_ORG_ID_2, role: 'admin' }];
   } else if (email === 'owner2@example.com') {
     // owner2: org2のみ（仕様遵守: 各組織に必ず1人のowner）
     orgRoles = [{ orgId: TEST_ORG_ID_2, role: 'owner' }];

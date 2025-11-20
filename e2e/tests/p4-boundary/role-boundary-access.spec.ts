@@ -37,7 +37,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 403またはunauthorizedページへリダイレクト
       await expect(page).toHaveURL(/unauthorized/);
-      await expect(page.getByText(/unauthorized|403|アクセス権限がありません/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: '403' })).toBeVisible();
     });
 
     test('memberは admin.local.test/org-settings に403/unauthorized', async ({ page }) => {
@@ -48,7 +48,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 403またはunauthorizedページへリダイレクト
       await expect(page).toHaveURL(/unauthorized/);
-      await expect(page.getByText(/unauthorized|403|アクセス権限がありません/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: '403' })).toBeVisible();
     });
 
     test('memberは admin.local.test/audit-logs に403/unauthorized', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 403またはunauthorizedページへリダイレクト
       await expect(page).toHaveURL(/unauthorized/);
-      await expect(page.getByText(/unauthorized|403|アクセス権限がありません/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: '403' })).toBeVisible();
     });
 
     test('memberは app.local.test にアクセス可能', async ({ page }) => {
@@ -111,7 +111,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // ownerのみアクセス可能なので403
       await expect(page).toHaveURL(/unauthorized/);
-      await expect(page.getByText(/unauthorized|403|アクセス権限がありません/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: '403' })).toBeVisible();
     });
 
     test('adminは admin.local.test/audit-logs にアクセス可能', async ({ page }) => {

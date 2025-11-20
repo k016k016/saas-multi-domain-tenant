@@ -37,8 +37,9 @@ test.describe('Session and Cookie Boundaries', () => {
       // admin.local.testへ直接アクセス
       await page.goto('http://admin.local.test:3003/');
 
-      // 認証済みでアクセス（memberなのでデフォルトページへリダイレクト）
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      // memberは権限がないため/unauthorizedへリダイレクト
+      await expect(page).toHaveURL(/unauthorized/);
+      await expect(page.getByRole('heading', { name: '403' })).toBeVisible();
     });
 
     test('app.local.testでログイン後、admin.local.testでも認証状態保持', async ({ page }) => {

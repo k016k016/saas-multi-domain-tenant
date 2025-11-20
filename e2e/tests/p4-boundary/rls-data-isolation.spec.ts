@@ -62,13 +62,13 @@ test.describe('RLS Data Isolation', () => {
 
       // org2のメンバーのみ表示
       await expect(page.getByText('Test Organization Beta')).toBeVisible();
+      await expect(page.getByText('member1@example.com')).toBeVisible(); // member1はorg2にもadminで所属
+      await expect(page.getByText('admin1@example.com')).toBeVisible(); // admin1はorg2にmemberで所属
       await expect(page.getByText('member2@example.com')).toBeVisible();
       await expect(page.getByText('admin2@example.com')).toBeVisible();
       await expect(page.getByText('owner2@example.com')).toBeVisible();
 
-      // org1のメンバーは表示されない
-      await expect(page.getByText('member1@example.com')).not.toBeVisible();
-      await expect(page.getByText('admin1@example.com')).not.toBeVisible();
+      // owner1はorg1専用なので表示されない
       await expect(page.getByText('owner1@example.com')).not.toBeVisible();
     });
 
@@ -82,10 +82,11 @@ test.describe('RLS Data Isolation', () => {
 
       // org2のメンバーのみ表示
       await expect(page.getByText('Test Organization Beta')).toBeVisible();
+      await expect(page.getByText('member1@example.com')).toBeVisible(); // member1はorg2にもadminで所属
       await expect(page.getByText('member2@example.com')).toBeVisible();
 
-      // org1のメンバーは表示されない
-      await expect(page.getByText('member1@example.com')).not.toBeVisible();
+      // owner1はorg1専用なので表示されない
+      await expect(page.getByText('owner1@example.com')).not.toBeVisible();
     });
   });
 
@@ -243,10 +244,11 @@ test.describe('RLS Data Isolation', () => {
 
       // org2のメンバーのみ表示
       await expect(page.getByText('Test Organization Beta')).toBeVisible();
+      await expect(page.getByText('member1@example.com')).toBeVisible(); // member1はorg2にもadminで所属
       await expect(page.getByText('member2@example.com')).toBeVisible();
 
-      // org1のメンバーは表示されない
-      await expect(page.getByText('member1@example.com')).not.toBeVisible();
+      // owner1はorg1専用なので表示されない
+      await expect(page.getByText('owner1@example.com')).not.toBeVisible();
 
       // org1に再度切り替え
       await page.getByRole('button', { name: 'Test Organization Beta' }).click();
