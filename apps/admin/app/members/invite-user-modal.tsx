@@ -1,59 +1,54 @@
 'use client';
 
 /**
- * ユーザー編集モーダル（Client Component）
+ * ユーザー招待モーダル（Client Component）
  *
  * 責務:
- * - ユーザー情報（氏名・メール・ロール）の編集
- * - Server Action (updateUser) を呼び出す
+ * - 新規ユーザーの招待フォーム（モーダル表示）
+ * - パスワード確認フィールド付き
  */
 
-import { useState, useEffect } from 'react';
-import { updateUser } from './actions';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { inviteUser } from './actions';
 import type { Role } from '@repo/config';
 
-interface Member {
-  userId: string;
-  email: string;
-  name: string;
-  role: 'owner' | 'admin' | 'member';
-}
-
-interface EditUserModalProps {
-  member: Member;
+interface InviteUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function EditUserModal({ member, isOpen, onClose, onSuccess }: EditUserModalProps) {
-  const [name, setName] = useState(member.name);
-  const [email, setEmail] = useState(member.email);
-  const [role, setRole] = useState<'owner' | 'member' | 'admin'>(member.role);
+export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUserModalProps) {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<'member' | 'admin'>('member');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const isOwner = member.role === 'owner';
 
-  // モーダルが開くたびにフォームをリセット
-  useEffect(() => {
-    if (isOpen) {
-      setName(member.name);
-      setEmail(member.email);
-      setRole(member.role);
-      setPassword('');
-      setPasswordConfirm('');
-      setError('');
-    }
-  }, [isOpen, member]);
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setPasswordConfirm('');
+    setName('');
+    setRole('member');
+    setError('');
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     // パスワードの確認チェック
-    if (password && password !== passwordConfirm) {
+    if (password !== passwordConfirm) {
       setError('パスワードが一致しません');
       return;
     }
@@ -61,16 +56,18 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
     setIsLoading(true);
 
     try {
-      const result = await updateUser(member.userId, name, email, role as Role, password || undefined);
+      const result = await inviteUser(email, password, name, role as Role);
 
       if (result.success) {
+        resetForm();
         onSuccess();
         onClose();
+        router.refresh();
       } else {
         setError(result.error);
       }
     } catch (err) {
-      setError('ユーザー情報の更新に失敗しました');
+      setError('ユーザーの招待に失敗しました');
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +89,7 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
         justifyContent: 'center',
         zIndex: 1000,
       }}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         style={{
@@ -105,7 +102,7 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 style={{ margin: '0 0 1rem', fontSize: '1.25rem' }}>ユーザー情報を編集</h2>
+        <h2 style={{ margin: '0 0 1rem', fontSize: '1.25rem' }}>新規ユーザーを招待</h2>
 
         {error && (
           <div
@@ -127,18 +124,19 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
           {/* 氏名 */}
           <div style={{ marginBottom: '1rem' }}>
             <label
-              htmlFor="edit-name"
+              htmlFor="invite-name"
               style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}
             >
               氏名
             </label>
             <input
-              id="edit-name"
+              id="invite-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
               required
+              placeholder="山田 太郎"
               style={{
                 width: '100%',
                 padding: '0.5rem',
@@ -154,18 +152,19 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
           {/* メールアドレス */}
           <div style={{ marginBottom: '1rem' }}>
             <label
-              htmlFor="edit-email"
+              htmlFor="invite-email"
               style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}
             >
               メールアドレス
             </label>
             <input
-              id="edit-email"
+              id="invite-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
+              placeholder="user@example.com"
               style={{
                 width: '100%',
                 padding: '0.5rem',
@@ -181,18 +180,19 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
           {/* パスワード */}
           <div style={{ marginBottom: '1rem' }}>
             <label
-              htmlFor="edit-password"
+              htmlFor="invite-password"
               style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}
             >
-              新しいパスワード（変更する場合のみ）
+              パスワード
             </label>
             <input
-              id="edit-password"
+              id="invite-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
-              placeholder="変更しない場合は空欄"
+              required
+              placeholder="6文字以上"
               style={{
                 width: '100%',
                 padding: '0.5rem',
@@ -208,23 +208,24 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
           {/* パスワード確認 */}
           <div style={{ marginBottom: '1rem' }}>
             <label
-              htmlFor="edit-password-confirm"
+              htmlFor="invite-password-confirm"
               style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}
             >
               パスワード確認
             </label>
             <input
-              id="edit-password-confirm"
+              id="invite-password-confirm"
               type="password"
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
-              disabled={isLoading || !password}
+              disabled={isLoading}
+              required
               placeholder="パスワードを再入力"
               style={{
                 width: '100%',
                 padding: '0.5rem',
-                background: password ? '#262626' : '#1a1a1a',
-                color: password ? '#e5e5e5' : '#71717a',
+                background: '#262626',
+                color: '#e5e5e5',
                 border: '1px solid #404040',
                 borderRadius: '4px',
                 boxSizing: 'border-box',
@@ -235,43 +236,36 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
           {/* ロール */}
           <div style={{ marginBottom: '1.5rem' }}>
             <label
-              htmlFor="edit-role"
+              htmlFor="invite-role"
               style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}
             >
               ロール
             </label>
             <select
-              id="edit-role"
+              id="invite-role"
               value={role}
-              onChange={(e) => setRole(e.target.value as 'owner' | 'member' | 'admin')}
-              disabled={isLoading || isOwner}
+              onChange={(e) => setRole(e.target.value as 'member' | 'admin')}
+              disabled={isLoading}
               style={{
                 width: '100%',
                 padding: '0.5rem',
-                background: isOwner ? '#1a1a1a' : '#262626',
-                color: isOwner ? '#71717a' : '#e5e5e5',
+                background: '#262626',
+                color: '#e5e5e5',
                 border: '1px solid #404040',
                 borderRadius: '4px',
                 boxSizing: 'border-box',
-                cursor: isOwner ? 'not-allowed' : 'pointer',
               }}
             >
-              {isOwner && <option value="owner">Owner</option>}
               <option value="member">Member</option>
               <option value="admin">Admin</option>
             </select>
-            {isOwner && (
-              <p style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '0.5rem' }}>
-                ※ Ownerのロールは変更できません
-              </p>
-            )}
           </div>
 
           {/* ボタン */}
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isLoading}
               style={{
                 padding: '0.5rem 1rem',
@@ -286,17 +280,17 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
             </button>
             <button
               type="submit"
-              disabled={isLoading || !name || !email}
+              disabled={isLoading || !name || !email || !password || !passwordConfirm}
               style={{
                 padding: '0.5rem 1rem',
-                background: isLoading || !name || !email ? '#404040' : '#3b82f6',
+                background: isLoading || !name || !email || !password || !passwordConfirm ? '#404040' : '#3b82f6',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: isLoading || !name || !email ? 'not-allowed' : 'pointer',
+                cursor: isLoading || !name || !email || !password || !passwordConfirm ? 'not-allowed' : 'pointer',
               }}
             >
-              {isLoading ? '保存中...' : '保存'}
+              {isLoading ? '追加中...' : '追加'}
             </button>
           </div>
         </form>

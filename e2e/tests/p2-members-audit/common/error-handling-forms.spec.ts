@@ -17,14 +17,17 @@ test.describe('エラーハンドリング（フォーム）', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
-    // フォームに入力（氏名とパスワードも必要）
-    await page.locator('input#name').fill('テストユーザー');
+    // 「ユーザーを追加」ボタンをクリック
+    await page.getByRole('button', { name: /ユーザーを追加/i }).click();
+
+    // モーダルに入力
+    await page.locator('input#invite-name').fill('テストユーザー');
     // ブラウザのHTML5バリデーションを通過するが、サーバー側で無効なメール
-    // @とドメイン部分が必要だが、TLDがない形式
-    await page.locator('input#email').fill('invalid@test');
-    await page.locator('input#password').fill(PASSWORD);
-    await page.locator('select#role').selectOption('member');
-    await page.getByRole('button', { name: /追加/i }).click();
+    await page.locator('input#invite-email').fill('invalid@test');
+    await page.locator('input#invite-password').fill(PASSWORD);
+    await page.locator('input#invite-password-confirm').fill(PASSWORD);
+    await page.locator('select#invite-role').selectOption('member');
+    await page.getByRole('button', { name: /^追加$/i }).click();
 
     // エラーメッセージ: "メールアドレスの形式が正しくありません"
     await expect(page.getByText(/形式が正しくありません/i)).toBeVisible();
@@ -34,12 +37,16 @@ test.describe('エラーハンドリング（フォーム）', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
+    // 「ユーザーを追加」ボタンをクリック
+    await page.getByRole('button', { name: /ユーザーを追加/i }).click();
+
     // 短いパスワードで送信
-    await page.locator('input#name').fill('テストユーザー');
-    await page.locator('input#email').fill(`short-pass-${Date.now()}@example.com`);
-    await page.locator('input#password').fill('12345');
-    await page.locator('select#role').selectOption('member');
-    await page.getByRole('button', { name: /追加/i }).click();
+    await page.locator('input#invite-name').fill('テストユーザー');
+    await page.locator('input#invite-email').fill(`short-pass-${Date.now()}@example.com`);
+    await page.locator('input#invite-password').fill('12345');
+    await page.locator('input#invite-password-confirm').fill('12345');
+    await page.locator('select#invite-role').selectOption('member');
+    await page.getByRole('button', { name: /^追加$/i }).click();
 
     // エラーメッセージ
     await expect(page.getByText(/6文字以上/i)).toBeVisible();
@@ -49,12 +56,16 @@ test.describe('エラーハンドリング（フォーム）', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
+    // 「ユーザーを追加」ボタンをクリック
+    await page.getByRole('button', { name: /ユーザーを追加/i }).click();
+
     // 既存ユーザーのメールアドレスで送信
-    await page.locator('input#name').fill('テストユーザー');
-    await page.locator('input#email').fill(ADMIN.email);
-    await page.locator('input#password').fill(PASSWORD);
-    await page.locator('select#role').selectOption('member');
-    await page.getByRole('button', { name: /追加/i }).click();
+    await page.locator('input#invite-name').fill('テストユーザー');
+    await page.locator('input#invite-email').fill(ADMIN.email);
+    await page.locator('input#invite-password').fill(PASSWORD);
+    await page.locator('input#invite-password-confirm').fill(PASSWORD);
+    await page.locator('select#invite-role').selectOption('member');
+    await page.getByRole('button', { name: /^追加$/i }).click();
 
     // エラーメッセージ（登録済みメールアドレス）
     await expect(page.getByText(/既に登録|already registered|使用されています/i)).toBeVisible();

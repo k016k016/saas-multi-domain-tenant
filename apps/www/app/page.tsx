@@ -11,7 +11,19 @@
  * - 業務機能の配置
  */
 
-export default function HomePage() {
+import { cookies } from 'next/headers';
+
+export default async function HomePage() {
+  // セッションCookieの存在確認
+  const cookieStore = await cookies();
+  const hasSession = cookieStore.getAll().some(
+    cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')
+  );
+
+  // ログイン状態ならappへ、未ログインならログインページへ
+  const signInHref = hasSession
+    ? process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002'
+    : '/login';
   return (
     <div
       style={{
@@ -46,7 +58,7 @@ export default function HomePage() {
         </p>
         <div style={{ marginTop: '1rem' }}>
           <a
-            href="/login"
+            href={signInHref}
             style={{
               display: 'inline-block',
               padding: '0.5rem 1rem',

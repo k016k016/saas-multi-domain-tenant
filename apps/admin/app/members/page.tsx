@@ -15,8 +15,8 @@
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
 import { getSupabaseAdmin } from '@repo/db';
 import { notFound, redirect } from 'next/navigation';
-import InviteUserForm from './invite-user-form';
 import MemberList from './member-list';
+import MembersPageClient from './members-page-client';
 
 // cookies()を使用するため、動的レンダリングを強制
 export const dynamic = 'force-dynamic';
@@ -78,62 +78,10 @@ export default async function MembersPage() {
     }) || [];
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <header style={{ marginBottom: '2rem' }}>
-        <h1>Members / メンバー管理</h1>
-        <p style={{ color: '#a1a1aa', marginTop: '0.5rem' }}>
-          組織: <strong>{org?.orgName ?? 'unknown'}</strong> ({org?.orgId ?? 'unknown'})
-        </p>
-        <p style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>
-          現在のメンバー数: {members.filter((m) => m.status === 'active').length}人
-        </p>
-      </header>
-
-      {/* 新規ユーザー招待セクション */}
-      <section
-        style={{
-          marginBottom: '2rem',
-          padding: '1.5rem',
-          background: '#262626',
-          border: '1px solid #404040',
-          borderRadius: '8px',
-        }}
-      >
-        <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
-          組織「{org.orgName}」に新規ユーザーを招待
-        </h2>
-        <InviteUserForm />
-      </section>
-
-      {/* メンバー一覧セクション */}
-      <section>
-        <h2 style={{ marginBottom: '1rem' }}>メンバー一覧</h2>
-        {currentUserRole && <MemberList members={members} currentUserRole={currentUserRole} />}
-      </section>
-
-      {/* 注意書き */}
-      <section
-        style={{
-          marginTop: '2rem',
-          padding: '1rem',
-          background: '#422006',
-          border: '1px solid #92400e',
-          borderRadius: '4px',
-        }}
-      >
-        <h3 style={{ margin: 0, color: '#fbbf24' }}>注意</h3>
-        <ul
-          style={{
-            marginTop: '0.5rem',
-            fontSize: '0.875rem',
-            color: '#fde68a',
-          }}
-        >
-          <li>ownerのロール変更・削除はできません</li>
-          <li>adminは複数人設定可能です</li>
-          <li>すべての操作はactivity_logsに記録されます（将来実装）</li>
-        </ul>
-      </section>
-    </div>
+    <MembersPageClient
+      org={org}
+      members={members}
+      currentUserRole={currentUserRole}
+    />
   );
 }

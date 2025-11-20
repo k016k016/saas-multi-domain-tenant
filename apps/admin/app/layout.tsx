@@ -8,6 +8,7 @@
  */
 
 import type { Metadata } from 'next';
+import SignOutButton from './signout-button';
 
 export const metadata: Metadata = {
   title: 'Admin - SaaS Multi-Tenant',
@@ -35,15 +36,18 @@ export default function RootLayout({
           borderBottom: '2px solid #f59e0b',
           display: 'flex',
           alignItems: 'center',
-          gap: '2rem'
+          justifyContent: 'space-between',
         }}>
-          <strong style={{ color: '#fbbf24' }}>Admin Domain (組織管理)</strong>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <a href="/" style={{ color: '#fcd34d', textDecoration: 'none' }}>ダッシュボード</a>
-            <a href="/members" style={{ color: '#fcd34d', textDecoration: 'none' }}>メンバー管理</a>
-            <a href="/audit-logs" style={{ color: '#fcd34d', textDecoration: 'none' }}>監査ログ</a>
-            <a href="/org-settings" style={{ color: '#fcd34d', textDecoration: 'none' }}>組織設定</a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <strong style={{ color: '#fbbf24' }}>Admin Domain (組織管理)</strong>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <a href="/" style={{ color: '#fcd34d', textDecoration: 'none' }}>ダッシュボード</a>
+              <a href="/members" style={{ color: '#fcd34d', textDecoration: 'none' }}>メンバー管理</a>
+              <a href="/audit-logs" style={{ color: '#fcd34d', textDecoration: 'none' }}>監査ログ</a>
+              <a href="/org-settings" style={{ color: '#fcd34d', textDecoration: 'none' }}>組織設定</a>
+            </div>
           </div>
+          <SignOutButton />
         </nav>
         {children}
       </body>

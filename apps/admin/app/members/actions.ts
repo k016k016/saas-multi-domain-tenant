@@ -432,13 +432,15 @@ export async function removeUser(
  * @param name - 新しい氏名
  * @param email - 新しいメールアドレス
  * @param newRole - 新しいロール（member/admin）
+ * @param password - 新しいパスワード（任意）
  * @returns ActionResult
  */
 export async function updateUser(
   targetUserId: string,
   name: string,
   email: string,
-  newRole: Role
+  newRole: Role,
+  password?: string
 ): Promise<ActionResult> {
   // 1. 入力バリデーション
   if (!targetUserId || typeof targetUserId !== 'string') {
@@ -474,6 +476,14 @@ export async function updateUser(
     return {
       success: false,
       error: 'ロールはowner, member, adminのいずれかを指定してください',
+    };
+  }
+
+  // パスワードが指定されている場合のバリデーション
+  if (password && password.length < 6) {
+    return {
+      success: false,
+      error: 'パスワードは6文字以上で指定してください',
     };
   }
 
@@ -542,14 +552,26 @@ export async function updateUser(
     };
   }
 
-  // 6. Auth情報を更新（メールアドレス・氏名）
-  const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+  // 6. Auth情報を更新（メールアドレス・氏名・パスワード）
+  const authUpdateData: {
+    email: string;
+    email_confirm: boolean;
+    user_metadata: { name: string };
+    password?: string;
+  } = {
     email,
     email_confirm: true,
     user_metadata: {
       name: name.trim(),
     },
-  });
+  };
+
+  // パスワードが指定されている場合のみ追加
+  if (password) {
+    authUpdateData.password = password;
+  }
+
+  const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, authUpdateData);
 
   if (authUpdateError) {
     console.error('[updateUser] Auth update error:', authUpdateError);
@@ -584,6 +606,7 @@ export async function updateUser(
       new_role: newRole,
       new_email: email,
       new_name: name.trim(),
+      password_changed: !!password,
       timestamp: new Date().toISOString(),
     },
   });
