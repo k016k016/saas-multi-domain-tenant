@@ -6,15 +6,15 @@ const MEMBER = { email: 'member1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('認証済みユーザーのWWWリダイレクト', () => {
-  test('ログイン済み → /loginアクセス → APPへリダイレクト', async ({ page }) => {
-    // ログイン
+  test('サインイン済み → /loginアクセス → APPへリダイレクト', async ({ page }) => {
+    // サインイン
     await uiLogin(page, MEMBER.email, PASSWORD);
 
-    // ログイン済みの状態で/loginにアクセス
+    // サインイン済みの状態で/loginにアクセス
     await page.goto(`${DOMAINS.WWW}/login`);
 
     // APPダッシュボードへリダイレクトされることを確認
-    // (ログイン済みユーザーはログインページにアクセスする必要がないため)
+    // (サインイン済みユーザーはサインインページにアクセスする必要がないため)
     await expect(page).toHaveURL(new RegExp(`${DOMAINS.APP}`));
     await expect(page).not.toHaveURL(new RegExp(`${DOMAINS.WWW}/login`));
   });

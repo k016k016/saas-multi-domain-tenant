@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     if (error || !data.session) {
       console.error('[auth/callback] Session exchange failed:', error);
-      // エラーの場合はログインページへ戻す
+      // エラーの場合はサインインページへ戻す
       const wwwUrl =
         process.env.NEXT_PUBLIC_WWW_URL ||
         process.env.WWW_URL ||
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(appUrl);
   }
 
-  // code がない場合はログインページへ戻す
+  // code がない場合はサインインページへ戻す
   const wwwUrl =
     process.env.NEXT_PUBLIC_WWW_URL ||
     process.env.WWW_URL ||

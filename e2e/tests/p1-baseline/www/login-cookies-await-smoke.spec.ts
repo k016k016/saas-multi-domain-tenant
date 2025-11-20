@@ -12,7 +12,7 @@ test.describe('/login >> cookies-await-smoke', () => {
     // HTTPステータスコードが200番台または300番台であることを確認
     expect(status).toBeGreaterThanOrEqual(200);
     expect(status).toBeLessThan(400);
-    // ログインフォームが表示されていることを確認
-    await expect(page.getByRole('button', { name: /ログイン|login/i })).toBeVisible();
+    // サインインフォームが表示されていることを確認
+    await expect(page.getByRole('button', { name: /サインイン|login/i })).toBeVisible();
   });
 });

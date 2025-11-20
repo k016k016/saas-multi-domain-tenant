@@ -1,10 +1,10 @@
 'use server';
 
 /**
- * ログイン関連の Server Actions
+ * サインイン関連の Server Actions
  *
  * 責務:
- * - Supabase Email/Password ログイン
+ * - Supabase Email/Password サインイン
  *
  * 重要な設計方針:
  * - redirect()は使用しない。必ず{ success, nextUrl }を返す
@@ -15,7 +15,7 @@ import { createServerClient } from '@repo/db';
 import type { ActionResult } from '@repo/config';
 
 /**
- * Email/Password でログインする
+ * Email/Password でサインインする
  *
  * @param email - メールアドレス
  * @param password - パスワード
@@ -36,7 +36,7 @@ export async function signInWithPassword(
     if (error || !data.session) {
       // テスト環境ではログを抑制（本番環境ではセキュリティ監査のため記録）
       if (process.env.NODE_ENV !== 'test') {
-        console.error('Password ログインエラー:', error);
+        console.error('Password サインインエラー:', error);
       }
       return {
         success: false,
@@ -45,7 +45,7 @@ export async function signInWithPassword(
     }
 
     // Supabase Session は createServerClient() が自動的に Cookie を管理
-    // ログイン成功後は app ドメインに遷移（org/role は DB で解決）
+    // サインイン成功後は app ドメインに遷移（org/role は DB で解決）
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||

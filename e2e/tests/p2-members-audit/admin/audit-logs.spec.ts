@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
+import { resetUserToOrg1 } from '../../../helpers/db';
 
 const ADMIN = { email: 'admin1@example.com' };
 const OWNER = { email: 'owner1@example.com' };
@@ -8,6 +9,10 @@ const MEMBER = { email: 'member1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('監査ログ閲覧UI', () => {
+  // 各テスト前にmember1をorg1（member権限）にリセット
+  test.beforeEach(async () => {
+    await resetUserToOrg1(MEMBER.email);
+  });
   test('admin → 監査ログページにアクセス可能', async ({ page }) => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/audit-logs`);

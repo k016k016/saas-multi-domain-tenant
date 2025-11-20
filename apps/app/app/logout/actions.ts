@@ -1,11 +1,11 @@
 'use server';
 
 /**
- * ログアウト関連の Server Actions
+ * サインアウト関連の Server Actions
  *
  * 責務:
  * - Supabase のセッションを破棄する
- * - WWW ドメインのログインページにリダイレクトするための nextUrl を返す
+ * - WWW ドメインのサインインページにリダイレクトするための nextUrl を返す
  *
  * 重要な設計方針:
  * - redirect()は使用しない。必ず{ success, nextUrl }を返す
@@ -16,7 +16,7 @@ import { createServerClient } from '@repo/db';
 import type { ActionResult } from '@repo/config';
 
 /**
- * ログアウトする
+ * サインアウトする
  *
  * @returns ActionResult - 成功時は nextUrl に www/login を返す
  */
@@ -27,14 +27,14 @@ export async function logoutAction(): Promise<ActionResult> {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('ログアウトエラー:', error);
+      console.error('サインアウトエラー:', error);
       return {
         success: false,
-        error: 'ログアウトに失敗しました',
+        error: 'サインアウトに失敗しました',
       };
     }
 
-    // ログアウト成功後は www ドメインのログインページに遷移
+    // サインアウト成功後は www ドメインのサインインページに遷移
     const wwwLoginUrl =
       process.env.NEXT_PUBLIC_WWW_URL ||
       process.env.WWW_URL ||

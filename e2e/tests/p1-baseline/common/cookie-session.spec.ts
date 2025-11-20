@@ -12,17 +12,17 @@ test.describe('Cookie・セッション管理', () => {
   test.beforeEach(async () => {
     await resetUserToOrg1(MEMBER.email);
   });
-  test('ログイン → Supabase Session Cookieの保持確認', async ({ page, context }) => {
-    // ログイン前のCookieを確認（セッションCookieが無いはず）
+  test('サインイン → Supabase Session Cookieの保持確認', async ({ page, context }) => {
+    // サインイン前のCookieを確認（セッションCookieが無いはず）
     const cookiesBeforeLogin = await context.cookies();
     const sessionCookieBeforeLogin = cookiesBeforeLogin.find(c => c.name.startsWith('sb-'));
     expect(sessionCookieBeforeLogin).toBeUndefined();
 
-    // ログイン
+    // サインイン
     await uiLogin(page, MEMBER.email, PASSWORD);
     await page.goto(`${DOMAINS.APP}`);
 
-    // ログイン後のCookieを確認
+    // サインイン後のCookieを確認
     const cookiesAfterLogin = await context.cookies();
 
     // Supabase Session Cookie (sb-*) が存在することを確認
@@ -35,10 +35,10 @@ test.describe('Cookie・セッション管理', () => {
   });
 
   test('ドメイン間でのCookie共有確認', async ({ page, context }) => {
-    // www.local.testでログイン
+    // www.local.testでサインイン
     await uiLogin(page, MEMBER.email, PASSWORD);
 
-    // app.local.testでもログイン状態であることを確認
+    // app.local.testでもサインイン状態であることを確認
     await page.goto(`${DOMAINS.APP}`);
     await expect(page).toHaveURL(new RegExp(`${DOMAINS.APP}`));
     await expect(page).not.toHaveURL(new RegExp(`${DOMAINS.WWW}/login`));
@@ -49,7 +49,7 @@ test.describe('Cookie・セッション管理', () => {
 
     // memberは/unauthorizedにリダイレクトされるはず（認証は通っているが権限不足）
     await expect(page).toHaveURL(new RegExp(`${DOMAINS.ADMIN}/unauthorized`));
-    // ログインページにリダイレクトされない（セッションが共有されている証拠）
+    // サインインページにリダイレクトされない（セッションが共有されている証拠）
     await expect(page).not.toHaveURL(new RegExp(`${DOMAINS.WWW}/login`));
   });
 });

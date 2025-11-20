@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ログアウトボタン（Client Component）
+ * サインアウトボタン（Client Component）
  *
  * 重要な設計方針:
  * - Server Actionを呼び出す
@@ -22,16 +22,16 @@ export default function LogoutButton() {
       const result = await logoutAction();
 
       if (result.success && result.nextUrl) {
-        // ログアウト成功: WWWドメインのログインページへ遷移
+        // サインアウト成功: WWWドメインのサインインページへ遷移
         window.location.assign(result.nextUrl);
       } else {
         // エラーメッセージを表示（オプション）
-        const errorMessage = !result.success ? result.error : 'ログアウトに失敗しました';
+        const errorMessage = !result.success ? result.error : 'サインアウトに失敗しました';
         alert(errorMessage);
         setIsLoading(false);
       }
     } catch (err) {
-      alert('ログアウトに失敗しました');
+      alert('サインアウトに失敗しました');
       setIsLoading(false);
     }
   };
@@ -50,7 +50,7 @@ export default function LogoutButton() {
         opacity: isLoading ? 0.6 : 1,
       }}
     >
-      {isLoading ? 'ログアウト中...' : 'ログアウト'}
+      {isLoading ? 'サインアウト中...' : 'サインアウト'}
     </button>
   );
 }

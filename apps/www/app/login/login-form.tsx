@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ログインフォーム (Client Component)
+ * サインインフォーム (Client Component)
  *
  * 責務:
  * - メールアドレス・パスワード入力UI
@@ -31,7 +31,7 @@ export function LoginForm() {
       if (!result.success) {
         setMessage({ type: 'error', text: result.error });
       } else {
-        // ログイン成功 → Server Action が返した nextUrl へ遷移
+        // サインイン成功 → Server Action が返した nextUrl へ遷移
         const nextUrl = result.nextUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://app.local.test:3002';
         // nextUrl が相対パスの場合は router.push、フルURLの場合は location.assign
         if (nextUrl.startsWith('/')) {
@@ -52,7 +52,7 @@ export function LoginForm() {
       <div style={{ marginBottom: '1rem' }}>
         <label
           htmlFor="email"
-          style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}
+          style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}
         >
           メールアドレス
         </label>
@@ -77,7 +77,7 @@ export function LoginForm() {
       <div style={{ marginBottom: '1rem' }}>
         <label
           htmlFor="password"
-          style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}
+          style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}
         >
           パスワード
         </label>
@@ -129,11 +129,11 @@ export function LoginForm() {
           cursor: loading ? 'not-allowed' : 'pointer',
         }}
       >
-        {loading ? '送信中...' : 'ログイン'}
+        {loading ? '送信中...' : 'サインイン'}
       </button>
 
       <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-        メールアドレスとパスワードでログインします。
+        メールアドレスとパスワードでサインインします。
       </p>
     </form>
   );

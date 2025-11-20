@@ -13,7 +13,7 @@ test.describe('エラーハンドリング（基本）', () => {
   test.beforeEach(async () => {
     await resetUserToOrg1(MEMBER.email);
   });
-  test('未認証 → 保護されたページにアクセス → ログインページにリダイレクト', async ({ page }) => {
+  test('未認証 → 保護されたページにアクセス → サインインページにリダイレクト', async ({ page }) => {
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
     await expect(page).toHaveURL(new RegExp(`${DOMAINS.WWW}/login`));

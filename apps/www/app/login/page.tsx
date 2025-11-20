@@ -1,11 +1,11 @@
-/**
- * ログインページ (OTP認証)
- *
- * 責務:
- * - メールアドレス入力フォーム
- * - Supabase OTP (Magic Link) 送信
- * - 認証済みユーザーは app へリダイレクト
- */
+// / **
+//  * サインインページ (パスワード認証)
+//  *
+//  * 責務:
+//  * - メールアドレス・パスワード入力フォーム
+//  * - Supabase パスワード認証
+//  * - 認証済みユーザーは app へリダイレクト
+//  */
 
 import { LoginForm } from './login-form';
 
@@ -29,8 +29,8 @@ export default function LoginPage() {
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       }}>
-        <h1 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', textAlign: 'center' }}>
-          ログイン
+        <h1 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', textAlign: 'center', color: '#9ca3af' }}>
+          サインイン
         </h1>
         <LoginForm />
       </div>

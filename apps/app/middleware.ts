@@ -21,7 +21,7 @@ export function middleware(req: NextRequest) {
     cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')
   )
 
-  // 未ログインの場合は /login へリダイレクト
+  // 未サインインの場合は /login へリダイレクト
   if (!hasSupabaseSession) {
     // url.hrefではなくDOMAINS.appを使用してリダイレクト先を構築
     // req.urlはlocalhostになる場合があるため、環境変数から取得したドメインを使用

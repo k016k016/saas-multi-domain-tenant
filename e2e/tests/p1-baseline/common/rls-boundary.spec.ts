@@ -20,7 +20,7 @@ test.describe('RLS境界テスト', () => {
     // memberはADMINにアクセスできないため、/unauthorizedへリダイレクト
     await expect(page).toHaveURL(new RegExp(`${DOMAINS.ADMIN}/unauthorized`));
 
-    // 注: RLSの検証は、実際にはadmin/ownerでログインして
+    // 注: RLSの検証は、実際にはadmin/ownerでサインインして
     // 別組織のデータが表示されないことを確認する必要があります
     // しかし、E2Eレベルでは組織IDを直接操作できないため、
     // この테스트は境界確認の意図を示す「スモークテスト」です
