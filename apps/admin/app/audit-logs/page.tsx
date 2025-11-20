@@ -4,6 +4,7 @@
  * 責務:
  * - 組織内の監査ログ一覧を表示
  * - 期間/アクション種別によるフィルタリング
+ * - 実行者・対象の情報をわかりやすく表示
  *
  * 権限:
  * - adminとownerのみアクセス可能
@@ -24,6 +25,12 @@ interface ActivityLog {
   user_id: string;
 }
 
+interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+}
+
 // アクション種別の日本語ラベル
 const ACTION_LABELS: Record<string, string> = {
   org_switched: '組織切替',
@@ -35,6 +42,33 @@ const ACTION_LABELS: Record<string, string> = {
   org_suspended: '組織凍結',
   owner_transferred: 'オーナー権限譲渡',
 };
+
+// payloadから対象・詳細を日本語で生成
+function formatDetails(action: AuditAction, payload: Record<string, unknown>): string {
+  switch (action) {
+    case 'user_invited':
+      return `${payload.invited_email || '不明'} を${payload.invited_role || 'member'}として招待`;
+    case 'role_changed':
+      return `${payload.old_role || '?'} → ${payload.new_role || '?'}`;
+    case 'user_removed':
+      return `${payload.target_role || 'member'} を削除`;
+    case 'user_updated':
+      if (payload.old_role !== payload.new_role) {
+        return `${payload.new_email || '?'}: ${payload.old_role} → ${payload.new_role}`;
+      }
+      return `${payload.new_email || '?'} の情報を更新`;
+    case 'org_switched':
+      return `組織を切替 (role: ${payload.role || '?'})`;
+    case 'owner_transferred':
+      return `オーナー権限を譲渡`;
+    case 'org_suspended':
+      return `組織を凍結`;
+    case 'payment_updated':
+      return `支払い情報を変更`;
+    default:
+      return JSON.stringify(payload);
+  }
+}
 
 export default async function AuditLogsPage({
   searchParams,
@@ -85,9 +119,75 @@ export default async function AuditLogsPage({
 
   const activityLogs: ActivityLog[] = logs || [];
 
+  // 実行者のユーザー情報を取得
+  const userIds = [...new Set(activityLogs.map(log => log.user_id))];
+  const userMap = new Map<string, UserInfo>();
+
+  if (userIds.length > 0) {
+    // Admin APIでユーザー一覧を取得
+    const { data: usersData } = await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+
+    if (usersData?.users) {
+      for (const user of usersData.users) {
+        if (userIds.includes(user.id)) {
+          userMap.set(user.id, {
+            id: user.id,
+            email: user.email || '不明',
+            name: (user.user_metadata?.name as string) || '',
+          });
+        }
+      }
+    }
+  }
+
+  // CSVデータを生成
+  const csvData = activityLogs.map(log => {
+    const user = userMap.get(log.user_id);
+    return {
+      日時: new Date(log.created_at).toLocaleString('ja-JP'),
+      アクション: ACTION_LABELS[log.action] || log.action,
+      実行者名: user?.name || '',
+      実行者メール: user?.email || '',
+      詳細: formatDetails(log.action, log.payload),
+      payload: JSON.stringify(log.payload),
+    };
+  });
+
+  const csvContent = [
+    Object.keys(csvData[0] || {}).join(','),
+    ...csvData.map(row =>
+      Object.values(row).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+    ),
+  ].join('\n');
+
+  const csvDataUri = `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`;
+
   return (
     <div style={{ padding: '2rem', background: '#1a1a1a', minHeight: '100vh', color: '#e5e5e5' }}>
-      <h1 style={{ marginBottom: '1.5rem' }}>監査ログ</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1 style={{ margin: 0 }}>監査ログ</h1>
+        {activityLogs.length > 0 && (
+          <a
+            href={csvDataUri}
+            download={`audit-logs-${new Date().toISOString().split('T')[0]}.csv`}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+            }}
+          >
+            CSVダウンロード
+          </a>
+        )}
+      </div>
 
       {/* フィルタリングフォーム */}
       <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#262626', borderRadius: '8px', border: '1px solid #404040' }}>
@@ -171,10 +271,10 @@ export default async function AuditLogsPage({
                 アクション
               </th>
               <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#a1a1aa', textTransform: 'uppercase' }}>
-                ユーザーID
+                実行者
               </th>
               <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#a1a1aa', textTransform: 'uppercase' }}>
-                詳細
+                対象・詳細
               </th>
             </tr>
           </thead>
@@ -186,57 +286,70 @@ export default async function AuditLogsPage({
                 </td>
               </tr>
             ) : (
-              activityLogs.map((log) => (
-                <tr key={log.id} style={{ borderBottom: '1px solid #404040' }}>
-                  <td style={{ padding: '1rem', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
-                    {new Date(log.created_at).toLocaleString('ja-JP', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                    })}
-                  </td>
-                  <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: '0.25rem 0.75rem',
-                        background: '#1e3a8a',
-                        color: '#93c5fd',
-                        border: '1px solid #3b82f6',
-                        borderRadius: '4px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {ACTION_LABELS[log.action] || log.action}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem', fontSize: '0.875rem', fontFamily: 'monospace', color: '#a1a1aa' }}>
-                    {log.user_id.substring(0, 8)}...
-                  </td>
-                  <td style={{ padding: '1rem', fontSize: '0.875rem' }}>
-                    <details style={{ cursor: 'pointer' }}>
-                      <summary style={{ color: '#60a5fa' }}>詳細を表示</summary>
-                      <pre
+              activityLogs.map((log) => {
+                const user = userMap.get(log.user_id);
+                return (
+                  <tr key={log.id} style={{ borderBottom: '1px solid #404040' }}>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                      {new Date(log.created_at).toLocaleString('ja-JP', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </td>
+                    <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
+                      <span
                         style={{
-                          marginTop: '0.5rem',
-                          padding: '0.5rem',
-                          background: '#262626',
+                          display: 'inline-block',
+                          padding: '0.25rem 0.75rem',
+                          background: '#1e3a8a',
+                          color: '#93c5fd',
+                          border: '1px solid #3b82f6',
                           borderRadius: '4px',
                           fontSize: '0.75rem',
-                          overflow: 'auto',
-                          color: '#a1a1aa',
+                          fontWeight: 600,
                         }}
                       >
-                        {JSON.stringify(log.payload, null, 2)}
-                      </pre>
-                    </details>
-                  </td>
-                </tr>
-              ))
+                        {ACTION_LABELS[log.action] || log.action}
+                      </span>
+                    </td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem' }}>
+                      {user ? (
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{user.name || '名前未設定'}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>{user.email}</div>
+                        </div>
+                      ) : (
+                        <span style={{ color: '#71717a', fontFamily: 'monospace' }}>
+                          {log.user_id.substring(0, 8)}...
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem' }}>
+                      <div>{formatDetails(log.action, log.payload)}</div>
+                      <details style={{ cursor: 'pointer', marginTop: '0.5rem' }}>
+                        <summary style={{ color: '#60a5fa', fontSize: '0.75rem' }}>JSON詳細</summary>
+                        <pre
+                          style={{
+                            marginTop: '0.5rem',
+                            padding: '0.5rem',
+                            background: '#262626',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            overflow: 'auto',
+                            color: '#a1a1aa',
+                          }}
+                        >
+                          {JSON.stringify(log.payload, null, 2)}
+                        </pre>
+                      </details>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
