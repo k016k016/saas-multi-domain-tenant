@@ -232,11 +232,13 @@ export async function changeUserRole(
     };
   }
 
-  // 5. 対象ユーザーのロールを確認
+  // 5. Service Role Keyで操作
+  const supabaseAdmin = getSupabaseAdmin();
+
   // 5-1. 対象ユーザーの情報を取得
-  const { data: targetUser, error: fetchError } = await supabase
+  const { data: targetUser, error: fetchError } = await supabaseAdmin
     .from('profiles')
-    .select('user_id, email, role')
+    .select('user_id, role')
     .eq('user_id', targetUserId)
     .eq('org_id', org.orgId)
     .single();
@@ -265,7 +267,7 @@ export async function changeUserRole(
   }
 
   // 6. ロール変更処理
-  const { error: updateError } = await supabase
+  const { error: updateError } = await supabaseAdmin
     .from('profiles')
     .update({ role: newRole, updated_at: new Date().toISOString() })
     .eq('user_id', targetUserId)
@@ -277,7 +279,7 @@ export async function changeUserRole(
   }
 
   // 7. 監査ログ記録
-  const logResult = await logActivity(supabase, {
+  const logResult = await logActivity(supabaseAdmin, {
     orgId: org.orgId,
     userId: currentUserId,
     action: 'role_changed',
@@ -348,11 +350,13 @@ export async function removeUser(
     };
   }
 
-  // 5. 対象ユーザーのロールを確認
+  // 5. Service Role Keyで操作
+  const supabaseAdmin = getSupabaseAdmin();
+
   // 5-1. 対象ユーザーの情報を取得
-  const { data: targetUser, error: fetchError } = await supabase
+  const { data: targetUser, error: fetchError } = await supabaseAdmin
     .from('profiles')
-    .select('user_id, email, role')
+    .select('user_id, role')
     .eq('user_id', targetUserId)
     .eq('org_id', org.orgId)
     .single();
@@ -369,9 +373,6 @@ export async function removeUser(
       error: 'ownerは削除できません。owner権限を譲渡してから削除してください。',
     };
   }
-
-  // 6. ユーザー削除処理（Service Role Key使用）
-  const supabaseAdmin = getSupabaseAdmin();
 
   // 6-1. profilesテーブルから削除
   const { error: deleteError } = await supabaseAdmin
@@ -407,7 +408,6 @@ export async function removeUser(
     action: 'user_removed',
     payload: {
       target_user_id: targetUserId,
-      target_email: targetUser.email,
       target_role: targetUser.role,
       timestamp: new Date().toISOString(),
     },
@@ -419,6 +419,177 @@ export async function removeUser(
   }
 
   // 8. 成功を返す
+  return {
+    success: true,
+    nextUrl: '/members',
+  };
+}
+
+/**
+ * ユーザー情報を更新する
+ *
+ * @param targetUserId - 対象ユーザーのID
+ * @param name - 新しい氏名
+ * @param email - 新しいメールアドレス
+ * @param newRole - 新しいロール（member/admin）
+ * @returns ActionResult
+ */
+export async function updateUser(
+  targetUserId: string,
+  name: string,
+  email: string,
+  newRole: Role
+): Promise<ActionResult> {
+  // 1. 入力バリデーション
+  if (!targetUserId || typeof targetUserId !== 'string') {
+    return {
+      success: false,
+      error: 'ユーザーIDが不正です',
+    };
+  }
+
+  if (!name || name.trim().length === 0) {
+    return {
+      success: false,
+      error: '氏名を入力してください',
+    };
+  }
+
+  if (!email || typeof email !== 'string') {
+    return {
+      success: false,
+      error: 'メールアドレスが不正です',
+    };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return {
+      success: false,
+      error: 'メールアドレスの形式が正しくありません',
+    };
+  }
+
+  if (!newRole || !['member', 'admin'].includes(newRole)) {
+    return {
+      success: false,
+      error: 'ロールはmemberまたはadminを指定してください',
+    };
+  }
+
+  // 2. 権限チェック
+  const roleContext = await getCurrentRole();
+  const currentUserRole = roleContext?.role;
+  if (!currentUserRole || !hasRole(currentUserRole, 'admin')) {
+    return {
+      success: false,
+      error: 'この操作を行う権限がありません',
+    };
+  }
+
+  // 3. 現在の組織を取得
+  const org = await getCurrentOrg();
+  if (!org) {
+    return {
+      success: false,
+      error: '組織情報が見つかりません',
+    };
+  }
+
+  // 4. 現在のユーザーIDを取得
+  const supabase = await createServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const currentUserId = session?.user?.id;
+  if (!currentUserId) {
+    return {
+      success: false,
+      error: '認証セッションが見つかりません',
+    };
+  }
+
+  // 5. Service Role Keyで操作
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // 5-1. 対象ユーザーの情報を取得
+  const { data: targetUser, error: fetchError } = await supabaseAdmin
+    .from('profiles')
+    .select('user_id, role')
+    .eq('user_id', targetUserId)
+    .eq('org_id', org.orgId)
+    .single();
+
+  if (fetchError || !targetUser) {
+    console.error('[updateUser] User fetch error:', fetchError);
+    return { success: false, error: '対象ユーザーが見つかりません' };
+  }
+
+  const oldRole = targetUser.role;
+
+  // 5-2. ownerのロール変更は禁止
+  if (targetUser.role === 'owner') {
+    return {
+      success: false,
+      error: 'ownerの情報は変更できません。',
+    };
+  }
+
+  // 5-3. 変更先ロールがownerの場合も禁止
+  if (newRole === 'owner') {
+    return {
+      success: false,
+      error: 'この機能ではownerロールへの変更はできません。',
+    };
+  }
+
+  // 6. Auth情報を更新（メールアドレス・氏名）
+  const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(targetUserId, {
+    email,
+    email_confirm: true,
+    user_metadata: {
+      name: name.trim(),
+    },
+  });
+
+  if (authUpdateError) {
+    console.error('[updateUser] Auth update error:', authUpdateError);
+    if (authUpdateError.message.includes('already been registered')) {
+      return { success: false, error: 'このメールアドレスは既に使用されています' };
+    }
+    return { success: false, error: 'ユーザー情報の更新に失敗しました' };
+  }
+
+  // 7. ロール変更処理
+  const { error: updateError } = await supabaseAdmin
+    .from('profiles')
+    .update({ role: newRole, updated_at: new Date().toISOString() })
+    .eq('user_id', targetUserId)
+    .eq('org_id', org.orgId);
+
+  if (updateError) {
+    console.error('[updateUser] Role update error:', updateError);
+    return { success: false, error: 'ロールの変更に失敗しました' };
+  }
+
+  // 8. 監査ログ記録
+  const logResult = await logActivity(supabaseAdmin, {
+    orgId: org.orgId,
+    userId: currentUserId,
+    action: 'user_updated',
+    payload: {
+      target_user_id: targetUserId,
+      old_role: oldRole,
+      new_role: newRole,
+      new_email: email,
+      new_name: name.trim(),
+      timestamp: new Date().toISOString(),
+    },
+  });
+
+  if (logResult.error) {
+    console.warn('[updateUser] Activity log failed:', logResult.error);
+  }
+
+  // 9. 成功を返す
   return {
     success: true,
     nextUrl: '/members',
