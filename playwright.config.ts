@@ -8,6 +8,25 @@ const WWW_URL = process.env.NEXT_PUBLIC_WWW_URL ?? 'http://www.local.test:3001';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://app.local.test:3002';
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://admin.local.test:3003';
 const OPS_URL = process.env.NEXT_PUBLIC_OPS_URL ?? 'http://ops.local.test:3004';
+const HOST_RESOLVER_RULE =
+  'MAP *.local.test 127.0.0.1,MAP local.test 127.0.0.1,MAP *.local.test ::1,MAP local.test ::1';
+
+type WebServerConfig = {
+  name: 'www' | 'app' | 'admin' | 'ops';
+  command: string;
+  url: string;
+};
+
+const baseWebServers: WebServerConfig[] = [
+  { name: 'www', command: 'pnpm --filter www start', url: 'http://localhost:3001' },
+  { name: 'app', command: 'pnpm --filter app start', url: 'http://localhost:3002' },
+  { name: 'admin', command: 'pnpm --filter admin start', url: 'http://localhost:3003' },
+  // /login is a public route that returns 200 even though / returns 404 by design.
+  { name: 'ops', command: 'pnpm --filter ops start', url: 'http://localhost:3004/login' },
+];
+
+const ciWebServers = baseWebServers.filter((server) => server.name !== 'ops');
+const effectiveWebServers = CI ? ciWebServers : baseWebServers;
 
 export default defineConfig({
   testDir: './e2e/tests',
@@ -20,13 +39,16 @@ export default defineConfig({
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
     navigationTimeout: CI ? 30_000 : 20_000, // CI環境では30秒に延長
+    launchOptions: {
+      args: [`--host-resolver-rules=${HOST_RESOLVER_RULE}`],
+    },
   },
-  webServer: CI ? [
-    { command: 'pnpm --filter www start', url: 'http://localhost:3001', reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter app start', url: 'http://localhost:3002', reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter admin start', url: 'http://localhost:3003', reuseExistingServer: true, timeout: 120_000 },
-    { command: 'pnpm --filter ops start', url: 'http://localhost:3004', reuseExistingServer: true, timeout: 120_000 },
-  ] : undefined,
+  webServer: effectiveWebServers.map(({ command, url }) => ({
+    command,
+    url,
+    reuseExistingServer: !CI,
+    timeout: 120_000,
+  })),
   projects: [
     // Phase 1: 基盤テスト（chromium のみ - Firefox は安定性の問題により除外）
     {

@@ -67,7 +67,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // app domainへアクセス（既にログイン後はapp.local.testにいるはず）
       await expect(page.url()).toContain('app.local.test');
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('memberは acme.app.local.test にアクセス可能', async ({ page }) => {
@@ -75,7 +75,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // ホストベースの組織URLへアクセス
       await page.goto('http://acme.app.local.test:3002/');
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
       await expect(page.url()).toContain('acme.app.local.test');
     });
 
@@ -83,10 +83,10 @@ test.describe('Role-based Access Boundaries', () => {
       await uiLogin(page, 'member1@example.com', PASSWORD);
 
       // OPS domainへアクセス
-      await page.goto('http://ops.local.test:3004/');
+      const response = await page.goto('http://ops.local.test:3004/');
 
       // 404エラー（OPSユーザーではない）
-      await expect(page.getByText(/404|not found/i)).toBeVisible();
+      expect(response?.status()).toBe(404);
     });
   });
 
@@ -100,7 +100,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 正常にアクセスできる
       await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('adminは admin.local.test/org-settings に403（ownerのみ）', async ({ page }) => {
@@ -122,7 +122,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 正常にアクセスできる
       await expect(page.getByRole('heading', { name: '監査ログ' })).toBeVisible();
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('adminは app.local.test にアクセス可能', async ({ page }) => {
@@ -130,7 +130,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // app domainへアクセス
       await expect(page.url()).toContain('app.local.test');
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('adminは ops.local.test に404（非OPSユーザー）', async ({ page }) => {
@@ -154,7 +154,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 正常にアクセスできる
       await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('ownerは admin.local.test/org-settings にアクセス可能', async ({ page }) => {
@@ -165,7 +165,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 正常にアクセスできる（ownerのみ可能）
       await expect(page.getByRole('heading', { name: '組織設定' })).toBeVisible();
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('ownerは admin.local.test/audit-logs にアクセス可能', async ({ page }) => {
@@ -176,7 +176,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 正常にアクセスできる
       await expect(page.getByRole('heading', { name: '監査ログ' })).toBeVisible();
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('ownerは app.local.test にアクセス可能', async ({ page }) => {
@@ -184,7 +184,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // app domainへアクセス
       await expect(page.url()).toContain('app.local.test');
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('ownerは ops.local.test に404（非OPSユーザー）', async ({ page }) => {
@@ -207,7 +207,7 @@ test.describe('Role-based Access Boundaries', () => {
       await page.goto('http://ops.local.test:3004/');
 
       // 正常にアクセスできる
-      await expect(page.getByRole('heading', { name: 'OPS Dashboard' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Ops コンソール/i })).toBeVisible();
     });
 
     test('ops1は org1のadminとして admin.local.test/members にアクセス可能', async ({ page }) => {
@@ -219,7 +219,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // 正常にアクセスできる
       await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
 
     test('ops1は app.local.test にアクセス可能', async ({ page }) => {
@@ -227,7 +227,7 @@ test.describe('Role-based Access Boundaries', () => {
 
       // app domainへアクセス
       await expect(page.url()).toContain('app.local.test');
-      await expect(page.getByText('Test Organization')).toBeVisible();
+      await expect(page.getByText('Test Organization').first()).toBeVisible();
     });
   });
 
@@ -251,11 +251,8 @@ test.describe('Role-based Access Boundaries', () => {
     });
 
     test('未認証ユーザーは ops.local.test で404', async ({ page }) => {
-      // 未認証状態でOPS domainへアクセス
-      await page.goto('http://ops.local.test:3004/');
-
-      // 404エラー（OPSは未認証でも404を返す）
-      await expect(page.getByText(/404|not found/i)).toBeVisible();
+      const response = await page.goto('http://ops.local.test:3004/');
+      expect(response?.status()).toBe(404);
     });
 
     test('未認証ユーザーは www.local.test にアクセス可能', async ({ page }) => {

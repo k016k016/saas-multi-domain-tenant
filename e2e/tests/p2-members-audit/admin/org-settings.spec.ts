@@ -22,21 +22,21 @@ test.describe('/org-settings アクセス制限', () => {
     await expect(page.getByRole('heading', { name: /組織設定/i })).toBeVisible();
   });
 
-  test('admin → 組織設定ページにアクセス不可（404）', async ({ page }) => {
+  test('admin → 組織設定ページにアクセス不可（/unauthorizedへリダイレクト）', async ({ page }) => {
     await uiLogin(page, ADMIN.email, PASSWORD);
 
     const response = await page.goto(`${DOMAINS.ADMIN}/org-settings`);
-
-    // 404が返される
-    expect(response?.status()).toBe(404);
+    await expect(page).toHaveURL(new RegExp(`${DOMAINS.ADMIN}/unauthorized`));
+    await expect(page.getByRole('heading', { name: /アクセス権限がありません/i })).toBeVisible();
+    expect(response?.status()).toBe(200);
   });
 
-  test('member → 組織設定ページにアクセス不可（404）', async ({ page }) => {
+  test('member → 組織設定ページにアクセス不可（/unauthorizedへリダイレクト）', async ({ page }) => {
     await uiLogin(page, MEMBER.email, PASSWORD);
 
     const response = await page.goto(`${DOMAINS.ADMIN}/org-settings`);
-
-    // 404が返される
-    expect(response?.status()).toBe(404);
+    await expect(page).toHaveURL(new RegExp(`${DOMAINS.ADMIN}/unauthorized`));
+    await expect(page.getByRole('heading', { name: /アクセス権限がありません/i })).toBeVisible();
+    expect(response?.status()).toBe(200);
   });
 });

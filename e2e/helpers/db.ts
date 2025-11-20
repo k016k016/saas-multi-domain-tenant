@@ -88,8 +88,8 @@ export async function resetUserToOrg1(email: string): Promise<void> {
   const user = await findUserByEmail(supabase, email);
   await upsertUserOrgContext(supabase, user.id, TEST_ORG_ID);
 
-  // member1の場合はroleもmemberにリセット
-  if (email === 'member1@example.com') {
+  // member1 / member-switcher の場合はorg1でのroleもmemberにリセット
+  if (email === 'member1@example.com' || email === 'member-switcher@example.com') {
     const { error: roleError } = await supabase
       .from('profiles')
       .update({ role: 'member' })

@@ -31,3 +31,22 @@ export async function uiLogin(page: Page, email: string, password: string) {
     }
   }
 }
+
+export async function uiLogout(page: Page) {
+  const logoutButton = page.getByRole('button', { name: /サインアウト/ });
+  if ((await logoutButton.count()) > 0) {
+    const button = logoutButton.first();
+    await button.waitFor({ state: 'visible', timeout: 10_000 });
+    await button.click();
+    await page.waitForURL((url) => {
+      const currentUrl = typeof url === 'string' ? url : url.href;
+      return currentUrl.includes('www.local.test') && currentUrl.includes('login');
+    }, { timeout: 20_000 });
+    await page.context().clearCookies();
+    return;
+  }
+
+  // Fallback: ボタンがない場合はCookieクリアでサインアウト状態へ
+  await page.context().clearCookies();
+  await page.goto(`${DOMAINS.WWW}/login`);
+}
