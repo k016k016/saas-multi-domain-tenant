@@ -51,7 +51,7 @@ export async function signInWithPassword(
     const opsUrl =
       process.env.NEXT_PUBLIC_OPS_URL ||
       process.env.OPS_URL ||
-      'http://ops.local.test:3005';
+      'http://ops.local.test:3004';
 
     return {
       success: true,
