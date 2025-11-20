@@ -2,46 +2,46 @@
 -- Fix RLS Infinite Recursion on profiles table
 -- ============================================================
 --
--- 問題:
--- profiles テーブルの RLS ポリシーが自分自身を参照して無限再帰を引き起こしていました。
+-- :
+-- profiles  RLS 
 --
--- 解決策:
--- 1. auth.jwt() を使ってユーザーのカスタムクレーム(role, org_id)を取得
--- 2. もしくは、既存のポリシーを削除して、より単純なポリシーに置き換える
+-- :
+-- 1. auth.jwt() (role, org_id)
+-- 2. 
 --
--- このマイグレーションでは、アプローチ2を採用します:
--- - 認証済みユーザーは自分自身のprofileを常に読める
--- - 組織管理者は同じ組織のprofileを操作できる
--- - これにより、初回ログイン時にprofileを取得できるようになります
+-- 2:
+-- - profile
+-- - profile
+-- - profile
 -- ============================================================
 
--- 既存のポリシーを削除
+-- 
 DROP POLICY IF EXISTS "profiles_select_policy" ON profiles;
 DROP POLICY IF EXISTS "profiles_insert_policy" ON profiles;
 DROP POLICY IF EXISTS "profiles_update_policy" ON profiles;
 DROP POLICY IF EXISTS "profiles_delete_policy" ON profiles;
 
 -- ------------------------------------------------------------
--- 新しい profiles テーブルの RLS ポリシー
+--  profiles  RLS 
 -- ------------------------------------------------------------
 
--- SELECT: 認証済みユーザーは自分自身のprofileを読める
--- これにより、ログイン後にCookie設定のためのprofile取得が可能になります
+-- SELECT: profile
+-- Cookieprofile
 CREATE POLICY "profiles_select_own"
 ON profiles
 FOR SELECT
 USING (
-  -- 自分自身のprofileは常に読める
+  -- profile
   user_id = auth.uid()
 );
 
--- SELECT: ops roleを持つユーザーはすべてのprofileを読める
--- これは別のポリシーとして分離することで、再帰を避けます
+-- SELECT: ops roleprofile
+-- 
 CREATE POLICY "profiles_select_ops"
 ON profiles
 FOR SELECT
 USING (
-  -- このクエリ結果はキャッシュされるため、無限再帰にはなりません
+  -- 
   EXISTS (
     SELECT 1 FROM profiles AS p
     WHERE p.user_id = auth.uid()
@@ -49,19 +49,19 @@ USING (
   )
 );
 
--- INSERT: ops roleを持つユーザー、または同じ組織のadmin/ownerが新しいprofileを作成できる
+-- INSERT: ops roleadmin/ownerprofile
 CREATE POLICY "profiles_insert_admin"
 ON profiles
 FOR INSERT
 WITH CHECK (
-  -- ops roleを持つユーザーはすべてのprofileを作成できる
+  -- ops roleprofile
   EXISTS (
     SELECT 1 FROM profiles AS p
     WHERE p.user_id = auth.uid()
     AND p.role = 'ops'
   )
   OR
-  -- 同じ組織のadmin/ownerは新しいprofileを作成できる
+  -- admin/ownerprofile
   EXISTS (
     SELECT 1 FROM profiles AS p
     WHERE p.user_id = auth.uid()
@@ -70,7 +70,7 @@ WITH CHECK (
   )
 );
 
--- UPDATE: 自分自身のprofileは更新できる(roleとorg_id以外)
+-- UPDATE: profile(roleorg_id)
 CREATE POLICY "profiles_update_own"
 ON profiles
 FOR UPDATE
@@ -79,10 +79,10 @@ USING (
 )
 WITH CHECK (
   user_id = auth.uid()
-  -- 注: role と org_id の変更は別の制御が必要
+  -- : role  org_id 
 );
 
--- UPDATE: admin/owner/opsは同じ組織のprofileを更新できる
+-- UPDATE: admin/owner/opsprofile
 CREATE POLICY "profiles_update_admin"
 ON profiles
 FOR UPDATE
@@ -95,8 +95,8 @@ USING (
   )
 );
 
--- DELETE: admin/owner/opsは同じ組織のprofileを削除できる
--- ただし、owner本人の削除は別の制御が必要
+-- DELETE: admin/owner/opsprofile
+-- owner
 CREATE POLICY "profiles_delete_admin"
 ON profiles
 FOR DELETE
@@ -110,13 +110,13 @@ USING (
 );
 
 -- ------------------------------------------------------------
--- organizations テーブルの RLS ポリシーも修正
+-- organizations  RLS 
 -- ------------------------------------------------------------
--- 同様の問題があるため、SELECT ポリシーを分離します
+-- SELECT 
 
 DROP POLICY IF EXISTS "organizations_select_policy" ON organizations;
 
--- SELECT: 自分が所属する組織は読める
+-- SELECT: 
 CREATE POLICY "organizations_select_member"
 ON organizations
 FOR SELECT
@@ -128,7 +128,7 @@ USING (
   )
 );
 
--- SELECT: ops roleを持つユーザーはすべての組織を読める
+-- SELECT: ops role
 CREATE POLICY "organizations_select_ops"
 ON organizations
 FOR SELECT
@@ -141,15 +141,15 @@ USING (
 );
 
 -- ------------------------------------------------------------
--- activity_logs テーブルの RLS ポリシーは問題なし
--- (profiles を参照しているが、profiles 自身を再帰的に参照していないため)
+-- activity_logs  RLS 
+-- (profiles profiles )
 -- ------------------------------------------------------------
 
-COMMENT ON POLICY "profiles_select_own" ON profiles IS '認証済みユーザーは自分自身のprofileを常に読める';
-COMMENT ON POLICY "profiles_select_ops" ON profiles IS 'ops roleを持つユーザーはすべてのprofileを読める';
-COMMENT ON POLICY "profiles_insert_admin" ON profiles IS 'ops/admin/ownerは新しいprofileを作成できる';
-COMMENT ON POLICY "profiles_update_own" ON profiles IS '自分自身のprofileは更新できる';
-COMMENT ON POLICY "profiles_update_admin" ON profiles IS 'admin/owner/opsは同じ組織のprofileを更新できる';
-COMMENT ON POLICY "profiles_delete_admin" ON profiles IS 'admin/owner/opsは同じ組織のprofileを削除できる';
-COMMENT ON POLICY "organizations_select_member" ON organizations IS '自分が所属する組織は読める';
-COMMENT ON POLICY "organizations_select_ops" ON organizations IS 'ops roleを持つユーザーはすべての組織を読める';
+COMMENT ON POLICY "profiles_select_own" ON profiles IS 'profile';
+COMMENT ON POLICY "profiles_select_ops" ON profiles IS 'ops roleprofile';
+COMMENT ON POLICY "profiles_insert_admin" ON profiles IS 'ops/admin/ownerprofile';
+COMMENT ON POLICY "profiles_update_own" ON profiles IS 'profile';
+COMMENT ON POLICY "profiles_update_admin" ON profiles IS 'admin/owner/opsprofile';
+COMMENT ON POLICY "profiles_delete_admin" ON profiles IS 'admin/owner/opsprofile';
+COMMENT ON POLICY "organizations_select_member" ON organizations IS '';
+COMMENT ON POLICY "organizations_select_ops" ON organizations IS 'ops role';

@@ -1,25 +1,25 @@
--- user_org_context RLS脆弱性の修正
+-- user_org_context RLS
 --
--- 問題点:
---   既存のUPDATE/INSERTポリシーにWITH CHECK制約がないため、
---   ユーザーは自分が所属していない組織のorg_idを設定できてしまう。
+-- :
+--   UPDATE/INSERTWITH CHECK
+--   org_id
 --
--- 対策:
---   1. WITH CHECKで所属組織のみを許可するよう制約を追加
---   2. profiles テーブルにUNIQUE制約を追加（重複防止）
+-- :
+--   1. WITH CHECK
+--   2. profiles UNIQUE
 
 -- ============================================================
--- 1. 既存のポリシーを削除
+-- 1. 
 -- ============================================================
 
 DROP POLICY IF EXISTS "Users can update own context" ON user_org_context;
 DROP POLICY IF EXISTS "Users can insert own context" ON user_org_context;
 
 -- ============================================================
--- 2. 所属組織チェック付きのポリシーを再作成
+-- 2. 
 -- ============================================================
 
--- UPDATE: ユーザーは自分の所属組織のみを設定可能
+-- UPDATE: 
 CREATE POLICY "Users can update own context to member orgs only"
 ON user_org_context
 FOR UPDATE
@@ -33,7 +33,7 @@ WITH CHECK (
   )
 );
 
--- INSERT: ユーザーは自分の所属組織のみを挿入可能
+-- INSERT: 
 CREATE POLICY "Users can insert own context for member orgs only"
 ON user_org_context
 FOR INSERT
@@ -47,18 +47,18 @@ WITH CHECK (
 );
 
 -- ============================================================
--- 3. profiles テーブルに整合性制約を追加
+-- 3. profiles 
 -- ============================================================
 
--- 同じユーザーが同じ組織に重複して所属できないようにする
+-- 
 CREATE UNIQUE INDEX IF NOT EXISTS profiles_user_org_unique
 ON profiles(user_id, org_id);
 
 -- ============================================================
--- 4. 検証用コメント
+-- 4. 
 -- ============================================================
 
--- この修正により、以下が保証される:
--- ✅ ユーザーは自分が所属する組織のみをuser_org_contextに設定できる
--- ✅ 不正なorg_idでの切り替えはDB層で拒否される
--- ✅ profilesの重複エントリが防止される
+-- :
+--  user_org_context
+--  org_idDB
+--  profiles

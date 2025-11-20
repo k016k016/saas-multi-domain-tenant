@@ -29,6 +29,14 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // Phase 3: URLパラメータ ?org=slug をX-Org-Slugヘッダーとして渡す
+  const orgSlugParam = url.searchParams.get('org')
+  if (orgSlugParam) {
+    const response = NextResponse.next()
+    response.headers.set('X-Org-Slug', orgSlugParam)
+    return response
+  }
+
   // 認証済みユーザーは通す
   // IMPORTANT: role検証 (admin/owner のみ許可) は各ページで行う
   return NextResponse.next()
