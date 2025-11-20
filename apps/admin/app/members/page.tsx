@@ -13,7 +13,7 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
-import { createServerClient, getSupabaseAdmin } from '@repo/db';
+import { getSupabaseAdmin } from '@repo/db';
 import { notFound, redirect } from 'next/navigation';
 import InviteUserForm from './invite-user-form';
 import MemberList from './member-list';
@@ -35,9 +35,9 @@ export default async function MembersPage() {
     notFound();
   }
 
-  // Supabase profilesテーブルから組織のメンバー一覧を取得
-  const supabase = await createServerClient();
-  const { data: profilesData, error: profilesError } = await supabase
+  // Supabase profilesテーブルから組織のメンバー一覧を取得（Service Role Key使用）
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: profilesData, error: profilesError } = await supabaseAdmin
     .from('profiles')
     .select('user_id, role, created_at')
     .eq('org_id', org.orgId)
@@ -47,8 +47,7 @@ export default async function MembersPage() {
     console.error('[MembersPage] Failed to fetch profiles:', profilesError);
   }
 
-  // auth.usersテーブルからメールアドレスと氏名を取得（Service Role Key使用）
-  const supabaseAdmin = getSupabaseAdmin();
+  // auth.usersテーブルからメールアドレスと氏名を取得
   const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
 
   if (usersError) {
