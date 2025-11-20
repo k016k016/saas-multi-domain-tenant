@@ -39,7 +39,7 @@ export default function RootLayout({
         }}>
           <strong style={{ color: '#fbbf24' }}>Admin Domain (組織管理)</strong>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <a href="/" style={{ color: '#fcd34d', textDecoration: 'none' }}>組織概要</a>
+            <a href="/" style={{ color: '#fcd34d', textDecoration: 'none' }}>ダッシュボード</a>
             <a href="/members" style={{ color: '#fcd34d', textDecoration: 'none' }}>メンバー管理</a>
             <a href="/audit-logs" style={{ color: '#fcd34d', textDecoration: 'none' }}>監査ログ</a>
             <a href="/org-settings" style={{ color: '#fcd34d', textDecoration: 'none' }}>組織設定</a>

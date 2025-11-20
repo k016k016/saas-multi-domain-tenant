@@ -150,27 +150,25 @@ export default function MemberList({ members, currentUserRole }: MemberListProps
                     {member.createdAt}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    {isOwner ? (
-                      // ownerは編集・削除不可
-                      <span style={{ color: '#71717a', fontSize: '0.875rem' }}>-</span>
-                    ) : (
-                      // admin/memberは編集・削除可能
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                        <button
-                          onClick={() => setEditingMember(member)}
-                          disabled={isLoading}
-                          style={{
-                            padding: '0.25rem 0.75rem',
-                            background: isLoading ? '#404040' : '#1e3a8a',
-                            color: isLoading ? '#71717a' : '#93c5fd',
-                            border: '1px solid #3b82f6',
-                            borderRadius: '4px',
-                            cursor: isLoading ? 'not-allowed' : 'pointer',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          編集
-                        </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      {/* 編集ボタン: 全員に表示 */}
+                      <button
+                        onClick={() => setEditingMember(member)}
+                        disabled={isLoading}
+                        style={{
+                          padding: '0.25rem 0.75rem',
+                          background: isLoading ? '#404040' : '#1e3a8a',
+                          color: isLoading ? '#71717a' : '#93c5fd',
+                          border: '1px solid #3b82f6',
+                          borderRadius: '4px',
+                          cursor: isLoading ? 'not-allowed' : 'pointer',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        編集
+                      </button>
+                      {/* 削除ボタン: ownerは非表示 */}
+                      {!isOwner && (
                         <button
                           onClick={() => handleRemove(member.userId, member.email)}
                           disabled={isLoading}
@@ -186,8 +184,8 @@ export default function MemberList({ members, currentUserRole }: MemberListProps
                         >
                           {isLoading ? '処理中...' : '削除'}
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

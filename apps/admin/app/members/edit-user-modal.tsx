@@ -29,16 +29,17 @@ interface EditUserModalProps {
 export default function EditUserModal({ member, isOpen, onClose, onSuccess }: EditUserModalProps) {
   const [name, setName] = useState(member.name);
   const [email, setEmail] = useState(member.email);
-  const [role, setRole] = useState<'member' | 'admin'>(member.role === 'owner' ? 'admin' : member.role);
+  const [role, setRole] = useState<'owner' | 'member' | 'admin'>(member.role);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const isOwner = member.role === 'owner';
 
   // モーダルが開くたびにフォームをリセット
   useEffect(() => {
     if (isOpen) {
       setName(member.name);
       setEmail(member.email);
-      setRole(member.role === 'owner' ? 'admin' : member.role);
+      setRole(member.role);
       setError('');
     }
   }, [isOpen, member]);
@@ -177,21 +178,28 @@ export default function EditUserModal({ member, isOpen, onClose, onSuccess }: Ed
             <select
               id="edit-role"
               value={role}
-              onChange={(e) => setRole(e.target.value as 'member' | 'admin')}
-              disabled={isLoading}
+              onChange={(e) => setRole(e.target.value as 'owner' | 'member' | 'admin')}
+              disabled={isLoading || isOwner}
               style={{
                 width: '100%',
                 padding: '0.5rem',
-                background: '#262626',
-                color: '#e5e5e5',
+                background: isOwner ? '#1a1a1a' : '#262626',
+                color: isOwner ? '#71717a' : '#e5e5e5',
                 border: '1px solid #404040',
                 borderRadius: '4px',
                 boxSizing: 'border-box',
+                cursor: isOwner ? 'not-allowed' : 'pointer',
               }}
             >
+              {isOwner && <option value="owner">Owner</option>}
               <option value="member">Member</option>
               <option value="admin">Admin</option>
             </select>
+            {isOwner && (
+              <p style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '0.5rem' }}>
+                ※ Ownerのロールは変更できません
+              </p>
+            )}
           </div>
 
           {/* ボタン */}

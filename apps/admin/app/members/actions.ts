@@ -470,10 +470,10 @@ export async function updateUser(
     };
   }
 
-  if (!newRole || !['member', 'admin'].includes(newRole)) {
+  if (!newRole || !['owner', 'member', 'admin'].includes(newRole)) {
     return {
       success: false,
-      error: 'ロールはmemberまたはadminを指定してください',
+      error: 'ロールはowner, member, adminのいずれかを指定してください',
     };
   }
 
@@ -524,20 +524,21 @@ export async function updateUser(
   }
 
   const oldRole = targetUser.role;
+  const isTargetOwner = targetUser.role === 'owner';
 
-  // 5-2. ownerのロール変更は禁止
-  if (targetUser.role === 'owner') {
-    return {
-      success: false,
-      error: 'ownerの情報は変更できません。',
-    };
-  }
-
-  // 5-3. 変更先ロールがownerの場合も禁止
-  if (newRole === 'owner') {
+  // 5-2. ownerへのロール変更は禁止（譲渡機能を使用）
+  if (!isTargetOwner && newRole === 'owner') {
     return {
       success: false,
       error: 'この機能ではownerロールへの変更はできません。',
+    };
+  }
+
+  // 5-3. ownerの場合、ロール変更が試みられていたら拒否
+  if (isTargetOwner && newRole !== 'owner') {
+    return {
+      success: false,
+      error: 'ownerのロールは変更できません。',
     };
   }
 
@@ -558,16 +559,18 @@ export async function updateUser(
     return { success: false, error: 'ユーザー情報の更新に失敗しました' };
   }
 
-  // 7. ロール変更処理
-  const { error: updateError } = await supabaseAdmin
-    .from('profiles')
-    .update({ role: newRole, updated_at: new Date().toISOString() })
-    .eq('user_id', targetUserId)
-    .eq('org_id', org.orgId);
+  // 7. ロール変更処理（ownerの場合はスキップ）
+  if (!isTargetOwner) {
+    const { error: updateError } = await supabaseAdmin
+      .from('profiles')
+      .update({ role: newRole, updated_at: new Date().toISOString() })
+      .eq('user_id', targetUserId)
+      .eq('org_id', org.orgId);
 
-  if (updateError) {
-    console.error('[updateUser] Role update error:', updateError);
-    return { success: false, error: 'ロールの変更に失敗しました' };
+    if (updateError) {
+      console.error('[updateUser] Role update error:', updateError);
+      return { success: false, error: 'ロールの変更に失敗しました' };
+    }
   }
 
   // 8. 監査ログ記録
