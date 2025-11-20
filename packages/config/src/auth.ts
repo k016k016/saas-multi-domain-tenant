@@ -276,6 +276,54 @@ export async function getCurrentRole(): Promise<RoleContext | null> {
  * - member: 基本権限のみ
  * - ops: 事業者側の特殊ロール
  */
+/**
+ * ユーザーの所属組織一覧を取得
+ *
+ * @returns 所属組織の配列（OPS組織を除く）
+ */
+export async function getUserOrganizations(): Promise<Array<{ id: string; name: string; slug: string }>> {
+  try {
+    const supabase = await createServerClient();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.user?.id) {
+      return [];
+    }
+
+    const userId = session.user.id;
+    const adminSupabase = getSupabaseAdmin();
+
+    // profilesテーブルからユーザーが所属する組織IDを取得
+    const { data: profiles, error: profilesError } = await adminSupabase
+      .from('profiles')
+      .select('org_id')
+      .eq('user_id', userId);
+
+    if (profilesError || !profiles || profiles.length === 0) {
+      return [];
+    }
+
+    const orgIds = profiles.map(p => p.org_id);
+
+    // organizationsテーブルから組織情報を取得（OPS組織を除外）
+    const { data: orgs, error: orgsError } = await adminSupabase
+      .from('organizations')
+      .select('id, name, slug')
+      .in('id', orgIds)
+      .neq('slug', 'ops-system') // OPS組織を除外
+      .order('name');
+
+    if (orgsError || !orgs) {
+      return [];
+    }
+
+    return orgs;
+  } catch (error) {
+    console.error('[getUserOrganizations] Unexpected error:', error);
+    return [];
+  }
+}
+
 export function hasRole(userRole: Role, requiredRole: Role): boolean {
   if (requiredRole === 'ops') {
     return userRole === 'ops';

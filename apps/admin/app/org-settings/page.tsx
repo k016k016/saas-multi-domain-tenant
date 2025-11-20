@@ -21,7 +21,7 @@
  */
 
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 // cookies()を使用するため、動的レンダリングを強制
 export const dynamic = 'force-dynamic';
@@ -33,7 +33,7 @@ export default async function OrgSettingsPage() {
 
   // ADMIN domain: owner のみアクセス可能
   if (!role || role !== 'owner') {
-    notFound();
+    redirect('/unauthorized');
   }
 
   return (

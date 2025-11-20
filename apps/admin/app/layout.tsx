@@ -9,17 +9,21 @@
 
 import type { Metadata } from 'next';
 import SignOutButton from './signout-button';
+import OrgSwitcher from '../../app/app/org-switcher';
+import { getCurrentOrg, getUserOrganizations } from '@repo/config';
 
 export const metadata: Metadata = {
   title: 'Admin - SaaS Multi-Tenant',
   description: '組織管理・請求UI (admin/owner専用)',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const org = await getCurrentOrg();
+  const availableOrgs = await getUserOrganizations();
   return (
     <html lang="ja">
       <body style={{
@@ -47,7 +51,15 @@ export default function RootLayout({
               <a href="/org-settings" style={{ color: '#fcd34d', textDecoration: 'none' }}>組織設定</a>
             </div>
           </div>
-          <SignOutButton />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {org && availableOrgs.length > 0 && (
+              <OrgSwitcher
+                currentOrg={{ id: org.orgId, name: org.orgName, slug: availableOrgs.find(o => o.id === org.orgId)?.slug || '' }}
+                availableOrgs={availableOrgs}
+              />
+            )}
+            <SignOutButton />
+          </div>
         </nav>
         {children}
       </body>
