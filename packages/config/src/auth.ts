@@ -12,9 +12,11 @@
  * - org_idベースのアクセス制御とRLSは必須であり、バイパスは許可しない。
  * - デフォルトでmemberにしない、未所属orgへのアクセスは許可しない。
  * - Server Component / Server Action のみで使用（Client Componentでは使用禁止）
+ * - Phase 2: X-Org-Slug ヘッダーがある場合はslugから組織を解決
  */
 
 import { createServerClient, getSupabaseAdmin } from '@repo/db';
+import { headers } from 'next/headers';
 
 export type Role = 'member' | 'admin' | 'owner' | 'ops';
 
@@ -30,8 +32,9 @@ export interface RoleContext {
 /**
  * 現在アクティブな組織コンテキストを取得
  *
- * user_org_context テーブルからアクティブな org_id を取得し、
- * organizations テーブルから組織情報を取得。
+ * Phase 2対応:
+ * - X-Org-Slugヘッダーがある場合: slugから組織を解決（Host-based organization resolution）
+ * - X-Org-Slugヘッダーがない場合: user_org_contextからorg_idを取得（従来方式）
  *
  * 【重要な制約】
  * - Session が無い場合は null を返す
@@ -54,41 +57,81 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
     }
 
     const userId = session.user.id;
-
-    // 2. user_org_context から active org_id を取得
-    // 注: Admin クライアントを使用して RLS をバイパス
-    //     （認証済みユーザーが自分自身の user_org_context を取得するだけなのでセキュリティ上問題なし）
     const adminSupabase = getSupabaseAdmin();
-    const { data: context, error: contextError } = await adminSupabase
-      .from('user_org_context')
-      .select('org_id')
-      .eq('user_id', userId)
-      .single();
 
-    if (contextError || !context) {
-      // アクティブな組織が無い → null を返す（呼び出し側で /switch-org へ誘導）
-      return null;
+    // Phase 2: X-Org-Slug ヘッダーをチェック
+    const headersList = await headers();
+    const orgSlug = headersList.get('x-org-slug');
+
+    let orgId: string;
+
+    if (orgSlug) {
+      // Phase 2: slugから組織を解決
+      const { data: org, error: orgError } = await adminSupabase
+        .from('organizations')
+        .select('id, name')
+        .eq('slug', orgSlug)
+        .single();
+
+      if (orgError || !org) {
+        console.error('[getCurrentOrg] Organization not found by slug:', { orgSlug, error: orgError });
+        // slug で組織が見つからない → null を返す
+        return null;
+      }
+
+      // ユーザーがその組織のメンバーかチェック
+      const { data: profile, error: profileError } = await adminSupabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('org_id', org.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('[getCurrentOrg] User not a member of organization:', { userId, orgId: org.id, error: profileError });
+        // ユーザーがこの組織に所属していない → null を返す
+        return null;
+      }
+
+      return {
+        orgId: org.id,
+        orgName: org.name,
+      };
+    } else {
+      // Phase 1: user_org_context から active org_id を取得（従来方式）
+      // 注: Admin クライアントを使用して RLS をバイパス
+      //     （認証済みユーザーが自分自身の user_org_context を取得するだけなのでセキュリティ上問題なし）
+      const { data: context, error: contextError } = await adminSupabase
+        .from('user_org_context')
+        .select('org_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (contextError || !context) {
+        // アクティブな組織が無い → null を返す（呼び出し側で /switch-org へ誘導）
+        return null;
+      }
+
+      orgId = context.org_id;
+
+      // organizations から組織情報を取得
+      const { data: org, error: orgError } = await adminSupabase
+        .from('organizations')
+        .select('id, name')
+        .eq('id', orgId)
+        .single();
+
+      if (orgError || !org) {
+        console.error('[getCurrentOrg] Organization not found:', { orgId, error: orgError });
+        // 組織が見つからない → null を返す
+        return null;
+      }
+
+      return {
+        orgId: org.id,
+        orgName: org.name,
+      };
     }
-
-    const orgId = context.org_id;
-
-    // 3. organizations から組織情報を取得
-    const { data: org, error: orgError } = await adminSupabase
-      .from('organizations')
-      .select('id, name')
-      .eq('id', orgId)
-      .single();
-
-    if (orgError || !org) {
-      console.error('[getCurrentOrg] Organization not found:', { orgId, error: orgError });
-      // 組織が見つからない → null を返す
-      return null;
-    }
-
-    return {
-      orgId: org.id,
-      orgName: org.name,
-    };
   } catch (error) {
     console.error('[getCurrentOrg] Unexpected error:', error);
     return null;
@@ -98,8 +141,9 @@ export async function getCurrentOrg(): Promise<OrgContext | null> {
 /**
  * 現在のユーザーのロールを取得
  *
- * Supabase Sessionから user_id を取得し、user_org_context から active org_id を取得して、
- * profiles テーブルから該当ユーザーのロールを取得。
+ * Phase 2対応:
+ * - X-Org-Slugヘッダーがある場合: slugから組織を解決してロール取得
+ * - X-Org-Slugヘッダーがない場合: user_org_contextからorg_idを取得してロール取得（従来方式）
  *
  * 【重要な制約】
  * - Session が無い場合は null を返す（デフォルトでmemberにしない）
@@ -125,25 +169,48 @@ export async function getCurrentRole(): Promise<RoleContext | null> {
     }
 
     const userId = session.user.id;
-
-    // 2. user_org_context から active org_id を取得
-    // 注: Admin クライアントを使用して RLS をバイパス
-    //     （認証済みユーザーが自分自身の user_org_context を取得するだけなのでセキュリティ上問題なし）
     const adminSupabase = getSupabaseAdmin();
-    const { data: context, error: contextError } = await adminSupabase
-      .from('user_org_context')
-      .select('org_id')
-      .eq('user_id', userId)
-      .single();
 
-    if (contextError || !context) {
-      // アクティブな組織が無い → null を返す
-      return null;
+    // Phase 2: X-Org-Slug ヘッダーをチェック
+    const headersList = await headers();
+    const orgSlug = headersList.get('x-org-slug');
+
+    let orgId: string;
+
+    if (orgSlug) {
+      // Phase 2: slugから組織を解決
+      const { data: org, error: orgError } = await adminSupabase
+        .from('organizations')
+        .select('id')
+        .eq('slug', orgSlug)
+        .single();
+
+      if (orgError || !org) {
+        console.error('[getCurrentRole] Organization not found by slug:', { orgSlug, error: orgError });
+        // slug で組織が見つからない → null を返す
+        return null;
+      }
+
+      orgId = org.id;
+    } else {
+      // Phase 1: user_org_context から active org_id を取得（従来方式）
+      // 注: Admin クライアントを使用して RLS をバイパス
+      //     （認証済みユーザーが自分自身の user_org_context を取得するだけなのでセキュリティ上問題なし）
+      const { data: context, error: contextError } = await adminSupabase
+        .from('user_org_context')
+        .select('org_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (contextError || !context) {
+        // アクティブな組織が無い → null を返す
+        return null;
+      }
+
+      orgId = context.org_id;
     }
 
-    const orgId = context.org_id;
-
-    // 3. profiles テーブルから role を SELECT
+    // profiles テーブルから role を SELECT
     const { data: profile, error: profileError } = await adminSupabase
       .from('profiles')
       .select('role')
