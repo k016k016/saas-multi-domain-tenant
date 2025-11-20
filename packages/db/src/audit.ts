@@ -27,6 +27,7 @@ export type AuditAction =
   | 'user_invited'          // ユーザー招待
   | 'role_changed'          // ロール変更
   | 'user_removed'          // ユーザー削除/無効化
+  | 'user_updated'          // ユーザー情報更新
   | 'payment_updated'       // 支払い情報変更（将来実装）
   | 'org_suspended'         // 組織凍結/廃止（将来実装）
   | 'owner_transferred';    // owner権限譲渡（将来実装）
