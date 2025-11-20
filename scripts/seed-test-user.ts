@@ -33,6 +33,10 @@ const TEST_ORG_NAME = 'Test Organization';
 const TEST_ORG_ID_2 = '00000000-0000-0000-0000-000000000002';
 const TEST_ORG_NAME_2 = 'Test Organization Beta';
 
+// OPSシステム用の組織（ops権限管理用）
+const OPS_ORG_ID = '00000000-0000-0000-0000-000000000099';
+const OPS_ORG_NAME = 'OPS System Organization';
+
 // E2Eテストで使用するテストユーザー
 // ロールごとに異なるメールアドレスを使用
 const TEST_USERS = [
@@ -40,6 +44,7 @@ const TEST_USERS = [
   { email: 'admin1@example.com', role: 'admin', name: '鈴木 花子' },
   { email: 'owner1@example.com', role: 'owner', name: '山田 一郎' },
   { email: 'owner2@example.com', role: 'owner', name: '佐藤 次郎' },
+  { email: 'ops1@example.com', role: 'ops', name: 'OPS管理者' },
 ] as const;
 
 async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
@@ -50,6 +55,7 @@ async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
     .upsert({
       id: TEST_ORG_ID,
       name: TEST_ORG_NAME,
+      slug: 'acme',
       plan: 'business',
       is_active: true,
     })
@@ -70,6 +76,7 @@ async function upsertOrganization2(supabase: ReturnType<typeof createClient>) {
     .upsert({
       id: TEST_ORG_ID_2,
       name: TEST_ORG_NAME_2,
+      slug: 'beta',
       plan: 'business',
       is_active: true,
     })
@@ -80,6 +87,27 @@ async function upsertOrganization2(supabase: ReturnType<typeof createClient>) {
   }
 
   console.log(`✅ Second test organization upserted successfully (ID: ${TEST_ORG_ID_2})`);
+}
+
+async function upsertOpsOrganization(supabase: ReturnType<typeof createClient>) {
+  console.log(`🏢 Upserting OPS system organization (${OPS_ORG_NAME})...`);
+
+  const { error } = await supabase
+    .from('organizations')
+    .upsert({
+      id: OPS_ORG_ID,
+      name: OPS_ORG_NAME,
+      slug: 'ops-system',
+      plan: 'enterprise',
+      is_active: true,
+    })
+    .select();
+
+  if (error) {
+    throw new Error(`Failed to upsert OPS organization: ${error.message}`);
+  }
+
+  console.log(`✅ OPS system organization upserted successfully (ID: ${OPS_ORG_ID})`);
 }
 
 async function upsertUser(
@@ -157,7 +185,15 @@ async function upsertUser(
   // ユーザーごとに所属組織とロールを決定
   let orgRoles: Array<{ orgId: string; role: string }>;
 
-  if (email === 'member1@example.com') {
+  if (email === 'ops1@example.com') {
+    // ops1: OPS組織にopsロールで登録 + org1のadminとしても登録
+    // opsドメインアクセスにはOPS組織のopsロールを使用
+    // 通常組織へのアクセスにはorg1のadminロールを使用
+    orgRoles = [
+      { orgId: OPS_ORG_ID, role: 'owner' }, // OPS組織のowner（opsロールの代わり）
+      { orgId: TEST_ORG_ID, role: 'admin' }, // 通常組織のadmin
+    ];
+  } else if (email === 'member1@example.com') {
     // member1: org1ではmember、org2ではadmin（ロール変化パターン）
     orgRoles = [
       { orgId: TEST_ORG_ID, role: 'member' },
@@ -299,6 +335,7 @@ async function main() {
   // テスト用組織を作成/更新
   await upsertOrganization(supabase);
   await upsertOrganization2(supabase);
+  await upsertOpsOrganization(supabase);
 
   // 各テストユーザーを作成/更新
   for (const user of TEST_USERS) {

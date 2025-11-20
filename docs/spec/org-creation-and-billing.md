@@ -212,7 +212,17 @@ create table if not exists billing_accounts (
    - 必須: 任意
    - 用途: 手動契約ID、請求書宛名、営業メモなどの自由記述。
 
-※ 初期 owner のメールアドレス入力は Phase1 では必須としない（invitation 機能を別で定義するため）。
+7. 初期 owner のメールアドレス
+   - フィールド名: `ownerEmail`
+   - 型: string
+   - 必須: 必須
+   - バリデーション:
+     - メール形式チェック
+   - 挙動（Phase1の前提）:
+     - Supabase Auth (`auth.admin.createUser`) で **新規 owner ユーザーを作成**する
+     - メールアドレスが既に登録済みの場合はエラーとし、組織作成をロールバックする
+     - 作成したユーザーを `profiles` / `memberships` に `role = 'owner'` で登録する
+     - `user_org_context` にこの org をデフォルト org として upsert する（owner にとっての初期 org として扱う）
 
 ### 5.3 バリデーションフロー
 
@@ -378,4 +388,3 @@ export async function createOrganization(
 
 という形でコード生成すればよい。  
 （このファイルが「ops からの org 作成＋サブドメイン前提」の唯一の仕様書として振る舞う想定）
-

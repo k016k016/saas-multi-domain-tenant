@@ -19,12 +19,12 @@ import { uiLogin } from '../../helpers/auth';
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('Admin URL-based Organization Resolution', () => {
-  test('動的ルート /o/acme/members で Test Organization のメンバー一覧が表示される', async ({ page }) => {
+  test('動的ルート /org/acme/members で Test Organization のメンバー一覧が表示される', async ({ page }) => {
     // owner1でログイン
     await uiLogin(page, 'owner1@example.com', PASSWORD);
 
     // 動的ルートでアクセス
-    await page.goto('http://admin.local.test:3003/o/acme/members');
+    await page.goto('http://admin.local.test:3003/org/acme/members');
 
     // ページタイトルとメンバー一覧が表示される
     await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
@@ -34,12 +34,12 @@ test.describe('Admin URL-based Organization Resolution', () => {
     await expect(page.getByText('owner1@example.com')).toBeVisible();
   });
 
-  test('動的ルート /o/beta/members で Test Organization Beta のメンバー一覧が表示される', async ({ page }) => {
+  test('動的ルート /org/beta/members で Test Organization Beta のメンバー一覧が表示される', async ({ page }) => {
     // owner2でログイン
     await uiLogin(page, 'owner2@example.com', PASSWORD);
 
     // 動的ルートでアクセス
-    await page.goto('http://admin.local.test:3003/o/beta/members');
+    await page.goto('http://admin.local.test:3003/org/beta/members');
 
     // ページタイトルとメンバー一覧が表示される
     await expect(page.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
@@ -79,24 +79,24 @@ test.describe('Admin URL-based Organization Resolution', () => {
     await expect(page.getByText('owner2@example.com')).toBeVisible();
   });
 
-  test('動的ルート /o/acme/org-settings で Test Organization の組織設定が表示される', async ({ page }) => {
+  test('動的ルート /org/acme/org-settings で Test Organization の組織設定が表示される', async ({ page }) => {
     // owner1でログイン
     await uiLogin(page, 'owner1@example.com', PASSWORD);
 
     // 動的ルートでアクセス
-    await page.goto('http://admin.local.test:3003/o/acme/org-settings');
+    await page.goto('http://admin.local.test:3003/org/acme/org-settings');
 
     // 組織設定ページが表示される
     await expect(page.getByRole('heading', { name: '組織設定' })).toBeVisible();
     await expect(page.getByText('Test Organization')).toBeVisible();
   });
 
-  test('動的ルート /o/acme/audit-logs で Test Organization の監査ログが表示される', async ({ page }) => {
+  test('動的ルート /org/acme/audit-logs で Test Organization の監査ログが表示される', async ({ page }) => {
     // owner1でログイン
     await uiLogin(page, 'owner1@example.com', PASSWORD);
 
     // 動的ルートでアクセス
-    await page.goto('http://admin.local.test:3003/o/acme/audit-logs');
+    await page.goto('http://admin.local.test:3003/org/acme/audit-logs');
 
     // 監査ログページが表示される
     await expect(page.getByRole('heading', { name: '監査ログ' })).toBeVisible();
@@ -108,7 +108,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
     await uiLogin(page, 'owner1@example.com', PASSWORD);
 
     // 存在しない組織のslugでアクセス
-    await page.goto('http://admin.local.test:3003/o/nonexistent/members');
+    await page.goto('http://admin.local.test:3003/org/nonexistent/members');
 
     // 404ページが表示される
     await expect(page.getByText(/not found|404/i)).toBeVisible();
@@ -119,7 +119,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
     await uiLogin(page, 'owner1@example.com', PASSWORD);
 
     // owner1が所属していないTest Organization Beta (beta)にアクセス
-    await page.goto('http://admin.local.test:3003/o/beta/members');
+    await page.goto('http://admin.local.test:3003/org/beta/members');
 
     // 404ページが表示される
     await expect(page.getByText(/not found|404/i)).toBeVisible();

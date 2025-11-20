@@ -15,8 +15,8 @@
  * - ownerのロール変更・削除は禁止（Server Actionで制御）
  */
 
-import { getCurrentOrg, getCurrentRole } from '@repo/config';
-import { getSupabaseAdmin } from '@repo/db';
+import { getCurrentOrg } from '@repo/config';
+import { getSupabaseAdmin, createServerClient } from '@repo/db';
 import { notFound, redirect } from 'next/navigation';
 import MembersPageClient from '../../../members/members-page-client';
 
@@ -35,16 +35,32 @@ export default async function MembersPageWithOrgSlug({ params }: PageProps) {
 
   // orgSlugを指定してgetCurrentOrgを呼び出す
   const org = await getCurrentOrg({ orgSlug });
-  const roleContext = await getCurrentRole();
-  const currentUserRole = roleContext?.role;
+
+  if (!org) {
+    notFound();
+  }
+
+  // この組織でのユーザーのロールを取得
+  const supabase = await createServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    redirect('/unauthorized');
+  }
+
+  const adminSupabase = getSupabaseAdmin();
+  const { data: profile } = await adminSupabase
+    .from('profiles')
+    .select('role')
+    .eq('user_id', session.user.id)
+    .eq('org_id', org.orgId)
+    .single();
+
+  const currentUserRole = profile?.role as 'owner' | 'admin' | 'member' | undefined;
 
   // ADMIN domain: admin/owner のみアクセス可能
   if (!currentUserRole || (currentUserRole !== 'admin' && currentUserRole !== 'owner')) {
     redirect('/unauthorized');
-  }
-
-  if (!org) {
-    notFound();
   }
 
   // Supabase profilesテーブルから組織のメンバー一覧を取得（Service Role Key使用）

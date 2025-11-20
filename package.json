@@ -14,6 +14,8 @@
     "test:e2e:p2": "playwright test e2e/tests/p2-members-audit --project=p2-chromium",
     "test:e2e:p1:ui": "playwright test e2e/tests/p1-baseline --project=p1-chromium --ui",
     "test:e2e:p2:ui": "playwright test e2e/tests/p2-members-audit --project=p2-chromium --ui",
+    "test:e2e:p3": "pnpm setup:e2e && playwright test e2e/tests/p3-ops-orgs --project=p3-chromium",
+    "test:e2e:p4": "pnpm setup:e2e && playwright test e2e/tests/p4-boundary --project=p4-chromium",
     "setup:e2e": "tsx scripts/seed-test-user.ts",
     "seed:create-users": "tsx infra/supabase/seeds/create-auth-users.ts",
     "seed:run": "./infra/supabase/seeds/run-seeds.sh",

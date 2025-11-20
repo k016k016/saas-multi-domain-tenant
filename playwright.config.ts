@@ -60,6 +60,12 @@ export default defineConfig({
       testMatch: /e2e\/tests\/p3-ops-orgs\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
+    // Phase 4: 境界系・回帰用E2E（chromium のみ）
+    {
+      name: 'p4-chromium',
+      testMatch: /e2e\/tests\/p4-boundary\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
     // 旧プロジェクト定義（互換性のため残す）
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },
     { name: 'app', use: { baseURL: APP_URL, ...devices['Desktop Chrome'] } },
