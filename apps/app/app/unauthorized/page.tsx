@@ -4,7 +4,15 @@
  * 責務:
  * - アクセス権限がないユーザーに403エラーページを表示
  * - ホームへの戻るリンクを提供
+ *
+ * 注意:
+ * - 親レイアウトで getCurrentOrg()（= cookies()）を使用しているため、
+ *   このページは dynamic として扱う（SSR専用）。表示内容は静的であり、
+ *   セッション情報や機密データは含めない。
  */
+
+// 親レイアウトが cookies() を使うため、このルートを動的扱いにしてビルドエラーを防ぐ
+export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 

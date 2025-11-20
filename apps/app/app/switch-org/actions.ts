@@ -114,7 +114,7 @@ export async function switchOrganization(
     }
 
     // 6. Phase 3: 組織のslugを取得してサブドメインURLを生成
-    const { data: org, error: orgError } = await adminSupabase
+    const { data: org, error: orgError } = await supabase
       .from('organizations')
       .select('slug')
       .eq('id', targetOrgId)

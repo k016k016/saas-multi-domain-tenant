@@ -53,7 +53,8 @@ export default function OrgList({ organizations, onEdit, onDeleteSuccess }: OrgL
         onDeleteSuccess();
         router.refresh();
       } else {
-        setError(result.error);
+        // result.error は undefined の可能性があるため、フォールバックメッセージを用意する
+        setError(result.error || '組織の削除に失敗しました');
       }
     } catch (err) {
       setError('組織の削除に失敗しました');

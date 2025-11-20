@@ -23,7 +23,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 /**
  * 監査ログのアクション種別
  */
-type AuditAction = 'org_switched' | 'user_invited' | 'role_changed' | 'user_removed' | 'user_updated' | 'payment_updated' | 'org_suspended' | 'owner_transferred';
+type AuditAction = 'org_switched' | 'user_invited' | 'role_changed' | 'user_removed' | 'user_updated' | 'organization_created' | 'payment_updated' | 'org_suspended' | 'owner_transferred';
 /**
  * 監査ログのペイロード型
  */

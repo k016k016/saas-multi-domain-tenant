@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   description: '組織管理・請求UI (admin/owner専用)',
 };
 
+// 親レイアウトで getCurrentOrg()（= cookies()）を使用するため、
+// admin 配下のルートはすべて dynamic として扱う（SSR専用）。
+export const dynamic = 'force-dynamic';
+
 export default async function RootLayout({
   children,
 }: {
