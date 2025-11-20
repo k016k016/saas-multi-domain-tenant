@@ -29,4 +29,34 @@ test.describe('エラーハンドリング（フォーム）', () => {
     // エラーメッセージ: "メールアドレスの形式が正しくありません"
     await expect(page.getByText(/形式が正しくありません/i)).toBeVisible();
   });
+
+  test('招待フォーム → パスワード6文字未満でエラー表示', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/members`);
+
+    // 短いパスワードで送信
+    await page.locator('input#name').fill('テストユーザー');
+    await page.locator('input#email').fill(`short-pass-${Date.now()}@example.com`);
+    await page.locator('input#password').fill('12345');
+    await page.locator('select#role').selectOption('member');
+    await page.getByRole('button', { name: /追加/i }).click();
+
+    // エラーメッセージ
+    await expect(page.getByText(/6文字以上/i)).toBeVisible();
+  });
+
+  test('招待フォーム → 重複メールでエラー表示', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/members`);
+
+    // 既存ユーザーのメールアドレスで送信
+    await page.locator('input#name').fill('テストユーザー');
+    await page.locator('input#email').fill(ADMIN.email);
+    await page.locator('input#password').fill(PASSWORD);
+    await page.locator('select#role').selectOption('member');
+    await page.getByRole('button', { name: /追加/i }).click();
+
+    // エラーメッセージ（登録済みメールアドレス）
+    await expect(page.getByText(/既に登録|already registered|使用されています/i)).toBeVisible();
+  });
 });

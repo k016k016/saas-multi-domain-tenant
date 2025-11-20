@@ -62,6 +62,19 @@ export async function resetUserToOrg1(email: string): Promise<void> {
     throw new Error(`Failed to reset user org context: ${contextError.message}`);
   }
 
+  // member1の場合はroleもmemberにリセット
+  if (email === 'member1@example.com') {
+    const { error: roleError } = await supabase
+      .from('profiles')
+      .update({ role: 'member' })
+      .eq('user_id', user.id)
+      .eq('org_id', TEST_ORG_ID);
+
+    if (roleError) {
+      throw new Error(`Failed to reset user role: ${roleError.message}`);
+    }
+  }
+
   console.log(`✅ [DB Helper] Reset ${email} to org1`);
 }
 

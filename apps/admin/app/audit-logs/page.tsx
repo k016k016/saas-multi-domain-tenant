@@ -73,7 +73,7 @@ function formatDetails(action: AuditAction, payload: Record<string, unknown>): s
 export default async function AuditLogsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ action?: string; days?: string }>;
+  searchParams: Promise<{ action?: string; days?: string; name?: string; email?: string }>;
 }) {
   const org = await getCurrentOrg();
   const roleContext = await getCurrentRole();
@@ -91,6 +91,8 @@ export default async function AuditLogsPage({
   const params = await searchParams;
   const actionFilter = params.action;
   const daysFilter = params.days ? parseInt(params.days, 10) : 7; // デフォルト7日間
+  const nameFilter = params.name?.toLowerCase() || '';
+  const emailFilter = params.email?.toLowerCase() || '';
 
   // フィルタリング用の開始日時を計算
   const startDate = new Date();
@@ -111,6 +113,7 @@ export default async function AuditLogsPage({
     query = query.eq('action', actionFilter);
   }
 
+
   const { data: logs, error } = await query;
 
   if (error) {
@@ -119,32 +122,50 @@ export default async function AuditLogsPage({
 
   const activityLogs: ActivityLog[] = logs || [];
 
-  // 実行者のユーザー情報を取得
-  const userIds = [...new Set(activityLogs.map(log => log.user_id))];
+  // 組織内のユーザー一覧を取得（フィルタ用）
+  const { data: profilesData } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('org_id', org.orgId);
+
+  const orgUserIds = profilesData?.map(p => p.user_id) || [];
+
+  // Admin APIでユーザー一覧を取得
   const userMap = new Map<string, UserInfo>();
 
-  if (userIds.length > 0) {
-    // Admin APIでユーザー一覧を取得
-    const { data: usersData } = await supabase.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
+  const { data: usersData } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
 
-    if (usersData?.users) {
-      for (const user of usersData.users) {
-        if (userIds.includes(user.id)) {
-          userMap.set(user.id, {
-            id: user.id,
-            email: user.email || '不明',
-            name: (user.user_metadata?.name as string) || '',
-          });
-        }
+  if (usersData?.users) {
+    for (const user of usersData.users) {
+      if (orgUserIds.includes(user.id)) {
+        userMap.set(user.id, {
+          id: user.id,
+          email: user.email || '不明',
+          name: (user.user_metadata?.name as string) || '',
+        });
       }
     }
   }
 
+  // 名前・メールで部分一致フィルタ
+  const filteredLogs = activityLogs.filter(log => {
+    const user = userMap.get(log.user_id);
+    if (!user) return true; // ユーザー情報がない場合は表示
+
+    if (nameFilter && !user.name.toLowerCase().includes(nameFilter)) {
+      return false;
+    }
+    if (emailFilter && !user.email.toLowerCase().includes(emailFilter)) {
+      return false;
+    }
+    return true;
+  });
+
   // CSVデータを生成
-  const csvData = activityLogs.map(log => {
+  const csvData = filteredLogs.map(log => {
     const user = userMap.get(log.user_id);
     return {
       日時: new Date(log.created_at).toLocaleString('ja-JP'),
@@ -169,7 +190,7 @@ export default async function AuditLogsPage({
     <div style={{ padding: '2rem', background: '#1a1a1a', minHeight: '100vh', color: '#e5e5e5' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ margin: 0 }}>監査ログ</h1>
-        {activityLogs.length > 0 && (
+        {filteredLogs.length > 0 && (
           <a
             href={csvDataUri}
             download={`audit-logs-${new Date().toISOString().split('T')[0]}.csv`}
@@ -243,6 +264,48 @@ export default async function AuditLogsPage({
             </select>
           </div>
 
+          <div>
+            <label htmlFor="name" style={{ display: 'block', fontSize: '0.875rem', color: '#a1a1aa', marginBottom: '0.5rem' }}>
+              実行者名
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              defaultValue={params.name || ''}
+              placeholder="部分一致"
+              style={{
+                padding: '0.5rem',
+                background: '#1a1a1a',
+                color: '#e5e5e5',
+                border: '1px solid #404040',
+                borderRadius: '4px',
+                width: '120px',
+              }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="email" style={{ display: 'block', fontSize: '0.875rem', color: '#a1a1aa', marginBottom: '0.5rem' }}>
+              メールアドレス
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="text"
+              defaultValue={params.email || ''}
+              placeholder="部分一致"
+              style={{
+                padding: '0.5rem',
+                background: '#1a1a1a',
+                color: '#e5e5e5',
+                border: '1px solid #404040',
+                borderRadius: '4px',
+                width: '150px',
+              }}
+            />
+          </div>
+
           <button
             type="submit"
             style={{
@@ -276,17 +339,20 @@ export default async function AuditLogsPage({
               <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#a1a1aa', textTransform: 'uppercase' }}>
                 対象・詳細
               </th>
+              <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#a1a1aa', textTransform: 'uppercase' }}>
+                JSON
+              </th>
             </tr>
           </thead>
           <tbody>
-            {activityLogs.length === 0 ? (
+            {filteredLogs.length === 0 ? (
               <tr>
-                <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#71717a' }}>
+                <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#71717a' }}>
                   監査ログが見つかりませんでした
                 </td>
               </tr>
             ) : (
-              activityLogs.map((log) => {
+              filteredLogs.map((log) => {
                 const user = userMap.get(log.user_id);
                 return (
                   <tr key={log.id} style={{ borderBottom: '1px solid #404040' }}>
@@ -329,9 +395,11 @@ export default async function AuditLogsPage({
                       )}
                     </td>
                     <td style={{ padding: '1rem', fontSize: '0.875rem' }}>
-                      <div>{formatDetails(log.action, log.payload)}</div>
-                      <details style={{ cursor: 'pointer', marginTop: '0.5rem' }}>
-                        <summary style={{ color: '#60a5fa', fontSize: '0.75rem' }}>JSON詳細</summary>
+                      {formatDetails(log.action, log.payload)}
+                    </td>
+                    <td style={{ padding: '1rem', fontSize: '0.875rem' }}>
+                      <details style={{ cursor: 'pointer' }}>
+                        <summary style={{ color: '#60a5fa', fontSize: '0.75rem' }}>表示</summary>
                         <pre
                           style={{
                             marginTop: '0.5rem',
@@ -341,6 +409,7 @@ export default async function AuditLogsPage({
                             fontSize: '0.75rem',
                             overflow: 'auto',
                             color: '#a1a1aa',
+                            maxWidth: '300px',
                           }}
                         >
                           {JSON.stringify(log.payload, null, 2)}
@@ -357,10 +426,12 @@ export default async function AuditLogsPage({
 
       {/* 結果サマリー */}
       <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#71717a' }}>
-        {activityLogs.length > 0 && (
+        {filteredLogs.length > 0 && (
           <p>
-            {activityLogs.length} 件のログを表示中（過去{daysFilter}日間
+            {filteredLogs.length} 件のログを表示中（過去{daysFilter}日間
             {actionFilter && actionFilter !== 'all' && `、${ACTION_LABELS[actionFilter]}のみ`}
+            {nameFilter && `、名前「${params.name}」`}
+            {emailFilter && `、メール「${params.email}」`}
             ）
           </p>
         )}

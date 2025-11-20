@@ -70,4 +70,55 @@ test.describe('監査ログ閲覧UI', () => {
 
     await expect(page).toHaveURL(/days=30/);
   });
+
+  test('admin → 実行者名でフィルタリングできる', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/audit-logs`);
+
+    // 実行者名フィルタに入力
+    await page.locator('input#name').fill('鈴木');
+    await page.getByRole('button', { name: /フィルタ適用/i }).click();
+
+    await expect(page).toHaveURL(/name=%E9%88%B4%E6%9C%A8/);
+  });
+
+  test('admin → メールアドレスでフィルタリングできる', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/audit-logs`);
+
+    // メールフィルタに入力
+    await page.locator('input#email').fill('admin1');
+    await page.getByRole('button', { name: /フィルタ適用/i }).click();
+
+    await expect(page).toHaveURL(/email=admin1/);
+  });
+
+  test('admin → 複合フィルタが適用される', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/audit-logs`);
+
+    // 複数条件を設定
+    await page.locator('select#action').selectOption('user_invited');
+    await page.locator('select#days').selectOption('30');
+    await page.locator('input#email').fill('admin');
+    await page.getByRole('button', { name: /フィルタ適用/i }).click();
+
+    // URLに全条件が含まれる
+    await expect(page).toHaveURL(/action=user_invited/);
+    await expect(page).toHaveURL(/days=30/);
+    await expect(page).toHaveURL(/email=admin/);
+  });
+
+  test('admin → CSVダウンロードリンクが存在する', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/audit-logs?days=90`);
+
+    // CSVダウンロードリンクが表示される
+    const csvLink = page.getByRole('link', { name: /CSVダウンロード/i });
+    await expect(csvLink).toBeVisible();
+
+    // href属性がdata:text/csvで始まることを確認
+    const href = await csvLink.getAttribute('href');
+    expect(href).toMatch(/^data:text\/csv/);
+  });
 });

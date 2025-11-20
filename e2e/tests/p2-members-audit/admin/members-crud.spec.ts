@@ -161,4 +161,57 @@ test.describe('admin/members CRUD', () => {
     // 一覧から削除される
     await expect(page.getByText(uniqueEmail)).not.toBeVisible();
   });
+
+  // Owner保護テスト
+  test('admin → ownerの削除ボタンは非表示', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/members`);
+
+    // owner行を探す
+    const ownerRow = page.locator('tr', { hasText: OWNER.email });
+    await expect(ownerRow).toBeVisible();
+
+    // 削除ボタンが存在しないことを確認
+    const deleteBtn = ownerRow.getByRole('button', { name: /削除/i });
+    await expect(deleteBtn).not.toBeVisible();
+  });
+
+  test('admin → ownerの編集ボタンは非表示', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/members`);
+
+    // owner行を探す
+    const ownerRow = page.locator('tr', { hasText: OWNER.email });
+    await expect(ownerRow).toBeVisible();
+
+    // 編集ボタンが存在しないことを確認
+    const editBtn = ownerRow.getByRole('button', { name: /編集/i });
+    await expect(editBtn).not.toBeVisible();
+  });
+
+  test('admin → 編集モーダルでロール変更が反映される', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+    await page.goto(`${DOMAINS.ADMIN}/members`);
+
+    // member1の編集ボタンをクリック
+    const memberRow = page.locator('tr', { hasText: MEMBER.email });
+    await memberRow.getByRole('button', { name: /編集/i }).click();
+
+    // モーダルが表示される
+    await expect(page.getByRole('heading', { name: /ユーザー情報を編集/i })).toBeVisible();
+
+    // ロールをadminに変更
+    await page.locator('select#edit-role').selectOption('admin');
+
+    // 保存
+    await page.getByRole('button', { name: /保存/i }).click();
+
+    // モーダルが閉じる
+    await expect(page.getByRole('heading', { name: /ユーザー情報を編集/i })).not.toBeVisible();
+
+    // 一覧でロールが更新されていることを確認（ロール列にadminが表示）
+    const updatedRow = page.locator('tr', { hasText: MEMBER.email });
+    await expect(updatedRow.getByText('admin')).toBeVisible();
+  });
+
 });
