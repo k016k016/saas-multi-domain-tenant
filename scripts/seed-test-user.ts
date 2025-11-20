@@ -36,10 +36,10 @@ const TEST_ORG_NAME_2 = 'Test Organization Beta';
 // E2Eテストで使用するテストユーザー
 // ロールごとに異なるメールアドレスを使用
 const TEST_USERS = [
-  { email: 'member1@example.com', role: 'member' },
-  { email: 'admin1@example.com', role: 'admin' },
-  { email: 'owner1@example.com', role: 'owner' },
-  { email: 'owner2@example.com', role: 'owner' },
+  { email: 'member1@example.com', role: 'member', name: '田中 太郎' },
+  { email: 'admin1@example.com', role: 'admin', name: '鈴木 花子' },
+  { email: 'owner1@example.com', role: 'owner', name: '山田 一郎' },
+  { email: 'owner2@example.com', role: 'owner', name: '佐藤 次郎' },
 ] as const;
 
 async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
@@ -86,7 +86,8 @@ async function upsertUser(
   supabase: ReturnType<typeof createClient>,
   email: string,
   password: string,
-  role: string
+  role: string,
+  name: string
 ) {
   // 既存ユーザーを検索
   const { data: listData, error: listError } = await supabase.auth.admin.listUsers({
@@ -115,6 +116,7 @@ async function upsertUser(
       {
         password,
         email_confirm: true,
+        user_metadata: { name },
       }
     );
 
@@ -132,6 +134,7 @@ async function upsertUser(
       email,
       password,
       email_confirm: true,
+      user_metadata: { name },
     });
 
     if (createError) {
@@ -246,7 +249,7 @@ async function main() {
 
   // 各テストユーザーを作成/更新
   for (const user of TEST_USERS) {
-    await upsertUser(supabase, user.email, password, user.role);
+    await upsertUser(supabase, user.email, password, user.role, user.name);
   }
 
   console.log('🎉 All test organizations and users seeding completed');
