@@ -156,6 +156,10 @@ test.describe('ops - ログイン設計の仕様', () => {
   test('ops/loginでログイン成功 → opsドメインへリダイレクト', async ({ page }) => {
     await page.goto(`${DOMAINS.OPS}/login`);
 
+    // ログインページの準備完了を待つ
+    await expect(page.getByTestId('ops-login-page-ready')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /OPS管理コンソール/i })).toBeVisible();
+
     await page.locator('input#email').fill(OPS_USER.email);
     await page.locator('input#password').fill(PASSWORD);
     await page.getByRole('button', { name: /OPSサインイン/i }).click();
