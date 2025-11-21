@@ -89,8 +89,8 @@ export async function inviteUser(
 
   // 4. 現在のユーザーIDを取得
   const supabase = await createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const currentUserId = session?.user?.id;
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const currentUserId = user?.id;
   if (!currentUserId) {
     return {
       success: false,
@@ -223,8 +223,8 @@ export async function changeUserRole(
 
   // 4. 現在のユーザーIDを取得
   const supabase = await createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const currentUserId = session?.user?.id;
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const currentUserId = user?.id;
   if (!currentUserId) {
     return {
       success: false,
@@ -341,8 +341,8 @@ export async function removeUser(
 
   // 4. 現在のユーザーIDを取得
   const supabase = await createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const currentUserId = session?.user?.id;
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const currentUserId = user?.id;
   if (!currentUserId) {
     return {
       success: false,
@@ -508,8 +508,8 @@ export async function updateUser(
 
   // 4. 現在のユーザーIDを取得
   const supabase = await createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const currentUserId = session?.user?.id;
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const currentUserId = user?.id;
   if (!currentUserId) {
     return {
       success: false,

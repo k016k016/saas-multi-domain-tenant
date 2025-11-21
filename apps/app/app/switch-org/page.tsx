@@ -19,9 +19,9 @@ export default async function SwitchOrgPage() {
   const supabase = await createServerClient();
 
   // 1. 現在のユーザーを取得
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (userError || !user) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <p>認証が必要です</p>
@@ -29,7 +29,7 @@ export default async function SwitchOrgPage() {
     );
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
 
   // 2. ユーザーが所属する組織一覧を取得
   // 注: Admin クライアントを使用することで、RLS ポリシーをバイパスして

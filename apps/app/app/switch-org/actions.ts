@@ -42,10 +42,10 @@ export async function switchOrganization(
   try {
     // 2. 現在のユーザーを取得
     const supabase = await createServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log('[SWITCH_ORG][AUTH]', { reqId, uid: session?.user?.id });
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('[SWITCH_ORG][AUTH]', { reqId, uid: user?.id });
 
-    if (!session?.user) {
+    if (userError || !user) {
       console.log('[SWITCH_ORG][NO_AUTH]', { reqId });
       return {
         success: false,
@@ -53,7 +53,7 @@ export async function switchOrganization(
       };
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
 
     // 3. ユーザーが指定組織に所属しているか確認
     const { data: profile, error: profileError } = await supabase

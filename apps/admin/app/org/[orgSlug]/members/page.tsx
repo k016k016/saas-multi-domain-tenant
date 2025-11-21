@@ -42,9 +42,9 @@ export default async function MembersPageWithOrgSlug({ params }: PageProps) {
 
   // この組織でのユーザーのロールを取得
   const supabase = await createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (userError || !user) {
     redirect('/unauthorized');
   }
 
@@ -52,7 +52,7 @@ export default async function MembersPageWithOrgSlug({ params }: PageProps) {
   const { data: profile } = await adminSupabase
     .from('profiles')
     .select('role')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('org_id', org.orgId)
     .single();
 

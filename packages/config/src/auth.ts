@@ -49,16 +49,16 @@ export interface RoleContext {
  */
 export async function getCurrentOrg(options?: { orgSlug?: string }): Promise<OrgContext | null> {
   try {
-    // 1. Supabase Session から user_id を取得
+    // 1. Supabase から認証済みユーザーを取得（サーバー側で検証）
     const supabase = await createServerClient();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user?.id) {
+    if (userError || !user?.id) {
       // セッションが無い → 未認証 → null を返す
       return null;
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const adminSupabase = getSupabaseAdmin();
 
     // Phase 3: options.orgSlugが指定されている場合は優先
@@ -193,16 +193,16 @@ export async function getCurrentOrg(options?: { orgSlug?: string }): Promise<Org
  */
 export async function getCurrentRole(): Promise<RoleContext | null> {
   try {
-    // 1. Supabase Session から user_id を取得
+    // 1. Supabase から認証済みユーザーを取得（サーバー側で検証）
     const supabase = await createServerClient();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user?.id) {
+    if (userError || !user?.id) {
       // セッションが無い → 未認証 → null を返す
       return null;
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const adminSupabase = getSupabaseAdmin();
 
     // Phase 2: X-Org-Slug ヘッダーをチェック
@@ -284,13 +284,13 @@ export async function getCurrentRole(): Promise<RoleContext | null> {
 export async function getUserOrganizations(): Promise<Array<{ id: string; name: string; slug: string }>> {
   try {
     const supabase = await createServerClient();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user?.id) {
+    if (userError || !user?.id) {
       return [];
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const adminSupabase = getSupabaseAdmin();
 
     // profilesテーブルからユーザーが所属する組織IDを取得
@@ -350,13 +350,13 @@ export function hasRole(userRole: Role, requiredRole: Role): boolean {
 export async function isOpsUser(): Promise<boolean> {
   try {
     const supabase = await createServerClient();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user?.id) {
+    if (userError || !user?.id) {
       return false;
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const adminSupabase = getSupabaseAdmin();
 
     // OPS System Organizationの固定UUID
