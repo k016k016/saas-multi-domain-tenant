@@ -1,8 +1,36 @@
 # ドキュメント
 
-このディレクトリには、プロジェクトの仕様書、設計決定、トラブルシューティングガイドなどが含まれます。
+このディレクトリには、プロジェクトの仕様書、設計決定、デプロイ手順、運用ガイドなどが含まれます。
+
+## クイックリンク
+
+### 新規開発者向け
+- **[クイックスタート](./onboarding/quickstart.md)** - 最速でローカル開発環境を立ち上げる
+- **[アーキテクチャ概要](./onboarding/architecture-overview.md)** - 設計判断の背景とCLAUDE.mdルールの理由
+
+### デプロイ
+- **[Vercelセットアップ](./deployment/vercel-setup.md)** - 4プロジェクトの作成と環境変数設定
+- **[ドメイン設定](./deployment/domain-configuration.md)** - DNS設定とCookie共有
+
+### 運用
+- **[監査ログガイド](./operations/activity-logs.md)** - ログ記録・閲覧・活用方法
+- **[組織ライフサイクル](./operations/organization-lifecycle.md)** - 組織作成・凍結・廃止・owner譲渡
+
+---
 
 ## ディレクトリ構成
+
+- **onboarding/** - 開発者向けオンボーディング
+  - `quickstart.md` - セットアップガイド（10分）
+  - `architecture-overview.md` - 設計判断の背景
+
+- **deployment/** - デプロイ手順
+  - `vercel-setup.md` - Vercel 4プロジェクト作成手順
+  - `domain-configuration.md` - DNS設定・Cookie共有設定
+
+- **operations/** - 運用ガイド
+  - `activity-logs.md` - 監査ログの記録・閲覧・活用
+  - `organization-lifecycle.md` - 組織管理（作成・凍結・廃止・owner譲渡）
 
 - **spec/** - 仕様書
   - `tenancy.md` - マルチテナント仕様

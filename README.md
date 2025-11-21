@@ -288,6 +288,51 @@ v0のゴールは「骨格と契約（責務分離・権限境界・RLS前提・
 そこを崩す提案は拒否する。
 
 
+## クイックスタート
+
+### 新規開発者向け
+
+詳しいセットアップ手順は **[クイックスタートガイド](docs/onboarding/quickstart.md)** を参照してください（10分で完了）。
+
+**概要**:
+1. `/etc/hosts` に `.local.test` ドメインを追加
+2. `pnpm install` で依存関係をインストール
+3. Supabaseプロジェクトを作成し、スキーマ・シードを適用
+4. `.env.local` に環境変数を設定
+5. `pnpm setup:e2e` でテストユーザーを作成
+6. `pnpm dev` で開発サーバーを起動
+
+### アーキテクチャを理解する
+
+このプロジェクトの設計判断の背景は **[アーキテクチャ概要](docs/onboarding/architecture-overview.md)** を参照してください。
+
+- なぜドメインを分離するのか
+- なぜRLSが必須なのか
+- なぜServer Actionで `redirect()` を使わないのか
+- CLAUDE.mdルールが存在する理由
+
+---
+
+## デプロイ
+
+### 本番環境へのデプロイ
+
+- **[Vercelセットアップガイド](docs/deployment/vercel-setup.md)** - 4プロジェクトの作成と環境変数設定
+- **[ドメイン設定ガイド](docs/deployment/domain-configuration.md)** - DNS設定とCookie共有
+
+本番環境では、4つのアプリ（www/app/admin/ops）を**独立したVercelプロジェクト**としてデプロイします。
+
+---
+
+## 運用
+
+### 監査ログとライフサイクル管理
+
+- **[監査ログガイド](docs/operations/activity-logs.md)** - ログ記録・閲覧・活用方法
+- **[組織ライフサイクル](docs/operations/organization-lifecycle.md)** - 組織作成・凍結・廃止・owner権限譲渡
+
+---
+
 ## E2Eテストのセットアップ
 
 このプロジェクトでは、Playwrightを使用してE2Eテストを実施します。
