@@ -203,10 +203,10 @@ async function upsertUser(
       { orgId: TEST_ORG_ID_2, role: 'admin' },
     ];
   } else if (email === 'admin1@example.com') {
-    // admin1: org1ではadmin、org2ではmember（ロール変化パターン）
+    // admin1: org1でもorg2でもadmin（両組織で管理権限）
     orgRoles = [
       { orgId: TEST_ORG_ID, role: 'admin' },
-      { orgId: TEST_ORG_ID_2, role: 'member' },
+      { orgId: TEST_ORG_ID_2, role: 'admin' },
     ];
   } else if (email === 'member-switcher@example.com') {
     // 組織切替専用ユーザー: org1ではmember、org2ではadmin

@@ -6,8 +6,9 @@
  * - Admin domainで異なる組織を別タブで開いても独立
  *
  * 使用ユーザー:
- * - member1@example.com (org1: member, org2: admin - 両方所属)
- * - ops1@example.com (OPS + org1: admin - 両方所属)
+ * - member1@example.com (org1: member, org2: admin - 両方所属) - Test 1, 2
+ * - admin1@example.com (org1: admin, org2: admin - 両方所属) - Test 3
+ * - owner1@example.com (org1: owner, org2: owner - 両方所属) - Test 4
  */
 
 import { test, expect } from '@playwright/test';
@@ -16,55 +17,26 @@ import { resetUserToOrg1 } from '../../helpers/db';
 
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
-test.describe.skip('Multi-tab Organization Isolation (pending multi-context support)', () => {
+test.describe.configure({ mode: 'serial' });
+
+test.describe('Multi-tab Organization Isolation', () => {
   test.beforeEach(async () => {
-    // member1のアクティブ組織をorg1にリセット
+    // 各ユーザーのアクティブ組織をorg1にリセット
     await resetUserToOrg1('member1@example.com');
+    await resetUserToOrg1('admin1@example.com');
+    await resetUserToOrg1('owner1@example.com');
   });
 
-  test('同一ユーザーが複数タブで異なる組織を見ても独立して動作', async ({ browser }) => {
-    // 新しいコンテキスト（Cookieを共有）
+  // 注: user_org_contextベースのテストは削除済み
+  // 現在の設計では、user_org_contextがユーザー単位で1レコードのため
+  // タブ間の独立性は実現不可能。URLベースの組織解決のみテスト。
+
+test('Admin domainで ?org=acme と ?org=beta を別タブで開いても独立', async ({ browser }) => {
     const context = await browser.newContext();
 
-    // タブ1: member1でログイン
+    // タブ1: admin1でログイン後、admin domainへアクセス
     const tab1 = await context.newPage();
-    await uiLogin(tab1, 'member1@example.com', PASSWORD);
-
-    // タブ1: デフォルトの組織（org1）を確認
-    await expect(tab1.getByText('Test Organization').first()).toBeVisible();
-    await expect(tab1.url()).toContain('app.local.test');
-
-    // タブ2を開く
-    const tab2 = await context.newPage();
-    await tab2.goto('http://app.local.test:3002/');
-
-    // タブ2: 同じユーザーでログイン済み（Cookie共有）
-    await expect(tab2.getByText('Test Organization').first()).toBeVisible();
-
-    // タブ2: 組織をTest Organization Betaに切り替え
-    await tab2.getByRole('button', { name: 'Test Organization' }).click();
-    await tab2.getByRole('button', { name: 'Test Organization Beta' }).click();
-
-    // タブ2: 切り替え後の確認
-    await tab2.waitForURL('**/app.local.test:3002/**');
-    await expect(tab2.getByRole('button', { name: 'Test Organization Beta' })).toBeVisible();
-
-    // タブ1: まだTest Organizationが表示されているか確認
-    await tab1.reload(); // リロードして最新の状態を取得
-
-    // タブ1: user_org_contextが更新されているので、Beta組織になる
-    // これが現在の仕様（アクティブ組織は全体で共有される）
-    await expect(tab1.getByRole('button', { name: 'Test Organization Beta' })).toBeVisible();
-
-    await context.close();
-  });
-
-  test('Admin domainで ?org=acme と ?org=beta を別タブで開いても独立', async ({ browser }) => {
-    const context = await browser.newContext();
-
-    // タブ1: member1でログイン後、admin domainへアクセス
-    const tab1 = await context.newPage();
-    await uiLogin(tab1, 'member1@example.com', PASSWORD);
+    await uiLogin(tab1, 'admin1@example.com', PASSWORD);
 
     // タブ1: ?org=acme でメンバー管理ページへ
     await tab1.goto('http://admin.local.test:3003/members?org=acme');
@@ -74,7 +46,7 @@ test.describe.skip('Multi-tab Organization Isolation (pending multi-context supp
     // タブ2を開く
     const tab2 = await context.newPage();
 
-    // タブ2: ?org=beta でメンバー管理ページへ（member1はbetaではadmin権限）
+    // タブ2: ?org=beta でメンバー管理ページへ（admin1はbetaでもadmin権限）
     await tab2.goto('http://admin.local.test:3003/members?org=beta');
     await expect(tab2.getByRole('heading', { name: 'メンバー管理' })).toBeVisible();
     await expect(tab2.getByText('Test Organization Beta').first()).toBeVisible();
@@ -93,9 +65,9 @@ test.describe.skip('Multi-tab Organization Isolation (pending multi-context supp
   test('動的ルートで /org/acme と /org/beta を別タブで開いても独立', async ({ browser }) => {
     const context = await browser.newContext();
 
-    // タブ1: member1でログイン
+    // タブ1: admin1でログイン
     const tab1 = await context.newPage();
-    await uiLogin(tab1, 'member1@example.com', PASSWORD);
+    await uiLogin(tab1, 'admin1@example.com', PASSWORD);
 
     // タブ1: /org/acme/members へ
     await tab1.goto('http://admin.local.test:3003/org/acme/members');
@@ -123,9 +95,9 @@ test.describe.skip('Multi-tab Organization Isolation (pending multi-context supp
   test('ホストベースの組織解決とタブの独立性', async ({ browser }) => {
     const context = await browser.newContext();
 
-    // タブ1: member1でログイン
+    // タブ1: owner1でログイン
     const tab1 = await context.newPage();
-    await uiLogin(tab1, 'member1@example.com', PASSWORD);
+    await uiLogin(tab1, 'owner1@example.com', PASSWORD);
 
     // タブ1: acme.app.local.testへアクセス
     await tab1.goto('http://acme.app.local.test:3002/');
