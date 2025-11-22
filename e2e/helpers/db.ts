@@ -21,7 +21,7 @@ const TEST_ORG_ID = ORG_IDS.PRIMARY; // scripts/seed-test-user.ts と同じ値�
  *
  * SERVICE_ROLE_KEYを使用してRLSをバイパスする
  */
-function getSupabaseAdmin() {
+export function getSupabaseAdmin() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       autoRefreshToken: false,

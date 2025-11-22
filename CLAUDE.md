@@ -41,11 +41,19 @@
 	•	権限系：管理は403を検証。/unauthorized 前提のテストは廃止。
 	•	テストを勝手にスキップしないこと。test.skip()の追加は禁止。
 	•	E2E実行は必ずフェーズ単位（p1→p2→p3→p4）で順次実行。並列実行禁止。
-	•	E2E実行前の必須手順：
-		1. プロセス停止：pkill -f "pnpm dev" && pkill -f "next dev"
-		2. キャッシュクリア：rm -rf apps/*/.next .turbo
-		3. サーバー再起動：pnpm dev（バックグラウンド）
-		4. データリセット（必要時）：pnpm seed:all
+	•	E2E実行前の必須手順（必ず順番通りに実行）：
+		1. プロセス停止：lsof -ti:3001,3002,3003,3004 | xargs kill -9 2>/dev/null && pkill -f "pnpm dev" 2>/dev/null
+		2. キャッシュクリア：rm -rf apps/*/.next .turbo playwright-report test-results
+		3. テストユーザー作成：pnpm setup:e2e （重要：seed:allの前に必ず実行）
+		4. データリセット：pnpm seed:all
+		5. サーバー再起動：pnpm dev（バックグラウンド）
+		6. 待機：sleep 40（4アプリの起動完了を待つ - 必須）
+		7. テスト実行：pnpm test:e2e:p1 && pnpm test:e2e:p2 && pnpm test:e2e:p3 && pnpm test:e2e:p4
+	•	デバッグ時のフェーズ別実行：pnpm test:e2e:p1（p2, p3, p4も同様）
+	•	特定ファイルのみ実行：pnpm test:e2e:p2 e2e/tests/p2-members-audit/admin/org-settings.spec.ts
+	•	特定テストのみ実行：pnpm test:e2e:p2 e2e/tests/p2-members-audit/admin/org-settings.spec.ts:17
+	•	ポート衝突エラー（EADDRINUSE）発生時：手順1から再実行
+	•	コード修正後：Server Actions (actions.ts) 修正時は必ずサーバー再起動（Turbopackのホットリロード不完全）
 	•	SEEDの変更をするときは、値の変更が他のテストに影響がないか確認すること。
 	•	E2Eテスト全部合格時：
 		E2Eテスト結果がすべてOKになったらその旨をCommitログに残しプッシュすること。
@@ -55,6 +63,7 @@
 	•	org_id の属性不備（共有されていないのに前提として扱う）
 	•	membershipのseed差分やプロジェクト取り違え
 	•	トランスパイル漏れやキャッシュ残留によるprod専用バグ
+	•	TurbopackのServer Actionsホットリロード不良（actions.ts修正後はサーバー再起動必須）
 
 9. 変更ポリシー
 	•	追加のルールはMINに先に反映。FULLは詳細・補遺のみ。

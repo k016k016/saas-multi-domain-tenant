@@ -25,16 +25,16 @@ DECLARE
   v_owner2   UUID;
 BEGIN
   -- 固定組織IDで作成 or 取得（seed-test-user.ts と統一）
-  INSERT INTO organizations (id, name, plan, is_active, created_at)
-  VALUES (v_org_id, 'Test Organization', 'pro', true, now())
+  INSERT INTO organizations (id, name, slug, plan, is_active, created_at)
+  VALUES (v_org_id, 'Test Organization', 'acme', 'pro', true, now())
   ON CONFLICT (id) DO UPDATE
-    SET name = excluded.name, updated_at = now();
+    SET name = excluded.name, slug = excluded.slug, updated_at = now();
 
   -- 2つ目の組織を作成（組織切替テスト用）
-  INSERT INTO organizations (id, name, plan, is_active, created_at)
-  VALUES (v_org_id_2, 'Test Organization Beta', 'business', true, now())
+  INSERT INTO organizations (id, name, slug, plan, is_active, created_at)
+  VALUES (v_org_id_2, 'Test Organization Beta', 'beta', 'business', true, now())
   ON CONFLICT (id) DO UPDATE
-    SET name = excluded.name, updated_at = now();
+    SET name = excluded.name, slug = excluded.slug, updated_at = now();
 
   -- AuthユーザーID取得（Service Roleで実行すること）
   SELECT id INTO v_member FROM auth.users WHERE email = 'member1@example.com';

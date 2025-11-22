@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
-import { resetUserToOrg1, createTestUser, deleteTestUser } from '../../../helpers/db';
+import { resetUserToOrg1, createTestUser, deleteTestUser, getSupabaseAdmin } from '../../../helpers/db';
 
 const ADMIN = { email: 'admin1@example.com' };
 const OWNER = { email: 'owner1@example.com' };
@@ -16,9 +16,23 @@ const TEST_USER = {
 };
 
 test.describe('admin/members CRUD', () => {
-  // 各テスト前にmember1をorg1（member権限）にリセット
+  // 各テスト前にmember1をorg1（member権限）にリセット、owner1をownerにリセット
   test.beforeEach(async () => {
+    const supabase = getSupabaseAdmin();
+
     await resetUserToOrg1(MEMBER.email);
+    await resetUserToOrg1(OWNER.email);
+
+    // owner1 のロールを owner にリセット（権限譲渡テストの影響を排除）
+    const { data: authUsers } = await supabase.auth.admin.listUsers();
+    const ownerUser = authUsers.users.find(u => u.email === OWNER.email);
+    const { data: org } = await supabase.from('organizations').select('id').eq('slug', 'acme').single();
+
+    await supabase
+      .from('profiles')
+      .update({ role: 'owner' })
+      .eq('user_id', ownerUser!.id)
+      .eq('org_id', org!.id);
   });
   test('admin → メンバー一覧にアクセス可能', async ({ page }) => {
     await uiLogin(page, ADMIN.email, PASSWORD);

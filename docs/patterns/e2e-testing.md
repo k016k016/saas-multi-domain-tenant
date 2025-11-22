@@ -83,6 +83,64 @@ E2Eテストの目的は「動くかどうか」ではなく「境界が破ら�
 
 ---
 
+## 8. E2Eテスト実行手順 【重要】
+
+正しいE2Eテスト実行には以下の手順を**必ず順番通り**に実行すること:
+
+```bash
+# 1. プロセス停止（既存サーバーをすべて終了）
+lsof -ti:3001,3002,3003,3004 | xargs kill -9 2>/dev/null
+pkill -f "pnpm dev" 2>/dev/null
+
+# 2. キャッシュクリア（古いビルドキャッシュとテスト結果を削除）
+rm -rf apps/*/.next .turbo playwright-report test-results
+
+# 3. テストユーザー作成（重要：seed:allの前に必ず実行）
+pnpm setup:e2e  # ← これがないと認証エラーで全テストが失敗する！
+
+# 4. データセットアップ（組織・プロファイル等のseed）
+pnpm seed:all
+
+# 5. サーバー再起動
+pnpm dev
+
+# 6. 待機（サーバー起動完了を待つ - 必須）
+sleep 40  # すべてのアプリ（www/app/admin/ops）の起動完了を待つ
+
+# 7. テスト実行（全フェーズ一括実行）
+pnpm test:e2e:p1 && pnpm test:e2e:p2 && pnpm test:e2e:p3 && pnpm test:e2e:p4
+```
+
+### フェーズ別実行（デバッグ時）
+
+```bash
+pnpm test:e2e:p1  # Phase 1: Baseline（31テスト）
+pnpm test:e2e:p2  # Phase 2: Members & Audit（46テスト）
+pnpm test:e2e:p3  # Phase 3: OPS & Orgs（49テスト）
+pnpm test:e2e:p4  # Phase 4: Boundary & RLS（46テスト）
+
+# 特定のファイルのみ実行
+pnpm test:e2e:p2 e2e/tests/p2-members-audit/admin/org-settings.spec.ts
+
+# 特定のテストケースのみ実行（行番号指定）
+pnpm test:e2e:p2 e2e/tests/p2-members-audit/admin/org-settings.spec.ts:17
+```
+
+### 重要な注意点
+
+* **`pnpm setup:e2e` を忘れると「Invalid login credentials」で全テスト失敗**
+  * `seed:all` は組織とプロファイルのみ作成
+  * `setup:e2e` がテストユーザーのパスワードを設定（`scripts/seed-test-user.ts`）
+* **プロセス停止とキャッシュクリアは必須**
+  * 前のセッションの残留プロセスが干渉する
+  * キャッシュが原因で古いコードが実行される場合がある
+* **40秒の待機時間は必須**
+  * 4つのアプリ（www/app/admin/ops）すべての起動完了を待つ
+  * 待機不足だとサーバー未起動でテストが失敗する
+* **テストはフェーズ順に実行**
+  * p1が失敗している場合、まずp1の問題を解決してからp2へ
+  * 全フェーズ一括実行は `&&` で連結し、失敗時に即停止
+
 ## 最終原則
 
 * E2Eテストは「機能が動くか」だけでなく「境界が壊れていないか」を見るもの。

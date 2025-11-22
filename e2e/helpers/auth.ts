@@ -43,10 +43,18 @@ export async function uiLogout(page: Page) {
       return currentUrl.includes('www.local.test') && currentUrl.includes('login');
     }, { timeout: 20_000 });
     await page.context().clearCookies();
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
     return;
   }
 
   // Fallback: ボタンがない場合はCookieクリアでサインアウト状態へ
   await page.context().clearCookies();
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
   await page.goto(`${DOMAINS.WWW}/login`);
 }
