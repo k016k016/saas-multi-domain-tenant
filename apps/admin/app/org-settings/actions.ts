@@ -16,7 +16,6 @@
 import { getCurrentOrg, getCurrentRole } from '@repo/config';
 import { createServerClient, getSupabaseAdmin } from '@repo/db';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 /**
  * owner権限譲渡
@@ -119,7 +118,7 @@ export async function transferOwnership(newOwnerId: string) {
     console.error('[transferOwnership] Failed to log activity:', logError);
   }
 
-  redirect('/members');
+  return { success: true, nextUrl: '/members' };
 }
 
 /**

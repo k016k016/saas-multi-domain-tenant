@@ -63,7 +63,11 @@ export default function OrgSettingsClient({ orgName, members, isActive }: OrgSet
         setMessage({ type: 'success', text: '成功：owner権限を譲渡しました。あなたはadminに降格されました。' });
         setShowTransferConfirm(false);
         setSelectedNewOwner('');
-        router.refresh();
+        if (result.nextUrl) {
+          router.push(result.nextUrl);
+        } else {
+          router.refresh();
+        }
       } else {
         setMessage({ type: 'error', text: result.error || '譲渡に失敗しました' });
         setShowTransferConfirm(false);

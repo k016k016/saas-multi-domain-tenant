@@ -18,6 +18,7 @@
 import { getSupabaseAdmin, logActivity } from '@repo/db';
 import { createServerClient } from '@repo/db';
 import type { ActionResult } from '@repo/config';
+import { isOpsUser } from '@repo/config';
 
 /**
  * 新しい組織とownerユーザーを作成する
@@ -36,7 +37,16 @@ export async function createOrganization(
   ownerPassword: string,
   ownerName: string
 ): Promise<ActionResult> {
-  // 1. 入力バリデーション
+  // 1. Ops権限チェック（必須 - 最優先）
+  const isOps = await isOpsUser();
+  if (!isOps) {
+    return {
+      success: false,
+      error: 'Unauthorized: Ops権限が必要です',
+    };
+  }
+
+  // 2. 入力バリデーション
   if (!orgName || orgName.trim().length === 0) {
     return {
       success: false,
