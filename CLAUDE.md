@@ -48,13 +48,18 @@
 		4. データリセット：pnpm seed:all
 		5. サーバー再起動：pnpm dev（バックグラウンド）
 		6. 待機：sleep 40（4アプリの起動完了を待つ - 必須）
-		7. テスト実行：pnpm test:e2e:p1 && pnpm test:e2e:p2 && pnpm test:e2e:p3 && pnpm test:e2e:p4
+		7. テスト実行：各フェーズを個別に実行（p1→p2→p3→p4の順）
+			- pnpm test:e2e:p1
+			- pnpm test:e2e:p2
+			- pnpm test:e2e:p3
+			- pnpm test:e2e:p4
 	•	デバッグ時のフェーズ別実行：pnpm test:e2e:p1（p2, p3, p4も同様）
 	•	特定ファイルのみ実行：pnpm test:e2e:p2 e2e/tests/p2-members-audit/admin/org-settings.spec.ts
 	•	特定テストのみ実行：pnpm test:e2e:p2 e2e/tests/p2-members-audit/admin/org-settings.spec.ts:17
 	•	E2E手順の厳守（AI側の約束）：
 		上記7ステップを必ず順番通りに実行する。省略・変更・推測禁止。
 		特にsleep 40の待機は必須。手順逸脱は一切許容しない。
+		テスト実行時は各フェーズを個別にBash実行し、各フェーズの合格/不合格件数を記録すること。
 	•	ポート衝突エラー（EADDRINUSE）発生時：手順1から再実行
 	•	コード修正後：Server Actions (actions.ts) 修正時は必ずサーバー再起動（Turbopackのホットリロード不完全）
 	•	SEEDの変更をするときは、値の変更が他のテストに影響がないか確認すること。
