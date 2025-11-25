@@ -86,7 +86,7 @@ jobs:
         run: pnpm tsx scripts/seed-test-user.ts
 
       - name: Install Playwright
-        run: pnpm dlx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       # E2E（playwright.config.ts で webServer/baseURL を管理）
       # Phase 1（基盤テスト）のみ実行（Chromiumのみ - Firefoxは安定性の問題により除外）
