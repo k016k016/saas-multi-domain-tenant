@@ -11,13 +11,8 @@
  * - 活動ログの記録
  */
 
-import { isOpsUser } from '@repo/config';
+import { isOpsUser, type ActionResult } from '@repo/config';
 import { getSupabaseAdmin } from '@repo/db';
-
-interface ActionResult {
-  success: boolean;
-  error?: string;
-}
 
 /**
  * メンバーを招待（新規作成）

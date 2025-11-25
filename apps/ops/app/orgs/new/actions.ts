@@ -42,7 +42,7 @@ export async function createOrganization(
   if (!isOps) {
     return {
       success: false,
-      error: 'Unauthorized: Ops権限が必要です',
+      error: 'Ops権限が必要です',
     };
   }
 

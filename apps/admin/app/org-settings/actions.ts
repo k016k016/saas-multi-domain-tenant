@@ -33,7 +33,7 @@ export async function transferOwnership(newOwnerId: string) {
 
   // owner権限チェック
   if (!roleContext || roleContext.role !== 'owner') {
-    return { success: false, error: 'Forbidden: owner権限が必要です' };
+    return { success: false, error: 'owner権限が必要です' };
   }
 
   if (!org) {
@@ -136,7 +136,7 @@ export async function freezeOrganization(reason: string) {
 
   // owner権限チェック
   if (!roleContext || roleContext.role !== 'owner') {
-    return { success: false, error: 'Forbidden: owner権限が必要です' };
+    return { success: false, error: 'owner権限が必要です' };
   }
 
   if (!org) {
@@ -218,7 +218,7 @@ export async function unfreezeOrganization() {
   // owner権限チェック
   if (!roleContext || roleContext.role !== 'owner') {
     console.log('[unfreezeOrganization] Permission denied');
-    return { success: false, error: 'Forbidden: owner権限が必要です' };
+    return { success: false, error: 'owner権限が必要です' };
   }
 
   if (!org) {
@@ -307,7 +307,7 @@ export async function archiveOrganization(confirmationName: string) {
 
   // owner権限チェック
   if (!roleContext || roleContext.role !== 'owner') {
-    return { success: false, error: 'Forbidden: owner権限が必要です' };
+    return { success: false, error: 'owner権限が必要です' };
   }
 
   if (!org) {
