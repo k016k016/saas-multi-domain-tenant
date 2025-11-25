@@ -28,7 +28,10 @@ export type AuditAction =
   | 'member.role_changed'       // ロール変更
   | 'member.removed'            // メンバー削除/無効化
   | 'member.updated'            // メンバー情報更新
+  | 'member.deleted'            // メンバー削除（ops操作）
   | 'organization.created'      // 組織作成（ops などからの新規作成）
+  | 'org.updated'               // 組織情報更新（ops操作）
+  | 'org.deleted'               // 組織削除（ops操作）
   | 'payment.updated'           // 支払い情報変更（将来実装）
   | 'org.suspended'             // 組織凍結/廃止（将来実装）
   | 'org.ownership_transferred' // owner権限譲渡（将来実装）

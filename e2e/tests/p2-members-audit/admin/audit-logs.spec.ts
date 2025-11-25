@@ -55,10 +55,10 @@ test.describe('監査ログ閲覧UI', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/audit-logs`);
 
-    await page.locator('select#action').selectOption('org_switched');
+    await page.locator('select#action').selectOption('org.switched');
     await page.getByRole('button', { name: /フィルタ適用/i }).click();
 
-    await expect(page).toHaveURL(/action=org_switched/);
+    await expect(page).toHaveURL(/action=org\.switched/);
   });
 
   test('admin → 期間でフィルタリングできる', async ({ page }) => {
@@ -98,13 +98,13 @@ test.describe('監査ログ閲覧UI', () => {
     await page.goto(`${DOMAINS.ADMIN}/audit-logs`);
 
     // 複数条件を設定
-    await page.locator('select#action').selectOption('user_invited');
+    await page.locator('select#action').selectOption('member.invited');
     await page.locator('select#days').selectOption('30');
     await page.locator('input#email').fill('admin');
     await page.getByRole('button', { name: /フィルタ適用/i }).click();
 
     // URLに全条件が含まれる
-    await expect(page).toHaveURL(/action=user_invited/);
+    await expect(page).toHaveURL(/action=member\.invited/);
     await expect(page).toHaveURL(/days=30/);
     await expect(page).toHaveURL(/email=admin/);
   });

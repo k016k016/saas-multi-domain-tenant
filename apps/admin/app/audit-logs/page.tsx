@@ -33,37 +33,58 @@ interface UserInfo {
 
 // アクション種別の日本語ラベル
 const ACTION_LABELS: Record<string, string> = {
-  org_switched: '組織切替',
-  user_invited: 'ユーザー招待',
-  role_changed: 'ロール変更',
-  user_removed: 'ユーザー削除',
-  user_updated: 'ユーザー更新',
-  payment_updated: '支払い情報変更',
-  org_suspended: '組織凍結',
-  owner_transferred: 'オーナー権限譲渡',
+  'org.switched': '組織切替',
+  'member.invited': 'メンバー招待',
+  'member.role_changed': 'ロール変更',
+  'member.removed': 'メンバー削除',
+  'member.updated': 'メンバー更新',
+  'member.deleted': 'メンバー削除（ops）',
+  'organization.created': '組織作成',
+  'org.updated': '組織更新（ops）',
+  'org.deleted': '組織削除（ops）',
+  'payment.updated': '支払い情報変更',
+  'org.suspended': '組織凍結',
+  'org.ownership_transferred': 'オーナー権限譲渡',
+  'org.frozen': '組織凍結',
+  'org.unfrozen': '凍結解除',
+  'org.archived': '組織廃止',
 };
 
 // payloadから対象・詳細を日本語で生成
 function formatDetails(action: AuditAction, payload: Record<string, unknown>): string {
   switch (action) {
-    case 'user_invited':
+    case 'member.invited':
       return `${payload.invited_email || '不明'} を${payload.invited_role || 'member'}として招待`;
-    case 'role_changed':
+    case 'member.role_changed':
       return `${payload.old_role || '?'} → ${payload.new_role || '?'}`;
-    case 'user_removed':
+    case 'member.removed':
       return `${payload.target_role || 'member'} を削除`;
-    case 'user_updated':
+    case 'member.deleted':
+      return `メンバーを削除（ops操作）`;
+    case 'member.updated':
       if (payload.old_role !== payload.new_role) {
         return `${payload.new_email || '?'}: ${payload.old_role} → ${payload.new_role}`;
       }
       return `${payload.new_email || '?'} の情報を更新`;
-    case 'org_switched':
+    case 'org.switched':
       return `組織を切替 (role: ${payload.role || '?'})`;
-    case 'owner_transferred':
+    case 'organization.created':
+      return `組織を作成: ${payload.org_name || '?'}`;
+    case 'org.updated':
+      return `組織情報を更新（ops操作）`;
+    case 'org.deleted':
+      return `組織を削除: ${payload.org_name || '?'}`;
+    case 'org.ownership_transferred':
       return `オーナー権限を譲渡`;
-    case 'org_suspended':
+    case 'org.frozen':
       return `組織を凍結`;
-    case 'payment_updated':
+    case 'org.unfrozen':
+      return `凍結を解除`;
+    case 'org.archived':
+      return `組織を廃止`;
+    case 'org.suspended':
+      return `組織を凍結`;
+    case 'payment.updated':
       return `支払い情報を変更`;
     default:
       return JSON.stringify(payload);
@@ -230,14 +251,20 @@ export default async function AuditLogsPage({
               }}
             >
               <option value="all">すべて</option>
-              <option value="org_switched">組織切替</option>
-              <option value="user_invited">ユーザー招待</option>
-              <option value="role_changed">ロール変更</option>
-              <option value="user_removed">ユーザー削除</option>
-              <option value="user_updated">ユーザー更新</option>
-              <option value="payment_updated">支払い情報変更</option>
-              <option value="org_suspended">組織凍結</option>
-              <option value="owner_transferred">オーナー権限譲渡</option>
+              <option value="org.switched">組織切替</option>
+              <option value="member.invited">メンバー招待</option>
+              <option value="member.role_changed">ロール変更</option>
+              <option value="member.removed">メンバー削除</option>
+              <option value="member.updated">メンバー更新</option>
+              <option value="member.deleted">メンバー削除（ops）</option>
+              <option value="organization.created">組織作成</option>
+              <option value="org.updated">組織更新（ops）</option>
+              <option value="org.deleted">組織削除（ops）</option>
+              <option value="org.ownership_transferred">オーナー権限譲渡</option>
+              <option value="org.frozen">組織凍結</option>
+              <option value="org.unfrozen">凍結解除</option>
+              <option value="org.archived">組織廃止</option>
+              <option value="payment.updated">支払い情報変更</option>
             </select>
           </div>
 

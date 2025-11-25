@@ -23,7 +23,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 /**
  * 監査ログのアクション種別
  */
-type AuditAction = 'org.switched' | 'member.invited' | 'member.role_changed' | 'member.removed' | 'member.updated' | 'organization.created' | 'payment.updated' | 'org.suspended' | 'org.ownership_transferred' | 'org.frozen' | 'org.unfrozen' | 'org.archived';
+type AuditAction = 'org.switched' | 'member.invited' | 'member.role_changed' | 'member.removed' | 'member.updated' | 'member.deleted' | 'organization.created' | 'org.updated' | 'org.deleted' | 'payment.updated' | 'org.suspended' | 'org.ownership_transferred' | 'org.frozen' | 'org.unfrozen' | 'org.archived';
 /**
  * 監査ログのペイロード型
  */
