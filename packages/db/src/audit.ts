@@ -8,13 +8,13 @@
  * - payload には操作の詳細をJSON形式で記録する
  *
  * 対象操作:
- * - 組織切替 (org_switched)
- * - ユーザー招待 (user_invited)
- * - ロール変更 (role_changed)
- * - ユーザー削除 (user_removed)
- * - 支払い情報変更 (payment_updated) ※将来実装
- * - 組織凍結/廃止 (org_suspended) ※将来実装
- * - owner権限譲渡 (owner_transferred) ※将来実装
+ * - 組織切替 (org.switched)
+ * - メンバー招待 (member.invited)
+ * - ロール変更 (member.role_changed)
+ * - メンバー削除 (member.removed)
+ * - 支払い情報変更 (payment.updated) ※将来実装
+ * - 組織凍結/廃止 (org.suspended) ※将来実装
+ * - owner権限譲渡 (org.ownership_transferred) ※将来実装
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -23,15 +23,18 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * 監査ログのアクション種別
  */
 export type AuditAction =
-  | 'org_switched'          // 組織切替
-  | 'user_invited'          // ユーザー招待
-  | 'role_changed'          // ロール変更
-  | 'user_removed'          // ユーザー削除/無効化
-  | 'user_updated'          // ユーザー情報更新
-  | 'organization_created'  // 組織作成（ops などからの新規作成）
-  | 'payment_updated'       // 支払い情報変更（将来実装）
-  | 'org_suspended'         // 組織凍結/廃止（将来実装）
-  | 'owner_transferred';    // owner権限譲渡（将来実装）
+  | 'org.switched'              // 組織切替
+  | 'member.invited'            // メンバー招待
+  | 'member.role_changed'       // ロール変更
+  | 'member.removed'            // メンバー削除/無効化
+  | 'member.updated'            // メンバー情報更新
+  | 'organization.created'      // 組織作成（ops などからの新規作成）
+  | 'payment.updated'           // 支払い情報変更（将来実装）
+  | 'org.suspended'             // 組織凍結/廃止（将来実装）
+  | 'org.ownership_transferred' // owner権限譲渡（将来実装）
+  | 'org.frozen'                // 組織凍結
+  | 'org.unfrozen'              // 凍結解除
+  | 'org.archived';             // 組織廃止
 
 /**
  * 監査ログのペイロード型
@@ -59,7 +62,7 @@ export interface AuditLogPayload {
  * await logActivity(supabase, {
  *   orgId: 'org-123',
  *   userId: 'user-456',
- *   action: 'org_switched',
+ *   action: 'org.switched',
  *   payload: {
  *     from: 'org-111',
  *     to: 'org-123',

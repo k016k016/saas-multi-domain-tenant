@@ -100,7 +100,7 @@ export async function switchOrganization(
     const logResult = await logActivity(supabase, {
       orgId: targetOrgId,
       userId,
-      action: 'org_switched',
+      action: 'org.switched',
       payload: {
         to_org_id: targetOrgId,
         role: profile.role,

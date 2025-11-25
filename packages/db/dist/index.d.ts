@@ -11,19 +11,19 @@ import { SupabaseClient } from '@supabase/supabase-js';
  * - payload には操作の詳細をJSON形式で記録する
  *
  * 対象操作:
- * - 組織切替 (org_switched)
- * - ユーザー招待 (user_invited)
- * - ロール変更 (role_changed)
- * - ユーザー削除 (user_removed)
- * - 支払い情報変更 (payment_updated) ※将来実装
- * - 組織凍結/廃止 (org_suspended) ※将来実装
- * - owner権限譲渡 (owner_transferred) ※将来実装
+ * - 組織切替 (org.switched)
+ * - メンバー招待 (member.invited)
+ * - ロール変更 (member.role_changed)
+ * - メンバー削除 (member.removed)
+ * - 支払い情報変更 (payment.updated) ※将来実装
+ * - 組織凍結/廃止 (org.suspended) ※将来実装
+ * - owner権限譲渡 (org.ownership_transferred) ※将来実装
  */
 
 /**
  * 監査ログのアクション種別
  */
-type AuditAction = 'org_switched' | 'user_invited' | 'role_changed' | 'user_removed' | 'user_updated' | 'organization_created' | 'payment_updated' | 'org_suspended' | 'owner_transferred';
+type AuditAction = 'org.switched' | 'member.invited' | 'member.role_changed' | 'member.removed' | 'member.updated' | 'organization.created' | 'payment.updated' | 'org.suspended' | 'org.ownership_transferred' | 'org.frozen' | 'org.unfrozen' | 'org.archived';
 /**
  * 監査ログのペイロード型
  */
@@ -49,7 +49,7 @@ interface AuditLogPayload {
  * await logActivity(supabase, {
  *   orgId: 'org-123',
  *   userId: 'user-456',
- *   action: 'org_switched',
+ *   action: 'org.switched',
  *   payload: {
  *     from: 'org-111',
  *     to: 'org-123',

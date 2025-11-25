@@ -156,7 +156,7 @@ export async function inviteUser(
   const logResult = await logActivity(supabaseAdmin, {
     orgId: org.orgId,
     userId: currentUserId,
-    action: 'user_invited',
+    action: 'member.invited',
     payload: {
       invited_email: email,
       invited_name: name.trim(),
@@ -282,7 +282,7 @@ export async function changeUserRole(
   const logResult = await logActivity(supabaseAdmin, {
     orgId: org.orgId,
     userId: currentUserId,
-    action: 'role_changed',
+    action: 'member.role_changed',
     payload: {
       target_user_id: targetUserId,
       old_role: oldRole,
@@ -405,7 +405,7 @@ export async function removeUser(
   const logResult = await logActivity(supabaseAdmin, {
     orgId: org.orgId,
     userId: currentUserId,
-    action: 'user_removed',
+    action: 'member.removed',
     payload: {
       target_user_id: targetUserId,
       target_role: targetUser.role,
@@ -599,7 +599,7 @@ export async function updateUser(
   const logResult = await logActivity(supabaseAdmin, {
     orgId: org.orgId,
     userId: currentUserId,
-    action: 'user_updated',
+    action: 'member.updated',
     payload: {
       target_user_id: targetUserId,
       old_role: oldRole,

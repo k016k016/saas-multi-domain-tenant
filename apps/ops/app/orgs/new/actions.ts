@@ -202,7 +202,7 @@ export async function createOrganization(
   const logResult = await logActivity(supabaseAdmin, {
     orgId: orgId,
     userId: currentUserId,
-    action: 'organization_created',
+    action: 'organization.created',
     payload: {
       org_name: orgName.trim(),
       org_slug: orgSlug.trim().toLowerCase(),
