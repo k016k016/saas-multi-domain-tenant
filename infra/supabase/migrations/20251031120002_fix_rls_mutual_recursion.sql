@@ -15,20 +15,27 @@
 -- - 
 -- ============================================================
 
--- 
+-- Drop existing policies before recreating
 DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
 DROP POLICY IF EXISTS "profiles_insert_any" ON profiles;
 DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
 DROP POLICY IF EXISTS "profiles_delete_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_authenticated" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_authenticated" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_authenticated" ON profiles;
+DROP POLICY IF EXISTS "profiles_delete_authenticated" ON profiles;
 
 DROP POLICY IF EXISTS "organizations_select_member" ON organizations;
 DROP POLICY IF EXISTS "organizations_insert_any" ON organizations;
 DROP POLICY IF EXISTS "organizations_update_member" ON organizations;
 DROP POLICY IF EXISTS "organizations_delete_member" ON organizations;
-
 DROP POLICY IF EXISTS "organizations_update_policy" ON organizations;
 DROP POLICY IF EXISTS "organizations_insert_policy" ON organizations;
 DROP POLICY IF EXISTS "organizations_delete_policy" ON organizations;
+DROP POLICY IF EXISTS "organizations_select_authenticated" ON organizations;
+DROP POLICY IF EXISTS "organizations_insert_authenticated" ON organizations;
+DROP POLICY IF EXISTS "organizations_update_authenticated" ON organizations;
+DROP POLICY IF EXISTS "organizations_delete_authenticated" ON organizations;
 
 -- ------------------------------------------------------------
 --  profiles  RLS  - 

@@ -7,13 +7,18 @@ CREATE TABLE IF NOT EXISTS user_org_context (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- : org_id 
-CREATE INDEX idx_user_org_context_org_id ON user_org_context(org_id);
+-- : org_id
+CREATE INDEX IF NOT EXISTS idx_user_org_context_org_id ON user_org_context(org_id);
 
 -- RLS
 ALTER TABLE user_org_context ENABLE ROW LEVEL SECURITY;
 
--- : 
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Users can view own context" ON user_org_context;
+DROP POLICY IF EXISTS "Users can update own context" ON user_org_context;
+DROP POLICY IF EXISTS "Users can insert own context" ON user_org_context;
+
+-- :
 CREATE POLICY "Users can view own context"
   ON user_org_context
   FOR SELECT

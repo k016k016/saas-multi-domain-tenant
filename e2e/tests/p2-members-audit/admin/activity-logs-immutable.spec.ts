@@ -107,3 +107,173 @@ test.describe('監査ログイミュータブル性', () => {
     expect(selected?.action).toBe('test.immutable_check');
   });
 });
+
+test.describe('監査ログフィールド検証', () => {
+  test('新フィールド（request_id, session_id, ip_address, user_agent, severity）が正しく記録される', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+
+    const supabase = getSupabaseAdmin();
+
+    // 既存のログから組織IDとユーザーIDを取得
+    const { data: existingLog } = await supabase
+      .from('activity_logs')
+      .select('org_id, user_id')
+      .limit(1)
+      .single();
+
+    expect(existingLog).not.toBeNull();
+
+    // 新フィールドを含むINSERT
+    const testRequestId = crypto.randomUUID();
+    const testSessionId = crypto.randomUUID();
+    const { data: inserted, error: insertError } = await supabase
+      .from('activity_logs')
+      .insert({
+        org_id: existingLog!.org_id,
+        user_id: existingLog!.user_id,
+        action: 'test.new_fields_check',
+        payload: { test: true },
+        request_id: testRequestId,
+        session_id: testSessionId,
+        ip_address: '203.0.113.42',
+        user_agent: 'Mozilla/5.0 (Test) E2E/1.0',
+        severity: 'warning',
+      })
+      .select()
+      .single();
+
+    expect(insertError).toBeNull();
+    expect(inserted).not.toBeNull();
+
+    // 新フィールドの値を確認
+    expect(inserted?.request_id).toBe(testRequestId);
+    expect(inserted?.session_id).toBe(testSessionId);
+    expect(inserted?.ip_address).toBe('203.0.113.42');
+    expect(inserted?.user_agent).toBe('Mozilla/5.0 (Test) E2E/1.0');
+    expect(inserted?.severity).toBe('warning');
+  });
+
+  test('request_id/session_idがUUID形式で記録される', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+
+    const supabase = getSupabaseAdmin();
+
+    // 既存のログから組織IDとユーザーIDを取得
+    const { data: existingLog } = await supabase
+      .from('activity_logs')
+      .select('org_id, user_id')
+      .limit(1)
+      .single();
+
+    const { data: inserted, error } = await supabase
+      .from('activity_logs')
+      .insert({
+        org_id: existingLog!.org_id,
+        user_id: existingLog!.user_id,
+        action: 'test.uuid_format_check',
+        payload: {},
+        request_id: crypto.randomUUID(),
+        session_id: crypto.randomUUID(),
+      })
+      .select()
+      .single();
+
+    expect(error).toBeNull();
+
+    // UUID v4形式確認（8-4-4-4-12の形式）
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    expect(inserted?.request_id).toMatch(uuidPattern);
+    expect(inserted?.session_id).toMatch(uuidPattern);
+  });
+
+  test('severity値（info/warning/critical）で正しくINSERT/SELECT可能', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+
+    const supabase = getSupabaseAdmin();
+
+    const { data: existingLog } = await supabase
+      .from('activity_logs')
+      .select('org_id, user_id')
+      .limit(1)
+      .single();
+
+    // 各severity値でテスト
+    for (const severityValue of ['info', 'warning', 'critical'] as const) {
+      const { data: inserted, error } = await supabase
+        .from('activity_logs')
+        .insert({
+          org_id: existingLog!.org_id,
+          user_id: existingLog!.user_id,
+          action: `test.severity_${severityValue}`,
+          payload: {},
+          severity: severityValue,
+        })
+        .select()
+        .single();
+
+      expect(error).toBeNull();
+      expect(inserted?.severity).toBe(severityValue);
+    }
+  });
+
+  test('severityのデフォルト値が"info"で記録される', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+
+    const supabase = getSupabaseAdmin();
+
+    const { data: existingLog } = await supabase
+      .from('activity_logs')
+      .select('org_id, user_id')
+      .limit(1)
+      .single();
+
+    // severity指定なしでINSERT
+    const { data: inserted, error } = await supabase
+      .from('activity_logs')
+      .insert({
+        org_id: existingLog!.org_id,
+        user_id: existingLog!.user_id,
+        action: 'test.severity_default',
+        payload: {},
+      })
+      .select()
+      .single();
+
+    expect(error).toBeNull();
+    // デフォルト値'info'が設定されることを確認
+    expect(inserted?.severity).toBe('info');
+  });
+
+  test('request_id/session_id/ip_address/user_agentはNULLで記録可能', async ({ page }) => {
+    await uiLogin(page, ADMIN.email, PASSWORD);
+
+    const supabase = getSupabaseAdmin();
+
+    const { data: existingLog } = await supabase
+      .from('activity_logs')
+      .select('org_id, user_id')
+      .limit(1)
+      .single();
+
+    // オプションフィールドを指定せずINSERT
+    const { data: inserted, error } = await supabase
+      .from('activity_logs')
+      .insert({
+        org_id: existingLog!.org_id,
+        user_id: existingLog!.user_id,
+        action: 'test.optional_fields_null',
+        payload: {},
+      })
+      .select()
+      .single();
+
+    expect(error).toBeNull();
+    expect(inserted).not.toBeNull();
+
+    // オプションフィールドはNULL
+    expect(inserted?.request_id).toBeNull();
+    expect(inserted?.session_id).toBeNull();
+    expect(inserted?.ip_address).toBeNull();
+    expect(inserted?.user_agent).toBeNull();
+  });
+});

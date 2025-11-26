@@ -9,11 +9,13 @@
 --   2. profiles UNIQUE
 
 -- ============================================================
--- 1. 
+-- 1.
 -- ============================================================
 
 DROP POLICY IF EXISTS "Users can update own context" ON user_org_context;
 DROP POLICY IF EXISTS "Users can insert own context" ON user_org_context;
+DROP POLICY IF EXISTS "Users can update own context to member orgs only" ON user_org_context;
+DROP POLICY IF EXISTS "Users can insert own context for member orgs only" ON user_org_context;
 
 -- ============================================================
 -- 2. 

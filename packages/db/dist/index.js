@@ -12,6 +12,11 @@ async function logActivity(supabase, logData) {
       user_id: logData.userId,
       action: logData.action,
       payload: logData.payload ?? {},
+      request_id: logData.requestId,
+      session_id: logData.sessionId,
+      ip_address: logData.ipAddress,
+      user_agent: logData.userAgent,
+      severity: logData.severity ?? "info",
       created_at: (/* @__PURE__ */ new Date()).toISOString()
     });
     if (error) {

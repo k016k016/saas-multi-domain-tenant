@@ -10,7 +10,7 @@
  * - 組織切替の操作はactivity_logsに記録する（将来実装）
  */
 
-import { createServerClient, logActivity } from '@repo/db';
+import { createServerClient, getSupabaseAdmin, logActivity } from '@repo/db';
 import type { ActionResult } from '@repo/config';
 
 interface SwitchOrgData {
@@ -56,7 +56,11 @@ export async function switchOrganization(
     const userId = user.id;
 
     // 3. ユーザーが指定組織に所属しているか確認
-    const { data: profile, error: profileError } = await supabase
+    const adminSupabase = getSupabaseAdmin();
+
+    // RLSポリシーが自己参照しており、ユーザーコンテキストのままprofilesをSELECTすると
+    // "infinite recursion" エラーになるため、ここはService Roleで明示的にチェックする。
+    const { data: profile, error: profileError } = await adminSupabase
       .from('profiles')
       .select('org_id, role')
       .eq('user_id', userId)
@@ -114,7 +118,7 @@ export async function switchOrganization(
     }
 
     // 6. Phase 3: 組織のslugを取得してサブドメインURLを生成
-    const { data: org, error: orgError } = await supabase
+    const { data: org, error: orgError } = await adminSupabase
       .from('organizations')
       .select('slug')
       .eq('id', targetOrgId)

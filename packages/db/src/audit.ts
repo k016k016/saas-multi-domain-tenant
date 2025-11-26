@@ -51,6 +51,16 @@ export interface AuditLogPayload {
   action: AuditAction;
   /** 詳細情報（任意）- JSON形式で操作の詳細を記録 */
   payload?: Record<string, unknown>;
+  /** リクエストID（任意）- 分散トレーシング用 */
+  requestId?: string;
+  /** セッションID（任意）- Supabaseセッション識別 */
+  sessionId?: string;
+  /** IPアドレス（任意）- クライアントのIPアドレス */
+  ipAddress?: string;
+  /** User-Agent（任意）- クライアントのUser-Agentヘッダ */
+  userAgent?: string;
+  /** ログレベル（任意）- デフォルト: 'info' */
+  severity?: 'info' | 'warning' | 'critical';
 }
 
 /**
@@ -84,6 +94,11 @@ export async function logActivity(
       user_id: logData.userId,
       action: logData.action,
       payload: logData.payload ?? {},
+      request_id: logData.requestId,
+      session_id: logData.sessionId,
+      ip_address: logData.ipAddress,
+      user_agent: logData.userAgent,
+      severity: logData.severity ?? 'info',
       created_at: new Date().toISOString(),
     });
 

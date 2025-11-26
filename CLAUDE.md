@@ -41,7 +41,7 @@
 	•	権限系：管理は403を検証。/unauthorized 前提のテストは廃止。
 	•	テストを勝手にスキップしないこと。test.skip()の追加は禁止。
 	•	E2E実行は必ずフェーズ単位（p1→p2→p3→p4）で順次実行。並列実行禁止。
-	•	E2E実行前の必須手順（必ず順番通りに実行）：
+	•	E2E実行前の必須手順（いかなる時も全てのテスト前に必ず順番通りに実行）：
 		1. プロセス停止：lsof -ti:3001,3002,3003,3004 | xargs kill -9 2>/dev/null && pkill -f "pnpm dev" 2>/dev/null
 		2. キャッシュクリア：rm -rf apps/*/.next .turbo playwright-report test-results
 		3. テストユーザー作成：pnpm setup:e2e （重要：seed:allの前に必ず実行）

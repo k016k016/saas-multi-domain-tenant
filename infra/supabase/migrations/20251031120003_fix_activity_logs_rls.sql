@@ -10,9 +10,11 @@
 -- activity_logsRLS
 -- ============================================================
 
---  activity_logs 
+--  activity_logs
 DROP POLICY IF EXISTS "activity_logs_select_policy" ON activity_logs;
 DROP POLICY IF EXISTS "activity_logs_insert_policy" ON activity_logs;
+DROP POLICY IF EXISTS "activity_logs_select_authenticated" ON activity_logs;
+DROP POLICY IF EXISTS "activity_logs_insert_authenticated" ON activity_logs;
 
 -- ------------------------------------------------------------
 --  activity_logs  RLS  - 

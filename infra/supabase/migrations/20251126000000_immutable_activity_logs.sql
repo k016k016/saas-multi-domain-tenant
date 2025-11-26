@@ -17,13 +17,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- UPDATEトリガー
+-- UPDATEトリガー (idempotent)
+DROP TRIGGER IF EXISTS prevent_activity_logs_update_trigger ON activity_logs;
 CREATE TRIGGER prevent_activity_logs_update_trigger
   BEFORE UPDATE ON activity_logs
   FOR EACH ROW
   EXECUTE FUNCTION prevent_activity_logs_update();
 
--- DELETEトリガー
+-- DELETEトリガー (idempotent)
+DROP TRIGGER IF EXISTS prevent_activity_logs_delete_trigger ON activity_logs;
 CREATE TRIGGER prevent_activity_logs_delete_trigger
   BEFORE DELETE ON activity_logs
   FOR EACH ROW
