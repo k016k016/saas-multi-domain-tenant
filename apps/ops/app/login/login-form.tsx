@@ -13,6 +13,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithPassword } from './actions';
 
+function resolveOpsRedirectUrl(target?: string | null) {
+  const fallback = process.env.NEXT_PUBLIC_OPS_URL || 'http://ops.local.test:3004';
+  try {
+    const url = new URL(target ?? '/', fallback);
+    url.pathname = '/';
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return `${fallback.replace(/\/$/, '')}/`;
+  }
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -32,12 +45,17 @@ export function LoginForm() {
         setMessage({ type: 'error', text: result.error });
       } else {
         // サインイン成功 → Server Action が返した nextUrl (OPSドメイン) へ遷移
-        const nextUrl = result.nextUrl || process.env.NEXT_PUBLIC_OPS_URL || 'http://ops.local.test:3005';
+        const destination = resolveOpsRedirectUrl(result.nextUrl);
         // nextUrl が相対パスの場合は router.push、フルURLの場合は location.assign
-        if (nextUrl.startsWith('/')) {
-          router.push(nextUrl);
-        } else {
-          window.location.assign(nextUrl);
+        try {
+          const url = new URL(destination);
+          if (url.origin === window.location.origin) {
+            router.push(url.toString());
+          } else {
+            window.location.assign(url.toString());
+          }
+        } catch {
+          window.location.assign(destination);
         }
       }
     } catch (err) {

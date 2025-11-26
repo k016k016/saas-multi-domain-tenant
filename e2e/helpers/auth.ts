@@ -22,6 +22,22 @@ export async function uiLogin(page: Page, email: string, password: string) {
         .isVisible()
         .catch(() => false);
 
+      if (!invalidCredentials) {
+        // 認証は成功しているがクライアント遷移が完了していないケースに備え、
+        // 明示的にAPPドメインへ遷移してCookieを有効化する。
+        try {
+          await page.goto(DOMAINS.APP, { waitUntil: 'domcontentloaded' });
+          if (page.url().startsWith(DOMAINS.APP) || (await hasSupabaseSessionCookie(page))) {
+            return;
+          }
+        } catch {
+          // fallthrough to retry/throw logic below
+        }
+        if (await hasSupabaseSessionCookie(page)) {
+          return;
+        }
+      }
+
       if (attempt === 3 || !invalidCredentials) {
         throw error;
       }
@@ -30,6 +46,14 @@ export async function uiLogin(page: Page, email: string, password: string) {
       await page.waitForTimeout(1_000);
     }
   }
+}
+
+async function hasSupabaseSessionCookie(page: Page) {
+  const cookies = await page.context().cookies();
+  return cookies.some((cookie) =>
+    cookie.name.startsWith('sb-') &&
+    /access-token|refresh-token/i.test(cookie.name)
+  );
 }
 
 export async function uiLogout(page: Page) {
