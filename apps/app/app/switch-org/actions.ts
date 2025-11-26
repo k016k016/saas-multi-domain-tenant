@@ -84,7 +84,7 @@ export async function switchOrganization(
     }
 
     // 4. active org を DB に保存（Cookie は使わない）
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminSupabase
       .from('user_org_context')
       .upsert({
         user_id: userId,
