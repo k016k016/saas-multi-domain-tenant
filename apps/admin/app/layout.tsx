@@ -4,7 +4,7 @@
  * アクセス制御:
  * - admin と owner のみアクセス可能
  * - member は 403 を返す
- * - middlewareでロール検証済みであることを前提とする
+ * - 未所属orgへのアクセスは各ページで検証（layoutでは通す）
  */
 
 import type { Metadata } from 'next';
@@ -28,6 +28,9 @@ export default async function RootLayout({
 }) {
   const org = await getCurrentOrg();
   const availableOrgs = await getUserOrganizations();
+
+  // orgがnullの場合は各ページで権限検証・リダイレクト処理を行う
+  // layoutではナビゲーションを表示しないだけ
   return (
     <html lang="ja">
       <body style={{

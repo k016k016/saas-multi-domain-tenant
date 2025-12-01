@@ -419,6 +419,16 @@ pnpm test:e2e
 pnpm test:e2e:ui
 ```
 
+フェーズごとの個別実行（常に p1→p2→p3→p4→p5 の順番を厳守）:
+
+```bash
+pnpm test:e2e:p1  # Phase 1: Baseline
+pnpm test:e2e:p2  # Phase 2: Members & Audit
+pnpm test:e2e:p3  # Phase 3: OPS & Orgs
+pnpm test:e2e:p4  # Phase 4: Boundary & RLS
+pnpm test:e2e:p5  # Phase 5: Security / 意地悪テスト
+```
+
 ### トラブルシューティング
 
 #### テストが「Invalid login credentials」で失敗する

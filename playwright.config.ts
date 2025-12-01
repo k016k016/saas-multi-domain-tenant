@@ -91,6 +91,13 @@ export default defineConfig({
       testMatch: /e2e\/tests\/p4-boundary\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
+    // Phase 5: セキュリティ/意地悪テスト
+    {
+      name: 'p5-chromium',
+      testMatch: /e2e\/tests\/p5-security\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+      fullyParallel: false,
+    },
     // 旧プロジェクト定義（互換性のため残す）
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },
     { name: 'app', use: { baseURL: APP_URL, ...devices['Desktop Chrome'] } },

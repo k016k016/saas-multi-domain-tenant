@@ -6,7 +6,7 @@
 
 ## 1. フェーズ分離の原則
 
-テストは2つのフェーズに分離されています：
+テストは5つのフェーズに分離されています：
 
 ### Phase 1 (p1-baseline): 基盤テスト
 **配置場所**: `e2e/tests/p1-baseline/`
@@ -23,11 +23,11 @@
 
 **実行コマンド**:
 ```bash
-pnpm test:e2e:p1       # chromium + firefox
-pnpm test:e2e:p1:ui    # chromium + UI mode
+pnpm test:e2e:p1
+pnpm test:e2e:p1:ui
 ```
 
-**ブラウザ**: chromium + firefox のみ（WebKitはスキップ）
+**ブラウザ**: chromium（UIモードはデバッグ用途）
 
 ### Phase 2 (p2-members-audit): 新機能テスト
 **配置場所**: `e2e/tests/p2-members-audit/`
@@ -43,11 +43,57 @@ pnpm test:e2e:p1:ui    # chromium + UI mode
 
 **実行コマンド**:
 ```bash
-pnpm test:e2e:p2       # chromium + firefox
-pnpm test:e2e:p2:ui    # chromium + UI mode
+pnpm test:e2e:p2
+pnpm test:e2e:p2:ui
 ```
 
-**ブラウザ**: chromium + firefox
+**ブラウザ**: chromium
+
+### Phase 3 (p3-ops-orgs): OPS & 組織ライフサイクル
+**配置場所**: `e2e/tests/p3-ops-orgs/`
+
+**目的**: OPS向け機能（組織CRUD、ライフサイクル、OPSユーザーの権限）を検証
+
+**含まれるテスト**:
+- OPSコンソールへのアクセス制御
+- 組織作成・編集・削除・凍結/解除
+- OPSユーザーの多組織所属と横断操作の制御
+
+**実行コマンド**:
+```bash
+pnpm test:e2e:p3
+```
+
+### Phase 4 (p4-boundary): 境界・RLS・クロスドメイン
+**配置場所**: `e2e/tests/p4-boundary/`
+
+**目的**: ドメイン間アクセス、RLS境界、マルチタブ挙動など、境界系のリグレッションを検証
+
+**含まれるテスト**:
+- ロール別のドメインアクセス
+- RLSベースのデータ越境防止
+- マルチタブ・マルチホストでのコンテキスト独立性
+
+**実行コマンド**:
+```bash
+pnpm test:e2e:p4
+```
+
+### Phase 5 (p5-security): セキュリティ / 意地悪テスト
+**配置場所**: `e2e/tests/p5-security/`
+
+**目的**: CSRF/直叩き、ホスト・ヘッダー偽装、RLSバイパスなど、意地悪ケースをまとめて検証
+
+**含まれるテスト**:
+- `x-org-slug` ヘッダー注入
+- サブドメイン偽装アクセス
+- Supabase REST への不正INSERT/RLSバイパス
+- 追加予定のOPS cookie盗用や凍結中orgアクセス遮断
+
+**実行コマンド**:
+```bash
+pnpm test:e2e:p5
+```
 
 ---
 
@@ -327,18 +373,25 @@ await page.locator('select#role').selectOption('member');
 
 ### 全テスト実行
 ```bash
-pnpm test:e2e          # 全フェーズ（chromium + firefox）
+pnpm test:e2e          # 全フェーズ（chromium）
 pnpm test:e2e:ui       # 全フェーズ（chromium + UI mode）
 ```
 
 ### フェーズ別実行
 ```bash
+pnpm test:e2e:p1
+pnpm test:e2e:p2
+pnpm test:e2e:p3
+pnpm test:e2e:p4
+pnpm test:e2e:p5
+```
+```bash
 # Phase 1のみ
-pnpm test:e2e:p1       # chromium + firefox
+pnpm test:e2e:p1       # chromium
 pnpm test:e2e:p1:ui    # chromium + UI mode
 
 # Phase 2のみ
-pnpm test:e2e:p2       # chromium + firefox
+pnpm test:e2e:p2       # chromium
 pnpm test:e2e:p2:ui    # chromium + UI mode
 ```
 
