@@ -89,9 +89,12 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       # E2E（playwright.config.ts で webServer/baseURL を管理）
-      # Phase 1（基盤テスト）のみ実行（Chromiumのみ - Firefoxは安定性の問題により除外）
-      - name: Run E2E
-        run: pnpm -w test:e2e --project=p1-chromium
+      # Phase 1（基盤テスト）+ Phase 5（セキュリティテスト）を実行
+      - name: Run E2E (P1 + P5)
+        run: |
+          pnpm -w test:e2e --project=p1-chromium
+          pnpm setup:e2e
+          pnpm -w playwright test e2e/tests/p5-security --project=p5-chromium
 
       - name: Upload Playwright report
         if: always()
