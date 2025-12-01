@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { signInWithPassword } from './actions';
 
 function resolveAppRedirectUrl(target?: string | null) {
@@ -153,8 +154,10 @@ export function LoginForm() {
         {loading ? '送信中...' : 'サインイン'}
       </button>
 
-      <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-        メールアドレスとパスワードでサインインします。
+      <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>
+        <Link href="/forgot-password" style={{ color: '#0070f3', textDecoration: 'none' }}>
+          パスワードをお忘れですか？
+        </Link>
       </p>
     </form>
   );

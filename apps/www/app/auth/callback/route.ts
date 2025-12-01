@@ -3,6 +3,7 @@
  *
  * 責務:
  * - Magic Link からのリダイレクトを処理
+ * - パスワードリセット (recovery) からのリダイレクトを処理
  * - code を session に交換
  * - Cookie に org_id と role を設定
  * - app ドメインへリダイレクト（組織未所属の場合は /switch-org）
@@ -10,6 +11,7 @@
  * 注意:
  * - このエンドポイントは Supabase の emailRedirectTo で指定される
  * - セッション確立後は app ドメインへ遷移
+ * - type=recovery の場合は /reset-password へ遷移
  */
 
 import { createServerClient } from '@repo/db';
@@ -18,6 +20,12 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const type = requestUrl.searchParams.get('type');
+
+  const wwwUrl =
+    process.env.NEXT_PUBLIC_WWW_URL ||
+    process.env.WWW_URL ||
+    'http://www.local.test:3001';
 
   if (code) {
     const supabase = await createServerClient();
@@ -28,11 +36,12 @@ export async function GET(request: NextRequest) {
     if (error || !data.session) {
       console.error('[auth/callback] Session exchange failed:', error);
       // エラーの場合はサインインページへ戻す
-      const wwwUrl =
-        process.env.NEXT_PUBLIC_WWW_URL ||
-        process.env.WWW_URL ||
-        'http://www.local.test:3001';
       return NextResponse.redirect(`${wwwUrl}/login?error=auth_failed`);
+    }
+
+    // パスワードリセット (recovery) の場合は /reset-password へ
+    if (type === 'recovery') {
+      return NextResponse.redirect(`${wwwUrl}/reset-password`);
     }
 
     // Supabase Session は createServerClient() が自動的に Cookie を管理
@@ -45,9 +54,5 @@ export async function GET(request: NextRequest) {
   }
 
   // code がない場合はサインインページへ戻す
-  const wwwUrl =
-    process.env.NEXT_PUBLIC_WWW_URL ||
-    process.env.WWW_URL ||
-    'http://www.local.test:3001';
   return NextResponse.redirect(`${wwwUrl}/login`);
 }
