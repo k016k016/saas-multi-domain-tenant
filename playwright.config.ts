@@ -86,10 +86,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     // Phase 4: 境界系・回帰用E2E（chromium のみ）
+    // 複数コンテキスト・複数uiLogin呼び出しのテストがあるためタイムアウト延長
     {
       name: 'p4-chromium',
       testMatch: /e2e\/tests\/p4-boundary\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
+      timeout: 45_000, // デフォルト30秒→45秒
     },
     // Phase 5: セキュリティ/意地悪テスト
     {
