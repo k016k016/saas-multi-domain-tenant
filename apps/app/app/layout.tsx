@@ -46,6 +46,7 @@ export default async function RootLayout({
                 availableOrgs={availableOrgs}
               />
             )}
+            <a href="/profile" style={{ color: '#93c5fd', textDecoration: 'none' }}>プロフィール</a>
             <LogoutButton />
           </div>
         </nav>
