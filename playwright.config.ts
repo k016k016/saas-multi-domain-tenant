@@ -32,7 +32,7 @@ export default defineConfig({
   testDir: './e2e/tests',
   timeout: CI ? 60_000 : 30_000, // CI環境では60秒に延長
   expect: { timeout: CI ? 15_000 : 10_000 },
-  workers: CI ? 1 : undefined, // CI環境では直列実行してテスト間のデータ競合を防ぐ
+  workers: 1, // 同一ユーザーのセッション競合を防ぐため直列実行
   reporter: CI ? 'github' : [['list'], ['html', { open: 'never' }]],
   globalTeardown: './playwright.global-teardown.ts',
   use: {

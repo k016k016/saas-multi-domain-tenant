@@ -58,17 +58,20 @@ test.describe('組織ライフサイクル（OPS）', () => {
         // 編集モーダルを開く
         const row = page.locator('tr', { hasText: testOrgName });
         await row.getByRole('button', { name: /編集/i }).click();
+        await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
 
         // プランを変更
         await page.locator('select#plan').selectOption('enterprise');
         await page.getByRole('button', { name: /更新/i }).click();
 
-        // 成功確認
+        // モーダルが閉じることを確認
+        await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+
+        // 成功メッセージ確認
         await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
 
-        // 再度編集モーダルを開いて確認
-        await row.getByRole('button', { name: /編集/i }).click();
-        await expect(page.locator('select#plan')).toHaveValue('enterprise');
+        // 一覧で「enterprise」が表示されていることを確認（既存テストと同じパターン）
+        await expect(row.getByText('enterprise')).toBeVisible();
       } finally {
         await deleteTestOrganization(testOrgId);
       }

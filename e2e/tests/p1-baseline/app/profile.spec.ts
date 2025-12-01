@@ -28,6 +28,9 @@ test.describe('プロフィール編集機能', () => {
     await uiLogin(page, MEMBER.email, PASSWORD);
     await page.goto(`${DOMAINS.APP}/profile`);
 
+    // ページ読み込み完了を待つ
+    await expect(page.getByText('プロフィール編集')).toBeVisible();
+
     const newName = `TestUser_${Date.now()}`;
     await page.locator('#name').fill(newName);
     await page.getByRole('button', { name: /名前を更新/ }).click();
@@ -39,6 +42,9 @@ test.describe('プロフィール編集機能', () => {
     await uiLogin(page, MEMBER.email, PASSWORD);
     await page.goto(`${DOMAINS.APP}/profile`);
 
+    // ページ読み込み完了を待つ
+    await expect(page.getByText('プロフィール編集')).toBeVisible();
+
     await page.locator('#name').fill('');
     await page.getByRole('button', { name: /名前を更新/ }).click();
 
@@ -48,6 +54,7 @@ test.describe('プロフィール編集機能', () => {
   test('プロフィールページ → パスワード変更が成功する', async ({ page }) => {
     await uiLogin(page, MEMBER.email, PASSWORD);
     await page.goto(`${DOMAINS.APP}/profile`);
+    await expect(page.getByText('プロフィール編集')).toBeVisible();
 
     // 同じパスワードに変更（テスト用）
     await page.locator('#password').fill(PASSWORD);
@@ -64,6 +71,7 @@ test.describe('プロフィール編集機能', () => {
   test('プロフィールページ → パスワード不一致でエラー表示', async ({ page }) => {
     await uiLogin(page, MEMBER.email, PASSWORD);
     await page.goto(`${DOMAINS.APP}/profile`);
+    await expect(page.getByText('プロフィール編集')).toBeVisible();
 
     await page.locator('#password').fill('newpassword123');
     await page.locator('#confirmPassword').fill('differentpassword');
@@ -75,6 +83,7 @@ test.describe('プロフィール編集機能', () => {
   test('プロフィールページ → パスワード6文字未満でエラー表示', async ({ page }) => {
     await uiLogin(page, MEMBER.email, PASSWORD);
     await page.goto(`${DOMAINS.APP}/profile`);
+    await expect(page.getByText('プロフィール編集')).toBeVisible();
 
     await page.locator('#password').fill('12345');
     await page.locator('#confirmPassword').fill('12345');
