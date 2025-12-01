@@ -1,8 +1,11 @@
 このリポジトリは、**マルチテナント / マルチドメイン構成のSaaSスターター**です。  
-Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提に、SaaSの土台（権限モデル、ドメイン分割、監査ログ、組織コンテキスト）だけを先に固めます。
+Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提に、
+SaaSの土台（権限モデル、ドメイン分割、監査ログ、組織コンテキスト）に加え、
+代表的なサンプルUI（メンバー管理・監査ログ・Opsコンソール）も最小限だけ実装しています。
 
 これは完成品アプリではありません。  
-ログイン / サインアップ / 課金処理 / 本番業務ロジックはまだ入れません。そこは各プロダクト側で決めてください。
+ログイン / サインアップのUX、課金処理、各プロダクト固有の本番業務ロジックはこのリポジトリには含めません。
+これらは各プロダクト側で自由に設計してください。
 
 > 注記: Edge と Node の責務分離（ADR-005参照）。middleware は Edge で軽量判定のみ、DB/認可はサーバ側で再検証。
 
@@ -58,7 +61,8 @@ Supabase(Postgres/RLS) と Next.js(App Router) / Vercel を前提に、SaaSの�
 ### ops
 - SaaS提供側（ベンダー側）の内部コンソール
 - 将来的には複数組織を横断したサポート/監査を行う場所
-- 現時点の雛形では "internal only / ops only" のダミーページのみ用意する
+- 現時点の雛形では "internal only / ops only" の最小Opsコンソール
+  （組織CRUD、メンバー管理、凍結/解除など）を提供する
 - 現段階ではRLSをバイパスするような横断閲覧機能は実装しない
 - 本番: `ops.example.com`（Vercelプロジェクト: Root=`apps/ops`）
 

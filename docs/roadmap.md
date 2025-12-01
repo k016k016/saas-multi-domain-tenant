@@ -18,6 +18,9 @@
 - **組織切替の厳格化**: `apps/app/app/switch-org/actions.ts` で所属検証ロジック、`ActionResult` 形式返却、監査ログ記録を実装済み
 - **共通認可ガード**: `packages/config/src/auth.ts` で `getCurrentOrg()`, `getCurrentRole()`, `hasRole()` 実装済み（ロール階層に基づく権限チェック）
 - **CI自動化**: `.github/workflows/ci.yml` でEdge-safe検証、redirect()検出、E2E自動実行を実装済み（Playwrightによる本番ビルドテスト）
+- **admin/members CRUD（実DB/RLS）**: 招待→有効化、ロール変更、削除（監査ログ付き）
+- **監査ログ閲覧UI（admin向け最小UI）**: 期間/ユーザー/アクション種別フィルタ、CSVエクスポート
+- **UX最小整備**: `/unauthorized` と `error.tsx` を実装
 
 ---
 
@@ -29,9 +32,7 @@
 
 ## ▶ Next（P1: 基礎機能）
 
-- **admin/members CRUD（実DB/RLS）**: 招待→有効化、ロール変更、削除（監査ログ必須）
-- **監査ログ閲覧（admin向け最小UI）**: 期間/ユーザー/アクションの簡易絞り込み
-- **UX最小整備**: `/unauthorized` と `error.tsx`
+- （現時点では追加検討中）
 
 ---
 

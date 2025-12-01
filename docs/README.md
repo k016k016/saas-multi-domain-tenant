@@ -7,6 +7,7 @@
 ### 新規開発者向け
 - **[クイックスタート](./onboarding/quickstart.md)** - 最速でローカル開発環境を立ち上げる
 - **[アーキテクチャ概要](./onboarding/architecture-overview.md)** - 設計判断の背景とCLAUDE.mdルールの理由
+- **[新プロダクト追加ガイド](./onboarding/new-product-from-template.md)** - このスターター上に業務ドメインを載せる手順
 
 ### デプロイ
 - **[Vercelセットアップ](./deployment/vercel-setup.md)** - 4プロジェクトの作成と環境変数設定
@@ -23,6 +24,7 @@
 - **onboarding/** - 開発者向けオンボーディング
   - `quickstart.md` - セットアップガイド（10分）
   - `architecture-overview.md` - 設計判断の背景
+  - `new-product-from-template.md` - 新しいプロダクトをこのスターターに載せるときのガイド
 
 - **deployment/** - デプロイ手順
   - `vercel-setup.md` - Vercel 4プロジェクト作成手順
@@ -48,6 +50,9 @@
   - `edge-middleware.md` - Edge Middlewareパターン
   - `cookies-and-sessions.md` - Cookie/Sessionパターン
   - `authentication-authorization.md` - 認証・認可パターン
+  - `notifications.md` - 通知・メール送信の抽象レイヤーパターン
+  - `cache-and-queue.md` - キャッシュ/キューの抽象レイヤーとRedis利用パターン
+  - `storage-and-cdn.md` - 画像ストレージ/Cloudflare CDN利用パターン（直リンク禁止方針）
 
 - **adr/** - アーキテクチャ決定記録 (ADR)
   - `ADR-005-edge-middleware-separation.md` - Edge Middleware と Node サーバ処理の分離

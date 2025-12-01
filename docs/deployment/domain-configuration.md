@@ -49,6 +49,26 @@ admin.yourdomain.com
 ops.yourdomain.com
 ```
 
+---
+
+## Cloudflare を使う場合の方針
+
+DNSプロバイダとして Cloudflare を使う場合も、基本方針は変わりません。
+
+- DNS 管理: Cloudflare で A/CNAME レコードを管理し、向き先は Vercel の指示通りに設定する
+- WAF / レート制限: Cloudflare 側で有効化してもよいが、アプリの認証や RLS の責務はサーバー側（Supabase/Postgres+Next.js）に残す
+- キャッシュ: HTML/JSON など動的レスポンスは原則キャッシュしない（静的アセットのみ）
+
+### 推奨構成
+
+- Cloudflare: パブリックインターネットと Vercel の間に置き、DNS + WAF + DDoS 保護を担当
+- Vercel: Next.js アプリのホスティングを担当
+- Supabase: 認証・DB・RLS を担当
+
+Cloudflare Workers / KV / Durable Objects などを使った高度な構成も可能ですが、このスターターでは
+それらには依存していません。必要になった場合は、Workers からは「別のクライアント」として
+API を呼ぶ形をとり、アプリ本体の責務分離（www/app/admin/ops と RLS）は崩さないようにしてください。
+
 ### 2. DNSプロバイダーでの設定
 
 ドメイン管理サービス（Cloudflare、Route53、Namecheapなど）で以下のレコードを追加：
