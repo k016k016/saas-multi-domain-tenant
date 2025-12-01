@@ -108,16 +108,17 @@ pnpm dev
 sleep 40  # すべてのアプリ（www/app/admin/ops）の起動完了を待つ
 
 # 7. テスト実行（全フェーズ一括実行）
-pnpm test:e2e:p1 && pnpm test:e2e:p2 && pnpm test:e2e:p3 && pnpm test:e2e:p4
+pnpm test:e2e:p1 && pnpm test:e2e:p2 && pnpm test:e2e:p3 && pnpm test:e2e:p4 && pnpm test:e2e:p5
 ```
 
 ### フェーズ別実行（デバッグ時）
 
 ```bash
-pnpm test:e2e:p1  # Phase 1: Baseline（31テスト）
-pnpm test:e2e:p2  # Phase 2: Members & Audit（46テスト）
-pnpm test:e2e:p3  # Phase 3: OPS & Orgs（49テスト）
-pnpm test:e2e:p4  # Phase 4: Boundary & RLS（46テスト）
+pnpm test:e2e:p1  # Phase 1: Baseline
+pnpm test:e2e:p2  # Phase 2: Members & Audit
+pnpm test:e2e:p3  # Phase 3: OPS & Orgs
+pnpm test:e2e:p4  # Phase 4: Boundary & RLS
+pnpm test:e2e:p5  # Phase 5: Security / 意地悪
 
 # 特定のファイルのみ実行
 pnpm test:e2e:p2 e2e/tests/p2-members-audit/admin/org-settings.spec.ts

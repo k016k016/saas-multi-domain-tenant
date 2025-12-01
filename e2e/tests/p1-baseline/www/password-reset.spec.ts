@@ -26,7 +26,8 @@ test.describe('パスワードリセット機能', () => {
   test('forgot-password → 有効なメール送信 → 成功メッセージ', async ({ page }) => {
     await page.goto(`${DOMAINS.WWW}/forgot-password`);
 
-    await page.locator('#email').fill('member1@example.com');
+    // 並列テスト用: このファイル専用のユーザー
+    await page.locator('#email').fill('member6@example.com');
     await page.getByRole('button', { name: /送信|リセット/i }).click();
 
     await expect(page.getByText(/メール.*送信|確認してください/i)).toBeVisible();

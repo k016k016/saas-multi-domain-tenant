@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
-import { resetUserToOrg1 } from '../../../helpers/db';
+import { resetUserToOrg1, deleteTestUser } from '../../../helpers/db';
 
+// 並列テスト用: このファイル専用のユーザー
 const ADMIN = { email: 'admin1@example.com' };
 const OWNER = { email: 'owner1@example.com' };
 const MEMBER = { email: 'member-switcher@example.com' };
@@ -120,5 +121,37 @@ test.describe('監査ログ閲覧UI', () => {
     // href属性がdata:text/csvで始まることを確認
     const href = await csvLink.getAttribute('href');
     expect(href).toMatch(/^data:text\/csv/);
+  });
+
+  test('admin → 招待操作が監査ログに記録される', async ({ page }) => {
+    const invitedEmail = `audit-log-${Date.now()}@example.com`;
+
+    try {
+      await uiLogin(page, ADMIN.email, PASSWORD);
+      await page.goto(`${DOMAINS.ADMIN}/members`);
+
+      await page.getByRole('button', { name: /ユーザーを追加/i }).click();
+      await expect(page.getByRole('heading', { name: /新規ユーザーを招待/i })).toBeVisible();
+      await page.locator('#invite-name').fill('監査ログ用ユーザー');
+      await page.locator('#invite-email').fill(invitedEmail);
+      await page.locator('#invite-password').fill(PASSWORD);
+      await page.locator('#invite-password-confirm').fill(PASSWORD);
+      await page.locator('select#invite-role').selectOption('member');
+      await page.getByRole('button', { name: /^追加$/i }).click();
+      await expect(page.getByText(invitedEmail)).toBeVisible();
+
+      // 監査ログの反映をポーリングで待機
+      await expect.poll(
+        async () => {
+          await page.goto(`${DOMAINS.ADMIN}/audit-logs?action=member.invited&days=1`);
+          await page.waitForSelector('table', { timeout: 5000 }).catch(() => null);
+          const text = await page.locator('table').textContent().catch(() => '');
+          return text?.includes(invitedEmail) ?? false;
+        },
+        { timeout: 10000, intervals: [1000, 2000, 3000] }
+      ).toBe(true);
+    } finally {
+      await deleteTestUser(invitedEmail);
+    }
   });
 });

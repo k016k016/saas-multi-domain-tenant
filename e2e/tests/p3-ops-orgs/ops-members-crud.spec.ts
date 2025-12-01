@@ -1,12 +1,29 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../helpers/domains';
 import { uiLogin } from '../../helpers/auth';
+import { getSupabaseAdmin } from '@repo/db';
 
 const OPS_USER = { email: 'ops1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001'; // Test Organization
 
 test.describe('ops/orgs/[orgId] - メンバー管理', () => {
+  // 各テスト後にゴミユーザーをクリーンアップ
+  test.afterEach(async () => {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+
+    // ops-test-数字@example.com, ops-delete-test-数字@example.com パターンを削除
+    const garbageUsers = users?.filter(u =>
+      u.email && /^ops-(test|delete-test)-\d+@example\.com$/.test(u.email)
+    ) || [];
+
+    for (const user of garbageUsers) {
+      await supabaseAdmin.from('profiles').delete().eq('user_id', user.id);
+      await supabaseAdmin.from('user_org_context').delete().eq('user_id', user.id);
+      await supabaseAdmin.auth.admin.deleteUser(user.id);
+    }
+  });
   test('ops → 組織詳細ページにアクセス可能', async ({ page }) => {
     await uiLogin(page, OPS_USER.email, PASSWORD);
     await page.goto(`${DOMAINS.OPS}/orgs/${TEST_ORG_ID}`);

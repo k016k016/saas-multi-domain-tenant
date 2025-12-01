@@ -1,12 +1,38 @@
 import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../helpers/domains';
 import { uiLogin } from '../../helpers/auth';
-import { createTestOrganization, deleteTestOrganization } from '../../helpers/db';
+import { createTestOrganization, deleteTestOrganization, getSupabaseAdmin } from '../../helpers/db';
 
 const OPS_USER = { email: 'ops1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('ops/orgs CRUD', () => {
+  // 各テスト後にゴミ組織をクリーンアップ（try/finallyでカバーできない場合のセーフティネット）
+  test.afterEach(async () => {
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // テストで作成された組織パターンを削除
+    const patterns = [
+      'edit-name-test-%',
+      'plan-change-test-%',
+      'active-toggle-test-%',
+      'delete-test-%',
+      'slug-edit-test-%',
+      'edited-slug-%',
+    ];
+
+    for (const pattern of patterns) {
+      const { data: orgs } = await supabaseAdmin
+        .from('organizations')
+        .select('id')
+        .like('slug', pattern);
+
+      for (const org of orgs || []) {
+        await supabaseAdmin.from('profiles').delete().eq('org_id', org.id);
+        await supabaseAdmin.from('organizations').delete().eq('id', org.id);
+      }
+    }
+  });
   test('ops → 組織一覧にアクセス可能', async ({ page }) => {
     await uiLogin(page, OPS_USER.email, PASSWORD);
     await page.goto(`${DOMAINS.OPS}/orgs`);
@@ -51,84 +77,115 @@ test.describe('ops/orgs CRUD', () => {
 
   test('ops → 組織名の編集が成功する', async ({ page }) => {
     await uiLogin(page, OPS_USER.email, PASSWORD);
-    await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // 最初の編集ボタンをクリック
-    await page.getByRole('button', { name: /編集/i }).first().click();
+    // テスト用組織を作成
+    const originalName = `編集前組織-${Date.now()}`;
+    const testOrgSlug = `edit-name-test-${Date.now()}`;
+    const testOrgId = await createTestOrganization(originalName, testOrgSlug);
 
-    // モーダルが表示される
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
+    try {
+      await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // 組織名を変更
-    const newName = `編集済み組織-${Date.now()}`;
-    await page.locator('input#name').fill(newName);
+      // 作成した組織の編集ボタンをクリック
+      const row = page.locator('tr', { hasText: originalName });
+      await row.getByRole('button', { name: /編集/i }).click();
 
-    // 更新ボタンをクリック
-    await page.getByRole('button', { name: /更新/i }).click();
+      // モーダルが表示される
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
 
-    // モーダルが閉じる
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+      // 組織名を変更
+      const newName = `編集済み組織-${Date.now()}`;
+      await page.locator('input#name').fill(newName);
 
-    // 成功メッセージが表示される
-    await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+      // 更新ボタンをクリック
+      await page.getByRole('button', { name: /更新/i }).click();
 
-    // 一覧に変更が反映される
-    await expect(page.getByText(newName)).toBeVisible();
+      // モーダルが閉じる
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+
+      // 成功メッセージが表示される
+      await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+
+      // 一覧に変更が反映される
+      await expect(page.getByText(newName)).toBeVisible();
+    } finally {
+      await deleteTestOrganization(testOrgId);
+    }
   });
 
   test('ops → プラン変更が成功する', async ({ page }) => {
     await uiLogin(page, OPS_USER.email, PASSWORD);
-    await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // 最初の編集ボタンをクリック
-    await page.getByRole('button', { name: /編集/i }).first().click();
+    // テスト用組織を作成
+    const testOrgName = `プラン変更テスト-${Date.now()}`;
+    const testOrgSlug = `plan-change-test-${Date.now()}`;
+    const testOrgId = await createTestOrganization(testOrgName, testOrgSlug);
 
-    // モーダルが表示される
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
+    try {
+      await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // プランを変更
-    await page.locator('select#plan').selectOption('business');
+      // 作成した組織の編集ボタンをクリック
+      const row = page.locator('tr', { hasText: testOrgName });
+      await row.getByRole('button', { name: /編集/i }).click();
 
-    // 更新ボタンをクリック
-    await page.getByRole('button', { name: /更新/i }).click();
+      // モーダルが表示される
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
 
-    // モーダルが閉じる
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+      // プランを変更
+      await page.locator('select#plan').selectOption('business');
 
-    // 成功メッセージが表示される
-    await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+      // 更新ボタンをクリック
+      await page.getByRole('button', { name: /更新/i }).click();
 
-    // 一覧にbusinessが表示される
-    await expect(page.getByText('business').first()).toBeVisible();
+      // モーダルが閉じる
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+
+      // 成功メッセージが表示される
+      await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+
+      // 一覧にbusinessが表示される
+      await expect(row.getByText('business')).toBeVisible();
+    } finally {
+      await deleteTestOrganization(testOrgId);
+    }
   });
 
   test('ops → 組織の有効/無効の切り替えが成功する', async ({ page }) => {
     await uiLogin(page, OPS_USER.email, PASSWORD);
-    await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // 最初の編集ボタンをクリック
-    await page.getByRole('button', { name: /編集/i }).first().click();
+    // テスト用組織を作成
+    const testOrgName = `有効無効テスト-${Date.now()}`;
+    const testOrgSlug = `active-toggle-test-${Date.now()}`;
+    const testOrgId = await createTestOrganization(testOrgName, testOrgSlug);
 
-    // モーダルが表示される
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
+    try {
+      await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // 有効化チェックボックスの状態を反転
-    const checkbox = page.locator('input[type="checkbox"]');
-    const wasChecked = await checkbox.isChecked();
-    await checkbox.click();
+      // 作成した組織の編集ボタンをクリック
+      const row = page.locator('tr', { hasText: testOrgName });
+      await row.getByRole('button', { name: /編集/i }).click();
 
-    // 更新ボタンをクリック
-    await page.getByRole('button', { name: /更新/i }).click();
+      // モーダルが表示される
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
 
-    // モーダルが閉じる
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+      // 有効化チェックボックスの状態を反転（初期状態はtrue）
+      const checkbox = page.locator('input[type="checkbox"]');
+      await checkbox.uncheck();
 
-    // 成功メッセージが表示される
-    await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+      // 更新ボタンをクリック
+      await page.getByRole('button', { name: /更新/i }).click();
 
-    // 一覧にステータスが表示される（有効→無効、または無効→有効）
-    const expectedStatus = wasChecked ? '無効' : '有効';
-    await expect(page.getByText(expectedStatus).first()).toBeVisible();
+      // モーダルが閉じる
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+
+      // 成功メッセージが表示される
+      await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+
+      // 一覧にステータスが表示される（spanタグの「無効」を探す）
+      await expect(row.locator('span', { hasText: '無効' })).toBeVisible();
+    } finally {
+      await deleteTestOrganization(testOrgId);
+    }
   });
 
   test('ops → 組織削除が成功する（メンバー0人の場合）', async ({ page }) => {
@@ -192,29 +249,40 @@ test.describe('ops/orgs CRUD', () => {
 
   test('ops → スラッグの編集が成功する', async ({ page }) => {
     await uiLogin(page, OPS_USER.email, PASSWORD);
-    await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // 最初の編集ボタンをクリック
-    await page.getByRole('button', { name: /編集/i }).first().click();
+    // テスト用組織を作成
+    const testOrgName = `スラッグ編集テスト-${Date.now()}`;
+    const originalSlug = `slug-edit-test-${Date.now()}`;
+    const testOrgId = await createTestOrganization(testOrgName, originalSlug);
 
-    // モーダルが表示される
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
+    try {
+      await page.goto(`${DOMAINS.OPS}/orgs`);
 
-    // スラッグを変更
-    const newSlug = `edited-slug-${Date.now()}`;
-    await page.locator('input#slug').fill(newSlug);
+      // 作成した組織の編集ボタンをクリック
+      const row = page.locator('tr', { hasText: testOrgName });
+      await row.getByRole('button', { name: /編集/i }).click();
 
-    // 更新ボタンをクリック
-    await page.getByRole('button', { name: /更新/i }).click();
+      // モーダルが表示される
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).toBeVisible();
 
-    // モーダルが閉じる
-    await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+      // スラッグを変更
+      const newSlug = `edited-slug-${Date.now()}`;
+      await page.locator('input#slug').fill(newSlug);
 
-    // 成功メッセージが表示される
-    await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+      // 更新ボタンをクリック
+      await page.getByRole('button', { name: /更新/i }).click();
 
-    // 一覧に変更が反映される
-    await expect(page.getByText(newSlug)).toBeVisible();
+      // モーダルが閉じる
+      await expect(page.getByRole('heading', { name: /組織を編集/i })).not.toBeVisible();
+
+      // 成功メッセージが表示される
+      await expect(page.getByText(/組織を更新しました/i)).toBeVisible();
+
+      // 一覧に変更が反映される
+      await expect(page.getByText(newSlug)).toBeVisible();
+    } finally {
+      await deleteTestOrganization(testOrgId);
+    }
   });
 
   test('ops → キャンセルボタンでモーダルが閉じる', async ({ page }) => {

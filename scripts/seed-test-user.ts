@@ -39,7 +39,9 @@ const OPS_ORG_NAME = 'OPS System Organization';
 
 // E2Eテストで使用するテストユーザー
 // ロールごとに異なるメールアドレスを使用
+// 並列テスト対応：各ファイルが専用ユーザーを使用できるようプールを拡張
 const TEST_USERS = [
+  // 基本ユーザー（既存）
   { email: 'member1@example.com', role: 'member', name: '田中 太郎' },
   { email: 'admin1@example.com', role: 'admin', name: '鈴木 花子' },
   { email: 'owner1@example.com', role: 'owner', name: '山田 一郎' },
@@ -48,6 +50,24 @@ const TEST_USERS = [
   { email: 'owner2@example.com', role: 'owner', name: '佐藤 次郎' },
   { email: 'ops1@example.com', role: 'ops', name: 'OPS管理者' },
   { email: 'member-switcher@example.com', role: 'member', name: '組織 切替' },
+  // 並列テスト用追加ユーザー（P1用 member プール）
+  { email: 'member3@example.com', role: 'member', name: '並列テスト用 Member3' },
+  { email: 'member4@example.com', role: 'member', name: '並列テスト用 Member4' },
+  { email: 'member5@example.com', role: 'member', name: '並列テスト用 Member5' },
+  { email: 'member6@example.com', role: 'member', name: '並列テスト用 Member6' },
+  { email: 'member7@example.com', role: 'member', name: '並列テスト用 Member7' },
+  { email: 'member8@example.com', role: 'member', name: '並列テスト用 Member8' },
+  { email: 'member9@example.com', role: 'member', name: '並列テスト用 Member9' },
+  { email: 'member10@example.com', role: 'member', name: '並列テスト用 Member10' },
+  // 並列テスト用追加ユーザー（P2用 admin/owner プール）
+  { email: 'admin3@example.com', role: 'admin', name: '並列テスト用 Admin3' },
+  { email: 'admin4@example.com', role: 'admin', name: '並列テスト用 Admin4' },
+  { email: 'admin5@example.com', role: 'admin', name: '並列テスト用 Admin5' },
+  { email: 'admin6@example.com', role: 'admin', name: '並列テスト用 Admin6' },
+  { email: 'owner3@example.com', role: 'owner', name: '並列テスト用 Owner3' },
+  { email: 'owner4@example.com', role: 'owner', name: '並列テスト用 Owner4' },
+  { email: 'owner5@example.com', role: 'owner', name: '並列テスト用 Owner5' },
+  { email: 'owner6@example.com', role: 'owner', name: '並列テスト用 Owner6' },
 ] as const;
 
 async function upsertOrganization(supabase: ReturnType<typeof createClient>) {
@@ -223,6 +243,16 @@ async function upsertUser(
   } else if (email === 'owner2@example.com') {
     // owner2: org2のみ（仕様遵守: 各組織に必ず1人のowner）
     orgRoles = [{ orgId: TEST_ORG_ID_2, role: 'owner' }];
+  } else if (/^member[3-9]@example\.com$/.test(email) || email === 'member10@example.com') {
+    // 並列テスト用 member3〜10: org1のmemberとして登録
+    orgRoles = [{ orgId: TEST_ORG_ID, role: 'member' }];
+  } else if (/^admin[3-6]@example\.com$/.test(email)) {
+    // 並列テスト用 admin3〜6: org1のadminとして登録
+    orgRoles = [{ orgId: TEST_ORG_ID, role: 'admin' }];
+  } else if (/^owner[3-6]@example\.com$/.test(email)) {
+    // 並列テスト用 owner3〜6: org1のadminとして登録
+    // 注意: DB制約により各組織ownerは1人のみ。owner権限テストはowner1を共有
+    orgRoles = [{ orgId: TEST_ORG_ID, role: 'admin' }];
   } else {
     // owner1など: org1のみ
     orgRoles = [{ orgId: TEST_ORG_ID, role }];

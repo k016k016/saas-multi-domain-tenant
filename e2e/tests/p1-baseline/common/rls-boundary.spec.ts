@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 
-const MEMBER = { email: 'member1@example.com' };
-const ADMIN = { email: 'admin1@example.com' };
+// 並列テスト用: このファイル専用のユーザー
+const MEMBER = { email: 'member10@example.com' };
+const ADMIN = { email: 'admin4@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 // 注: このテストは複数組織のテストデータが必要です

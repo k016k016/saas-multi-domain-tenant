@@ -49,11 +49,16 @@ export async function uiLogin(page: Page, email: string, password: string) {
 }
 
 async function hasSupabaseSessionCookie(page: Page) {
-  const cookies = await page.context().cookies();
-  return cookies.some((cookie) =>
-    cookie.name.startsWith('sb-') &&
-    /access-token|refresh-token/i.test(cookie.name)
-  );
+  try {
+    const cookies = await page.context().cookies();
+    return cookies.some((cookie) =>
+      cookie.name.startsWith('sb-') &&
+      /access-token|refresh-token/i.test(cookie.name)
+    );
+  } catch {
+    // コンテキスト破棄時（タイムアウト後など）はfalseを返す
+    return false;
+  }
 }
 
 export async function uiLogout(page: Page) {

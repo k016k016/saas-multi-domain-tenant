@@ -203,6 +203,12 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
+  packages/cache:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   packages/config:
     dependencies:
       '@repo/db':
@@ -230,6 +236,12 @@ importers:
       next:
         specifier: ^16.0.0
         version: 16.0.1(@babel/core@7.28.5)(@playwright/test@1.56.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/notifications:
+    devDependencies:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

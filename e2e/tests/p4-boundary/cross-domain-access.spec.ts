@@ -23,12 +23,8 @@ test.describe('ドメイン間アクセス制御', () => {
 
       const res = await page.goto(`${DOMAINS.OPS}`);
 
-      // OPSドメインは ops1 専用。ownerでもアクセス不可
-      // 404またはログインページにリダイレクト
-      const status = res?.status();
-      const url = page.url();
-      const isBlocked = status === 404 || url.includes('/login') || url.includes('/unauthorized');
-      expect(isBlocked).toBe(true);
+      expect(res?.status()).toBe(404);
+      await expect(page.locator('body')).toContainText(/404|Not Found/i);
     });
 
     test('admin → /ops/orgs → 404', async ({ page }) => {
@@ -36,10 +32,8 @@ test.describe('ドメイン間アクセス制御', () => {
 
       const res = await page.goto(`${DOMAINS.OPS}/orgs`);
 
-      const status = res?.status();
-      const url = page.url();
-      const isBlocked = status === 404 || url.includes('/login') || url.includes('/unauthorized');
-      expect(isBlocked).toBe(true);
+      expect(res?.status()).toBe(404);
+      await expect(page.locator('body')).toContainText(/404|Not Found/i);
     });
 
     test('member → /ops → 404', async ({ page }) => {
@@ -47,10 +41,8 @@ test.describe('ドメイン間アクセス制御', () => {
 
       const res = await page.goto(`${DOMAINS.OPS}`);
 
-      const status = res?.status();
-      const url = page.url();
-      const isBlocked = status === 404 || url.includes('/login') || url.includes('/unauthorized');
-      expect(isBlocked).toBe(true);
+      expect(res?.status()).toBe(404);
+      await expect(page.locator('body')).toContainText(/404|Not Found/i);
     });
   });
 
@@ -61,12 +53,8 @@ test.describe('ドメイン間アクセス制御', () => {
       // ops1はorg1でadmin権限を持つ
       const res = await page.goto(`${DOMAINS.ADMIN}/members`);
 
-      // ops1がorg1のadminなら許可、そうでなければ拒否
-      const url = page.url();
-      const isAllowed = res?.ok() && url.includes('/members');
-      const isDenied = url.includes('/unauthorized') || url.includes('/login');
-
-      expect(isAllowed || isDenied).toBe(true);
+      expect(res?.ok()).toBeTruthy();
+      await expect(page.getByRole('heading', { name: /メンバー管理/i })).toBeVisible();
     });
 
     test('ops → /ops/orgs → アクセス可能', async ({ page }) => {

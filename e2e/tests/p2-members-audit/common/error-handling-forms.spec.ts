@@ -3,7 +3,8 @@ import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 import { resetUserToOrg1 } from '../../../helpers/db';
 
-const ADMIN = { email: 'admin1@example.com' };
+// 並列テスト用: このファイル専用のユーザー
+const ADMIN = { email: 'admin5@example.com' };
 const MEMBER = { email: 'member-switcher@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 

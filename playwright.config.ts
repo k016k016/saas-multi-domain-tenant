@@ -32,7 +32,7 @@ export default defineConfig({
   testDir: './e2e/tests',
   timeout: CI ? 60_000 : 30_000, // CI環境では60秒に延長
   expect: { timeout: CI ? 15_000 : 10_000 },
-  workers: 1, // 同一ユーザーのセッション競合を防ぐため直列実行
+  workers: CI ? 1 : undefined, // CI: 直列、ローカル: 並列（ユーザー分離済み）
   reporter: CI ? 'github' : [['list'], ['html', { open: 'never' }]],
   globalTeardown: './playwright.global-teardown.ts',
   use: {
@@ -65,10 +65,12 @@ export default defineConfig({
     //   retries: 1,
     // },
     // Phase 2: 新機能テスト（chromium のみ - Firefox は安定性の問題により除外）
+    // P2はowner権限テストがあるため直列実行（owner1を複数ファイルで共有）
     {
       name: 'p2-chromium',
       testMatch: /e2e\/tests\/p2-members-audit\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
+      fullyParallel: false,
     },
     // Firefox テストは一時的に無効化（安定性の問題のため）
     // {
@@ -84,10 +86,19 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     // Phase 4: 境界系・回帰用E2E（chromium のみ）
+    // 複数コンテキスト・複数uiLogin呼び出しのテストがあるためタイムアウト延長
     {
       name: 'p4-chromium',
       testMatch: /e2e\/tests\/p4-boundary\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
+      timeout: 45_000, // デフォルト30秒→45秒
+    },
+    // Phase 5: セキュリティ/意地悪テスト
+    {
+      name: 'p5-chromium',
+      testMatch: /e2e\/tests\/p5-security\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+      fullyParallel: false,
     },
     // 旧プロジェクト定義（互換性のため残す）
     { name: 'www', use: { baseURL: WWW_URL, ...devices['Desktop Chrome'] } },

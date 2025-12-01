@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { notFound } from 'next/navigation';
 import LogoutButton from './logout-button';
 import OrgSwitcher from './org-switcher';
 import { getCurrentOrg, getUserOrganizations } from '@repo/config';
@@ -15,6 +17,16 @@ export default async function RootLayout({
 }) {
   const org = await getCurrentOrg();
   const availableOrgs = await getUserOrganizations();
+
+  // X-Org-Slugヘッダーがある場合（ホストベースでorg指定）かつorgがnull → 未所属orgへのアクセス
+  // ヘッダーなしでorgがnullの場合はログインページへリダイレクトされている前提
+  const headersList = await headers();
+  const hasOrgSlugHeader = headersList.has('x-org-slug');
+
+  if (!org && hasOrgSlugHeader) {
+    // 明示的なorg指定があるのに所属していない → 404
+    notFound();
+  }
   return (
     <html lang="ja">
       <body style={{

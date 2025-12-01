@@ -153,19 +153,6 @@ test.describe('ops - ログイン設計の仕様', () => {
     expect(response?.status()).toBe(404);
   });
 
-  test('ops/loginでログイン成功 → opsドメインへリダイレクト', async ({ page }) => {
-    await page.goto(`${DOMAINS.OPS}/login`);
-
-    // ログインページの準備完了を待つ
-    await expect(page.getByTestId('ops-login-page-ready')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /OPS管理コンソール/i })).toBeVisible();
-
-    await page.locator('input#email').fill(OPS_USER.email);
-    await page.locator('input#password').fill(PASSWORD);
-    await page.getByRole('button', { name: /OPSサインイン/i }).click();
-
-    // 成功時は DOMAINS.OPS へリダイレクト（appドメインではない）
-    await expect(page).toHaveURL(new RegExp(`${DOMAINS.OPS}/?$`));
-    await expect(page.getByRole('heading', { name: /Ops コンソール/i })).toBeVisible();
-  });
+  // 「ops/loginでログイン成功 → opsドメインへリダイレクト」は
+  // :22 の「ops1 → ops専用ログインページからログイン可能」と重複するため削除
 });

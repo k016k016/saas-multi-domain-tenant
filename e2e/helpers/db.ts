@@ -88,11 +88,38 @@ export async function resetUserToOrg1(email: string): Promise<void> {
   const user = await findUserByEmail(supabase, email);
   await upsertUserOrgContext(supabase, user.id, TEST_ORG_ID);
 
-  // member1 / member-switcher の場合はorg1でのroleもmemberにリセット
+  // ロールをリセット（テスト間での汚染を防ぐ）
+  let targetRole: string | null = null;
   if (email === 'member1@example.com' || email === 'member-switcher@example.com') {
+    targetRole = 'member';
+  } else if (email === 'owner1@example.com') {
+    targetRole = 'owner';
+  }
+
+  if (targetRole) {
+    // owner1をownerに戻す場合、先に現在のownerをadminに降格
+    if (targetRole === 'owner') {
+      // 現在のownerを取得（owner1以外）
+      const { data: currentOwners } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('org_id', TEST_ORG_ID)
+        .eq('role', 'owner')
+        .neq('user_id', user.id);
+
+      // 現在のownerをadminに降格
+      for (const owner of currentOwners || []) {
+        await supabase
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('user_id', owner.user_id)
+          .eq('org_id', TEST_ORG_ID);
+      }
+    }
+
     const { error: roleError } = await supabase
       .from('profiles')
-      .update({ role: 'member' })
+      .update({ role: targetRole })
       .eq('user_id', user.id)
       .eq('org_id', TEST_ORG_ID);
 
@@ -108,18 +135,18 @@ export async function resetUserToOrg1(email: string): Promise<void> {
  * テスト用ユーザーを作成（メール送信なし）
  *
  * @param email - ユーザーのメールアドレス
- * @param role - ロール（member/admin）
+ * @param role - ロール（member/admin/owner）
  * @param password - パスワード
  * @returns 作成されたユーザーのID
  *
  * 用途:
- * - 招待機能のテスト（メール送信を回避）
- * - 動的なテストユーザー作成
+ * - 招待機能や組織ライフサイクルテストでの一時ユーザー作成
  */
 export async function createTestUser(
   email: string,
-  role: 'member' | 'admin',
-  password: string
+  role: 'member' | 'admin' | 'owner',
+  password: string,
+  orgId: string = TEST_ORG_ID
 ): Promise<string> {
   const supabase = getSupabaseAdmin();
 
@@ -141,7 +168,7 @@ export async function createTestUser(
     .from('profiles')
     .insert({
       user_id: userId,
-      org_id: TEST_ORG_ID,
+      org_id: orgId,
       role: role,
     });
 
@@ -154,7 +181,7 @@ export async function createTestUser(
     .from('user_org_context')
     .upsert({
       user_id: userId,
-      org_id: TEST_ORG_ID,
+      org_id: orgId,
       updated_at: new Date().toISOString(),
     });
 
