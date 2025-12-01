@@ -135,18 +135,18 @@ export async function resetUserToOrg1(email: string): Promise<void> {
  * テスト用ユーザーを作成（メール送信なし）
  *
  * @param email - ユーザーのメールアドレス
- * @param role - ロール（member/admin）
+ * @param role - ロール（member/admin/owner）
  * @param password - パスワード
  * @returns 作成されたユーザーのID
  *
  * 用途:
- * - 招待機能のテスト（メール送信を回避）
- * - 動的なテストユーザー作成
+ * - 招待機能や組織ライフサイクルテストでの一時ユーザー作成
  */
 export async function createTestUser(
   email: string,
-  role: 'member' | 'admin',
-  password: string
+  role: 'member' | 'admin' | 'owner',
+  password: string,
+  orgId: string = TEST_ORG_ID
 ): Promise<string> {
   const supabase = getSupabaseAdmin();
 
@@ -168,7 +168,7 @@ export async function createTestUser(
     .from('profiles')
     .insert({
       user_id: userId,
-      org_id: TEST_ORG_ID,
+      org_id: orgId,
       role: role,
     });
 
@@ -181,7 +181,7 @@ export async function createTestUser(
     .from('user_org_context')
     .upsert({
       user_id: userId,
-      org_id: TEST_ORG_ID,
+      org_id: orgId,
       updated_at: new Date().toISOString(),
     });
 

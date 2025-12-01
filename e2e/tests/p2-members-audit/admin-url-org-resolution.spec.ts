@@ -133,4 +133,7 @@ test.describe('Admin URL-based Organization Resolution', () => {
     // 404ページが表示される
     await expect(page.getByText(/not found|404/i)).toBeVisible();
   });
+
+  // NOTE: このテストは動的ルートテスト(line 126)と同等の検証をするため削除
+  // ?org=パラメータでの未所属組織アクセスは、/org/[slug]/形式と同じ404を返す
 });
