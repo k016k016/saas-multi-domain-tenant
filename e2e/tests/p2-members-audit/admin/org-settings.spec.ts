@@ -3,10 +3,14 @@ import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 import { resetUserToOrg1, getSupabaseAdmin } from '../../../helpers/db';
 
+// owner権限テスト用: owner1を使用（DB制約により各組織ownerは1人のみ）
 const ADMIN = { email: 'admin1@example.com' };
 const OWNER = { email: 'owner1@example.com' };
-const MEMBER = { email: 'member1@example.com' };
+const MEMBER = { email: 'member4@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
+
+// owner1を共有するため、このファイルのテストは直列実行
+test.describe.configure({ mode: 'serial' });
 
 test.describe('/org-settings アクセス制限', () => {
   // 各テスト前にmember1をorg1（member権限）にリセット
@@ -46,17 +50,6 @@ test.describe('/org-settings 機能テスト', () => {
     const supabase = getSupabaseAdmin();
 
     await resetUserToOrg1(OWNER.email);
-
-    // owner1 のロールを owner にリセット（権限譲渡テストの影響を排除）
-    const { data: authUsers } = await supabase.auth.admin.listUsers();
-    const ownerUser = authUsers.users.find(u => u.email === OWNER.email);
-    const { data: org } = await supabase.from('organizations').select('id').eq('slug', 'acme').single();
-
-    await supabase
-      .from('profiles')
-      .update({ role: 'owner' })
-      .eq('user_id', ownerUser!.id)
-      .eq('org_id', org!.id);
 
     // 組織を必ずアクティブ状態にリセット（前のテストの影響を排除）
     await supabase
@@ -173,24 +166,17 @@ test.describe('/org-settings 機能テスト', () => {
       .single();
     expect(afterNewOwner?.role).toBe('owner');
 
-    // ロールバック: 新owner → 元のロールに戻す
-    const { data: originalNewOwner } = await supabase
+    // ロールバック: 先に新ownerをadminに降格し、その後旧ownerをownerに戻す（DB制約を満たすため）
+    await supabase
       .from('profiles')
-      .select('role')
+      .update({ role: 'admin' })
       .eq('user_id', selectedValue)
-      .eq('org_id', orgId)
-      .single();
+      .eq('org_id', orgId);
 
     await supabase
       .from('profiles')
       .update({ role: 'owner' })
       .eq('user_id', ownerUser!.id)
-      .eq('org_id', orgId);
-
-    await supabase
-      .from('profiles')
-      .update({ role: 'admin' })  // 元のロールに戻す（admin or memberの可能性があるが、ここではadminと仮定）
-      .eq('user_id', selectedValue)
       .eq('org_id', orgId);
   });
 

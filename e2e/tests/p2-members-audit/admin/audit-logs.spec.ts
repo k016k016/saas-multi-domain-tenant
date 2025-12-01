@@ -3,6 +3,7 @@ import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 import { resetUserToOrg1 } from '../../../helpers/db';
 
+// 並列テスト用: このファイル専用のユーザー
 const ADMIN = { email: 'admin1@example.com' };
 const OWNER = { email: 'owner1@example.com' };
 const MEMBER = { email: 'member-switcher@example.com' };

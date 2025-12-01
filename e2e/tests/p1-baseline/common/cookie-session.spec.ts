@@ -3,12 +3,12 @@ import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 import { resetUserToOrg1 } from '../../../helpers/db';
 
-const MEMBER = { email: 'member1@example.com' };
+// 並列テスト用: このファイル専用のユーザー
+const MEMBER = { email: 'member7@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('Cookie・セッション管理', () => {
-  // 各テスト前にmember1をorg1（member権限）にリセット
-  // これにより他のテスト（特にorg-switching.spec.ts）による状態汚染を防ぐ
+  // 各テスト前にユーザーをorg1（member権限）にリセット
   test.beforeEach(async () => {
     await resetUserToOrg1(MEMBER.email);
   });

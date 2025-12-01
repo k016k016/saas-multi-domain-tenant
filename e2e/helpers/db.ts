@@ -88,11 +88,38 @@ export async function resetUserToOrg1(email: string): Promise<void> {
   const user = await findUserByEmail(supabase, email);
   await upsertUserOrgContext(supabase, user.id, TEST_ORG_ID);
 
-  // member1 / member-switcher の場合はorg1でのroleもmemberにリセット
+  // ロールをリセット（テスト間での汚染を防ぐ）
+  let targetRole: string | null = null;
   if (email === 'member1@example.com' || email === 'member-switcher@example.com') {
+    targetRole = 'member';
+  } else if (email === 'owner1@example.com') {
+    targetRole = 'owner';
+  }
+
+  if (targetRole) {
+    // owner1をownerに戻す場合、先に現在のownerをadminに降格
+    if (targetRole === 'owner') {
+      // 現在のownerを取得（owner1以外）
+      const { data: currentOwners } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('org_id', TEST_ORG_ID)
+        .eq('role', 'owner')
+        .neq('user_id', user.id);
+
+      // 現在のownerをadminに降格
+      for (const owner of currentOwners || []) {
+        await supabase
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('user_id', owner.user_id)
+          .eq('org_id', TEST_ORG_ID);
+      }
+    }
+
     const { error: roleError } = await supabase
       .from('profiles')
-      .update({ role: 'member' })
+      .update({ role: targetRole })
       .eq('user_id', user.id)
       .eq('org_id', TEST_ORG_ID);
 

@@ -3,8 +3,10 @@ import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 import { resetUserToOrg1 } from '../../../helpers/db';
 
-const MEMBER = { email: 'member1@example.com' };
-const ADMIN = { email: 'admin1@example.com' };
+// 並列テスト用: このファイル専用のユーザー
+// member1とadmin1は profile.spec.ts で使用するため別ユーザーを割り当て
+const MEMBER = { email: 'member1@example.com' };  // profile.spec.ts と共有可（読み取りのみ）
+const ADMIN = { email: 'admin5@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('エラーハンドリング（基本）', () => {

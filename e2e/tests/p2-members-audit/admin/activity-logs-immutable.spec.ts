@@ -3,8 +3,9 @@ import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 import { getSupabaseAdmin } from '@repo/db';
 
-const ADMIN = { email: 'admin1@example.com' };
-const OWNER = { email: 'owner1@example.com' };
+// 並列テスト用: このファイル専用のユーザー
+const ADMIN = { email: 'admin4@example.com' };
+const OWNER = { email: 'owner4@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('監査ログイミュータブル性', () => {

@@ -154,6 +154,9 @@ test.describe('ops - ログイン設計の仕様', () => {
   });
 
   test('ops/loginでログイン成功 → opsドメインへリダイレクト', async ({ page }) => {
+    // 前のテストのセッションをクリア
+    await page.context().clearCookies();
+
     await page.goto(`${DOMAINS.OPS}/login`);
 
     // ログインページの準備完了を待つ

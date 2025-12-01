@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 
-const OWNER = { email: 'owner1@example.com' };
+// 並列テスト用: このファイル専用のユーザー
+const OWNER = { email: 'owner6@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('バリデーションエラー', () => {

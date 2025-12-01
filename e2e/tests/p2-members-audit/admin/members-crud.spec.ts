@@ -3,36 +3,44 @@ import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 import { resetUserToOrg1, createTestUser, deleteTestUser, getSupabaseAdmin } from '../../../helpers/db';
 
-const ADMIN = { email: 'admin1@example.com' };
+// owner権限テスト用: owner1を使用（DB制約により各組織ownerは1人のみ）
+const ADMIN = { email: 'admin3@example.com' };
 const OWNER = { email: 'owner1@example.com' };
 const MEMBER = { email: 'member-switcher@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
-// テスト用ユーザー
+// テスト用ユーザー（未使用だが互換性のため残す）
 const TEST_USER = {
   email: `test-${Date.now()}@example.com`,
   name: 'テストユーザー',
   password: PASSWORD,
 };
 
+// owner1を共有するため、このファイルのテストは直列実行
+test.describe.configure({ mode: 'serial' });
+
 test.describe('admin/members CRUD', () => {
   // 各テスト前にmember1をorg1（member権限）にリセット、owner1をownerにリセット
   test.beforeEach(async () => {
-    const supabase = getSupabaseAdmin();
-
     await resetUserToOrg1(MEMBER.email);
     await resetUserToOrg1(OWNER.email);
+  });
 
-    // owner1 のロールを owner にリセット（権限譲渡テストの影響を排除）
-    const { data: authUsers } = await supabase.auth.admin.listUsers();
-    const ownerUser = authUsers.users.find(u => u.email === OWNER.email);
-    const { data: org } = await supabase.from('organizations').select('id').eq('slug', 'acme').single();
+  // 各テスト後にゴミユーザーをクリーンアップ
+  test.afterEach(async () => {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
 
-    await supabase
-      .from('profiles')
-      .update({ role: 'owner' })
-      .eq('user_id', ownerUser!.id)
-      .eq('org_id', org!.id);
+    // test-数字@example.com, delete-test-数字@example.com パターンを削除
+    const garbageUsers = users?.filter(u =>
+      u.email && /^(test|delete-test)-\d+@example\.com$/.test(u.email)
+    ) || [];
+
+    for (const user of garbageUsers) {
+      await supabaseAdmin.from('profiles').delete().eq('user_id', user.id);
+      await supabaseAdmin.from('user_org_context').delete().eq('user_id', user.id);
+      await supabaseAdmin.auth.admin.deleteUser(user.id);
+    }
   });
   test('admin → メンバー一覧にアクセス可能', async ({ page }) => {
     await uiLogin(page, ADMIN.email, PASSWORD);
@@ -198,8 +206,8 @@ test.describe('admin/members CRUD', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
-    // owner行を探す
-    const ownerRow = page.locator('tr', { hasText: OWNER.email });
+    // OWNERロールの行を探す（メールや名前は他のテストで変更される可能性があるため）
+    const ownerRow = page.locator('tr').filter({ has: page.getByText('OWNER', { exact: true }) }).first();
     await expect(ownerRow).toBeVisible();
 
     // 削除ボタンが存在しないことを確認
@@ -211,8 +219,8 @@ test.describe('admin/members CRUD', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
-    // owner行を探す
-    const ownerRow = page.locator('tr', { hasText: OWNER.email });
+    // OWNERロールの行を探す（メールや名前は他のテストで変更される可能性があるため）
+    const ownerRow = page.locator('tr').filter({ has: page.getByText('OWNER', { exact: true }) }).first();
     await expect(ownerRow).toBeVisible();
 
     // 編集ボタンをクリック
@@ -233,8 +241,8 @@ test.describe('admin/members CRUD', () => {
     await uiLogin(page, ADMIN.email, PASSWORD);
     await page.goto(`${DOMAINS.ADMIN}/members`);
 
-    // owner行を探す
-    const ownerRow = page.locator('tr', { hasText: OWNER.email });
+    // OWNERロールの行を探す（メールや名前は他のテストで変更される可能性があるため）
+    const ownerRow = page.locator('tr').filter({ has: page.getByText('OWNER', { exact: true }) }).first();
     await expect(ownerRow).toBeVisible();
 
     // 編集ボタンをクリック

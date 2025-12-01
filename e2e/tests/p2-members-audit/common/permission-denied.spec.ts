@@ -2,10 +2,14 @@ import { test, expect } from '@playwright/test';
 import { DOMAINS } from '../../../helpers/domains';
 import { uiLogin } from '../../../helpers/auth';
 
-const MEMBER = { email: 'member1@example.com' };
-const ADMIN = { email: 'admin1@example.com' };
+// owner権限テスト用: owner1を使用（DB制約により各組織ownerは1人のみ）
+const MEMBER = { email: 'member3@example.com' };
+const ADMIN = { email: 'admin6@example.com' };
 const OWNER = { email: 'owner1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
+
+// owner1を共有するため、このファイルのテストは直列実行
+test.describe.configure({ mode: 'serial' });
 
 test.describe('権限拒否シナリオ', () => {
   test.describe('member の権限制限', () => {

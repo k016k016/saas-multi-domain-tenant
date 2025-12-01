@@ -8,6 +8,33 @@ const OPS_USER = { email: 'ops1@example.com' };
 const PASSWORD = process.env.E2E_TEST_PASSWORD!;
 
 test.describe('ops/orgs/new - 組織作成', () => {
+  // 各テスト後に owner-数字@example.com パターンのゴミユーザーをクリーンアップ
+  test.afterEach(async () => {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const garbageUsers = users?.filter(u => u.email && /^owner-\d+@example\.com$/.test(u.email)) || [];
+
+    for (const user of garbageUsers) {
+      // profilesから削除
+      await supabaseAdmin.from('profiles').delete().eq('user_id', user.id);
+      // user_org_contextから削除
+      await supabaseAdmin.from('user_org_context').delete().eq('user_id', user.id);
+      // auth.usersから削除
+      await supabaseAdmin.auth.admin.deleteUser(user.id);
+    }
+
+    // test-org-数字 パターンの組織も削除
+    const { data: orgs } = await supabaseAdmin
+      .from('organizations')
+      .select('id, slug')
+      .like('slug', 'test-org-%');
+
+    for (const org of orgs || []) {
+      await supabaseAdmin.from('profiles').delete().eq('org_id', org.id);
+      await supabaseAdmin.from('organizations').delete().eq('id', org.id);
+    }
+  });
+
   test('ops管理者 → /orgs/new にアクセス可能', async ({ page }) => {
     await uiLogin(page, OPS_USER.email, PASSWORD);
     await page.goto(`${DOMAINS.OPS}/orgs/new`);
