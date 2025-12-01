@@ -36,7 +36,7 @@ test.describe('WWWサインイン機能（完全版）', () => {
     await page.goto(`${DOMAINS.APP}`);
 
     // ページ読み込みを待つ
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // サインアウトボタンをクリック（より具体的なセレクターを使用）
     const logoutButton = page.getByText(/サインアウト|logout|sign out/i).first();

@@ -32,8 +32,8 @@ test.describe('RLS境界テスト', () => {
     // 監査ログページにアクセス
     await page.goto(`${DOMAINS.ADMIN}/audit-logs`);
 
-    // Firefoxでのレンダリング待機
-    await page.waitForLoadState('networkidle');
+    // ページ読み込み完了を待機
+    await page.waitForLoadState('domcontentloaded');
 
     // adminはアクセス可能なはず
     await expect(page.getByRole('heading', { name: /監査ログ/i })).toBeVisible();
