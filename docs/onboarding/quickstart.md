@@ -134,6 +134,21 @@ E2E_TEST_PASSWORD=YourSecurePassword123!
 # OPENAI_API_KEY=
 ```
 
+### 5.1. 各アプリに.env.localを共有（重要）
+
+⚠️ **Turborepoモノレポの落とし穴**: Next.jsは各アプリディレクトリから`.env.local`を読み込みます。ルートの`.env.local`だけでは各アプリに環境変数が渡りません。
+
+以下のコマンドで、各アプリディレクトリにルートの`.env.local`へのシンボリックリンクを作成します：
+
+```bash
+ln -sf ../../.env.local apps/www/.env.local
+ln -sf ../../.env.local apps/app/.env.local
+ln -sf ../../.env.local apps/admin/.env.local
+ln -sf ../../.env.local apps/ops/.env.local
+```
+
+> **なぜ必要か？**: これらのシンボリックリンクは`.gitignore`に含まれるため、クローン後には存在しません。この手順を省略すると、Server Actions実行時に「NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set」エラーが発生します。
+
 ### 6. E2Eテストユーザーを作成
 
 ```bash
@@ -325,6 +340,7 @@ NEXT_PUBLIC_COOKIE_DOMAIN=.local.test
 - [ ] スキーマ（migrations）が適用されている
 - [ ] シードデータが投入されている
 - [ ] `.env.local` が作成され、必須環境変数が設定されている
+- [ ] 各アプリディレクトリに`.env.local`シンボリックリンクが作成されている
 - [ ] E2Eテストユーザーが作成されている
 - [ ] `pnpm dev` で4つのアプリが起動する
 - [ ] http://ops.local.test:3004/login でログインできる
