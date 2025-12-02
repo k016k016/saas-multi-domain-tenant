@@ -321,6 +321,7 @@ v0のゴールは「骨格と契約（責務分離・権限境界・RLS前提・
 
 ### 本番環境へのデプロイ
 
+- **[完全セットアップガイド（CLI版）](docs/deployment/full-setup-guide.md)** - Supabase〜Vercel〜DNS設定まで一気通貫
 - **[Vercelセットアップガイド](docs/deployment/vercel-setup.md)** - 4プロジェクトの作成と環境変数設定
 - **[ドメイン設定ガイド](docs/deployment/domain-configuration.md)** - DNS設定とCookie共有
 
